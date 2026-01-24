@@ -14,59 +14,41 @@ AI-powered weather aggregation using MCP (Model Context Protocol).
 - 🌙 Moon phases
 - 🌍 Multi-language support (EN, CZ)
 
-## Installation
+## Quick Start
 
+**Terminal 1 - Backend API:**
 ```bash
-# Clone repository
-git clone https://github.com/Soptik1290/mcp-weather.git
 cd mcp-weather
-
-# Install dependencies
-python -m uv sync
-
-# Set up environment
 cp .env.example .env
-# Edit .env with your OpenAI API key
+# Edit .env with your OPENAI_API_KEY
+python -m uv run python -m src.api
 ```
 
-## Usage
-
-### Run MCP Server
-
+**Terminal 2 - Frontend:**
 ```bash
-python -m uv run python -m src.server
+cd mcp-weather/frontend
+npm install
+npm run dev
 ```
 
-### Available MCP Tools
+Open **http://localhost:3000** 🚀
 
-| Tool | Description |
-|------|-------------|
-| `search_location` | Search for cities by name |
-| `get_current_weather` | Current weather + AI summary |
-| `get_weather_forecast` | Multi-day forecast + AI analysis |
-| `get_weather_by_coordinates` | Weather by lat/lon |
-| `get_ambient_theme` | Get theme colors for UI |
+## API Endpoints
 
-### Ambient Themes
-
-| Weather | Theme |
-|---------|-------|
-| ☀️ Sunny | `sunny` - orange/gold |
-| 🌧️ Rain | `rain` - blue/gray |
-| ❄️ Snow | `snow` - white/blue |
-| ⛈️ Storm | `storm` - purple/black + ⚡ |
-| 🌅 Sunrise | `sunrise` - pink/coral |
-| 🌇 Sunset | `sunset` - coral/purple |
-| 🌙 Night | `clear_night` / `cloudy_night` |
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/search` | POST | Search locations |
+| `/weather/current` | POST | Current + AI summary |
+| `/weather/forecast` | POST | 7-day forecast |
+| `/weather/coordinates` | POST | Weather by lat/lon |
+| `/theme` | POST | Get ambient theme |
 
 ## Tech Stack
 
-- Python 3.14+
-- FastMCP (MCP Server)
-- Open-Meteo API (free, no key required)
-- OpenAI GPT-5-mini (for AI summaries)
-- httpx (async HTTP)
-- Pydantic (data validation)
+- **Backend**: Python 3.14+, FastAPI, FastMCP
+- **Frontend**: Next.js 16, Tailwind 4.1, shadcn/ui
+- **AI**: OpenAI GPT-5-mini
+- **Weather**: Open-Meteo API (free)
 
 ## License
 

@@ -16,8 +16,9 @@ import {
 } from '@/components/weather';
 import { type WeatherResponse } from '@/lib/types';
 import { THEMES, isDarkTheme, type AmbientTheme, type ThemeName } from '@/lib/themes';
+import { getWeatherForecast } from '@/lib/api';
 
-// Demo data for initial display
+// Demo data for initial display (fallback when API unavailable)
 const DEMO_DATA: WeatherResponse = {
     location: {
         name: 'Prague',
@@ -65,6 +66,7 @@ const DEMO_DATA: WeatherResponse = {
 export function WeatherDashboard() {
     const [weatherData, setWeatherData] = useState<WeatherResponse>(DEMO_DATA);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [currentTheme, setCurrentTheme] = useState<AmbientTheme>(
         THEMES[(weatherData.ambient_theme?.theme as ThemeName) || 'cloudy']
     );
@@ -73,10 +75,31 @@ export function WeatherDashboard() {
 
     const handleSearch = async (query: string) => {
         setIsLoading(true);
+        setError(null);
         try {
-            // TODO: Connect to MCP server
-            console.log('Searching for:', query);
-            // For now, just use demo data with updated location name
+            // Try to fetch real data from API
+            const data = await getWeatherForecast(query, 7, 'en');
+
+            if (data) {
+                setWeatherData(data);
+                // Update theme based on API response
+                if (data.ambient_theme?.theme) {
+                    const themeName = data.ambient_theme.theme as ThemeName;
+                    if (THEMES[themeName]) {
+                        setCurrentTheme(THEMES[themeName]);
+                    }
+                }
+            } else {
+                // API not available, use demo with location name
+                setError('API not available - showing demo data');
+                setWeatherData({
+                    ...DEMO_DATA,
+                    location: { ...DEMO_DATA.location, name: query },
+                });
+            }
+        } catch (err) {
+            console.error('Search error:', err);
+            setError('Failed to fetch weather data');
             setWeatherData({
                 ...DEMO_DATA,
                 location: { ...DEMO_DATA.location, name: query },
