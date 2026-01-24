@@ -1,12 +1,11 @@
 """
-AI Weather Aggregator using GPT-5-mini.
-Analyzes and summarizes weather data from multiple providers.
+AI Weather Aggregator - Intelligent multi-source data fusion.
+Analyzes data from multiple weather APIs and deduces the most accurate forecast.
 """
 
 import os
-import json
 from typing import Optional
-from openai import AsyncOpenAI
+from datetime import datetime
 from src.models import (
     WeatherData, AggregatedForecast, Location,
     CurrentWeather, DailyForecast, HourlyForecast, Astronomy
@@ -14,17 +13,34 @@ from src.models import (
 
 
 class WeatherAggregator:
-    """AI-powered weather data aggregator using GPT-5-mini."""
+    """
+    AI-powered weather data aggregator.
+    
+    When multiple sources are available, uses AI to:
+    1. Compare temperature, precipitation, wind data from each source
+    2. Identify outliers and consensus values
+    3. Deduce the most likely actual weather conditions
+    4. Assign confidence based on source agreement
+    """
     
     def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the aggregator.
         
         Args:
-            api_key: OpenAI API key (defaults to OPENAI_API_KEY env var)
+            api_key: OpenAI API key (optional - works without for basic aggregation)
         """
-        self.client = AsyncOpenAI(api_key=api_key or os.getenv("OPENAI_API_KEY"))
-        self.model = "gpt-5-mini"
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
+        self.has_ai = bool(self.api_key)
+        
+        if self.has_ai:
+            try:
+                from openai import AsyncOpenAI
+                self.client = AsyncOpenAI(api_key=self.api_key)
+                self.model = "gpt-5-mini"
+            except Exception:
+                self.has_ai = False
+                self.client = None
     
     async def aggregate(
         self,
@@ -32,122 +48,171 @@ class WeatherAggregator:
         user_language: str = "en"
     ) -> AggregatedForecast:
         """
-        Aggregate weather data from multiple providers using AI.
+        Aggregate weather data from multiple providers.
+        
+        With single source: Returns data as-is with basic info
+        With multiple sources: Uses AI to deduce most accurate values
         
         Args:
             weather_data: List of weather data from different providers
             user_language: Language for AI summary (en, cs, etc.)
             
         Returns:
-            AggregatedForecast with unified data and AI insights
+            AggregatedForecast with unified data
         """
         if not weather_data:
             raise ValueError("No weather data to aggregate")
         
-        # Use first provider's location as reference
         location = weather_data[0].location
+        sources = [wd.provider for wd in weather_data]
         
-        # Build context for AI
-        context = self._build_ai_context(weather_data)
+        # Single source - just pass through
+        if len(weather_data) == 1:
+            base = weather_data[0]
+            return AggregatedForecast(
+                location=location,
+                current=base.current,
+                daily_forecast=base.daily_forecast,
+                hourly_forecast=base.hourly_forecast,
+                astronomy=base.astronomy,
+                ai_summary=None,  # No AI summary for single source
+                confidence_score=0.75,  # Medium confidence with single source
+                sources_used=sources
+            )
         
-        # Get AI analysis
-        summary, confidence = await self._get_ai_analysis(
-            context, 
-            location.name,
-            user_language
+        # Multiple sources - perform intelligent aggregation
+        if self.has_ai:
+            return await self._ai_aggregate(weather_data, user_language)
+        else:
+            return await self._statistical_aggregate(weather_data)
+    
+    async def _statistical_aggregate(
+        self, 
+        weather_data: list[WeatherData]
+    ) -> AggregatedForecast:
+        """
+        Statistical aggregation when AI is not available.
+        Uses median values and outlier detection.
+        """
+        location = weather_data[0].location
+        sources = [wd.provider for wd in weather_data]
+        
+        # Collect current temperatures from all sources
+        temps = [wd.current.temperature for wd in weather_data if wd.current]
+        feels_likes = [wd.current.feels_like for wd in weather_data if wd.current and wd.current.feels_like]
+        humidities = [wd.current.humidity for wd in weather_data if wd.current and wd.current.humidity]
+        wind_speeds = [wd.current.wind_speed for wd in weather_data if wd.current and wd.current.wind_speed]
+        
+        # Use median for robustness against outliers
+        def median(values):
+            if not values:
+                return None
+            sorted_v = sorted(values)
+            n = len(sorted_v)
+            return sorted_v[n // 2] if n % 2 else (sorted_v[n // 2 - 1] + sorted_v[n // 2]) / 2
+        
+        # Calculate confidence based on source agreement
+        def calc_confidence(values):
+            if len(values) < 2:
+                return 0.75
+            spread = max(values) - min(values)
+            # Temperature spread < 2°C = high confidence
+            if spread < 2:
+                return 0.95
+            elif spread < 5:
+                return 0.85
+            else:
+                return 0.70
+        
+        confidence = calc_confidence(temps) if temps else 0.75
+        
+        # Create aggregated current weather
+        base = weather_data[0]
+        aggregated_current = CurrentWeather(
+            temperature=median(temps) or base.current.temperature,
+            feels_like=median(feels_likes),
+            humidity=median(humidities),
+            wind_speed=median(wind_speeds),
+            weather_code=base.current.weather_code,
+            weather_description=base.current.weather_description,
+            uv_index=base.current.uv_index,
+            pressure=base.current.pressure,
+            cloud_cover=base.current.cloud_cover,
         )
-        
-        # Merge weather data (for now, use first provider as base)
-        base_data = weather_data[0]
         
         return AggregatedForecast(
             location=location,
-            current=base_data.current,
-            daily_forecast=base_data.daily_forecast,
-            hourly_forecast=base_data.hourly_forecast,
-            astronomy=base_data.astronomy,
-            ai_summary=summary,
+            current=aggregated_current,
+            daily_forecast=base.daily_forecast,
+            hourly_forecast=base.hourly_forecast,
+            astronomy=base.astronomy,
+            ai_summary=f"Aggregated from {len(sources)} sources. {'Good' if confidence > 0.85 else 'Moderate'} agreement between providers.",
             confidence_score=confidence,
-            sources_used=[wd.provider for wd in weather_data]
+            sources_used=sources
         )
     
-    def _build_ai_context(self, weather_data: list[WeatherData]) -> str:
-        """Build context string for AI from weather data."""
-        context_parts = []
+    async def _ai_aggregate(
+        self,
+        weather_data: list[WeatherData],
+        language: str
+    ) -> AggregatedForecast:
+        """
+        AI-powered aggregation using GPT-5-mini.
+        Analyzes differences and deduces most accurate values.
+        """
+        from openai import AsyncOpenAI
+        import json
         
+        location = weather_data[0].location
+        sources = [wd.provider for wd in weather_data]
+        
+        # Build comparison context
+        context_parts = []
         for wd in weather_data:
-            provider_info = f"\n=== {wd.provider.upper()} ===\n"
-            
             if wd.current:
-                provider_info += f"""
-Current Weather:
+                context_parts.append(f"""
+{wd.provider.upper()}:
 - Temperature: {wd.current.temperature}°C (feels like: {wd.current.feels_like}°C)
-- Conditions: {wd.current.weather_description}
 - Humidity: {wd.current.humidity}%
 - Wind: {wd.current.wind_speed} km/h
-- Cloud cover: {wd.current.cloud_cover}%
-"""
-            
-            if wd.daily_forecast:
-                provider_info += "\nDaily Forecast:\n"
-                for day in wd.daily_forecast[:5]:  # Limit to 5 days
-                    provider_info += f"- {day.date}: {day.temperature_min}°C to {day.temperature_max}°C, {day.weather_description}\n"
-            
-            if wd.astronomy:
-                provider_info += f"""
-Astronomy:
-- Sunrise: {wd.astronomy.sunrise}
-- Sunset: {wd.astronomy.sunset}
-- Moon phase: {wd.astronomy.moon_phase_name or 'N/A'}
-"""
-            
-            context_parts.append(provider_info)
+- Conditions: {wd.current.weather_description}
+""")
         
-        return "\n".join(context_parts)
-    
-    async def _get_ai_analysis(
-        self,
-        weather_context: str,
-        location_name: str,
-        language: str
-    ) -> tuple[str, float]:
-        """
-        Get AI analysis of weather data.
+        context = "\n".join(context_parts)
         
-        Returns:
-            Tuple of (summary text, confidence score 0-1)
-        """
         language_instruction = {
             "en": "Respond in English.",
             "cs": "Odpověz v češtině.",
         }.get(language, "Respond in English.")
         
-        system_prompt = f"""You are a weather analyst AI. Analyze the provided weather data and create a helpful, concise summary for the user.
+        system_prompt = f"""You are an expert meteorologist AI. Analyze weather data from multiple sources and deduce the most accurate forecast.
 
 {language_instruction}
 
-Guidelines:
-- Be conversational and friendly
-- Highlight important weather conditions (extreme temps, rain, storms)
-- Give practical advice (umbrella, warm clothes, sunscreen, etc.)
-- Mention any significant changes in upcoming days
-- Keep the summary under 3-4 sentences
-- If data from multiple sources differs, note the uncertainty
+Your task:
+1. Compare the values from each source
+2. Identify any outliers or inconsistencies
+3. Determine the most likely actual values based on:
+   - Consensus between sources
+   - Known reliability of certain metrics
+   - Physical plausibility
+4. Provide a confidence score (0-1) based on source agreement
 
-Also assess data confidence:
-- 1.0 = All sources agree perfectly
-- 0.8+ = Minor differences, high confidence
-- 0.6-0.8 = Some disagreement, moderate confidence
-- Below 0.6 = Significant disagreement, low confidence"""
+Return a JSON object with:
+- "temperature": your deduced temperature in °C
+- "feels_like": feels like temperature
+- "humidity": humidity percentage
+- "wind_speed": wind speed in km/h
+- "conditions": weather description
+- "confidence": 0-1 score
+- "reasoning": brief explanation of your deduction"""
 
-        user_prompt = f"""Location: {location_name}
+        user_prompt = f"""Location: {location.name}
 
-Weather Data:
-{weather_context}
+Data from {len(sources)} weather sources:
+{context}
 
-Provide a helpful weather summary and a confidence score (0-1) based on source agreement.
-Format your response as JSON:
-{{"summary": "your weather summary here", "confidence": 0.95}}"""
+Analyze these sources and deduce the most accurate current weather."""
 
         try:
             response = await self.client.chat.completions.create(
@@ -156,17 +221,40 @@ Format your response as JSON:
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.7,
+                temperature=0.3,  # Low temp for consistent deductions
                 max_tokens=500,
                 response_format={"type": "json_object"}
             )
             
             result = json.loads(response.choices[0].message.content)
-            return result.get("summary", "Weather data unavailable"), result.get("confidence", 0.8)
+            
+            # Create aggregated weather with AI-deduced values
+            aggregated_current = CurrentWeather(
+                temperature=result.get("temperature", weather_data[0].current.temperature),
+                feels_like=result.get("feels_like"),
+                humidity=result.get("humidity"),
+                wind_speed=result.get("wind_speed"),
+                weather_description=result.get("conditions", weather_data[0].current.weather_description),
+                weather_code=weather_data[0].current.weather_code,
+                uv_index=weather_data[0].current.uv_index,
+                pressure=weather_data[0].current.pressure,
+                cloud_cover=weather_data[0].current.cloud_cover,
+            )
+            
+            return AggregatedForecast(
+                location=location,
+                current=aggregated_current,
+                daily_forecast=weather_data[0].daily_forecast,
+                hourly_forecast=weather_data[0].hourly_forecast,
+                astronomy=weather_data[0].astronomy,
+                ai_summary=result.get("reasoning", "AI aggregation complete"),
+                confidence_score=result.get("confidence", 0.85),
+                sources_used=sources
+            )
             
         except Exception as e:
-            # Fallback if AI fails
-            return f"Weather analysis temporarily unavailable: {str(e)}", 0.5
+            # Fallback to statistical if AI fails
+            return await self._statistical_aggregate(weather_data)
     
     async def get_ambient_theme(
         self,
@@ -227,7 +315,6 @@ Format your response as JSON:
             }
         
         if is_night:
-            # Check cloud cover for night theme
             if current_weather.cloud_cover and current_weather.cloud_cover > 50:
                 return {
                     "theme": "cloudy_night",

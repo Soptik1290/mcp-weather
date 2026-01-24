@@ -49,7 +49,7 @@ const DEMO_DATA: WeatherResponse = {
         { date: '2026-01-30', temperature_max: 1, temperature_min: -4, weather_code: 73, weather_description: 'Moderate snow' },
     ],
     hourly_forecast: Array.from({ length: 24 }, (_, i) => ({
-        time: new Date(Date.now() + i * 3600000).toISOString(),
+        time: `2026-01-24T${String(i).padStart(2, '0')}:00:00`,
         temperature: Math.round(-1 + Math.sin(i / 4) * 3),
         weather_code: i < 8 ? 3 : i < 16 ? 2 : 1,
         precipitation_probability: Math.max(0, 30 - i * 2),

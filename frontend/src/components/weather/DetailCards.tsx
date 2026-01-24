@@ -87,13 +87,14 @@ export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?:
 }
 
 // UV Index Card
-export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number; isDark?: boolean }) {
-    const level = uvIndex !== undefined ? getUVLevel(uvIndex) : '';
+export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDark?: boolean }) {
+    const hasValue = uvIndex != null && !isNaN(uvIndex);
+    const level = hasValue ? getUVLevel(uvIndex) : '';
 
     return (
         <DetailCard
             title="UV Index"
-            value={uvIndex !== undefined ? uvIndex.toFixed(1) : '--'}
+            value={hasValue ? uvIndex.toFixed(1) : '--'}
             icon={Sun}
             subtitle={level}
             isDark={isDark}
