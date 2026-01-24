@@ -3,6 +3,7 @@ HTTP API Server for Weather MCP.
 Wraps MCP tools as REST endpoints for frontend access.
 """
 
+import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -11,7 +12,7 @@ import json
 
 from src.providers.open_meteo import OpenMeteoProvider
 from src.aggregator import WeatherAggregator
-from src.models import Location
+from src.models import Location, WeatherData
 
 # Initialize app
 app = FastAPI(
@@ -29,8 +30,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize components
+# Initialize providers
+providers = []
+
+# Always available - no API key needed
 open_meteo = OpenMeteoProvider()
+providers.append(("open_meteo", open_meteo))
+
+# OpenWeatherMap - optional
+if os.getenv("OPENWEATHERMAP_API_KEY"):
+    try:
+        from src.providers.openweathermap import OpenWeatherMapProvider
+        owm = OpenWeatherMapProvider()
+        providers.append(("openweathermap", owm))
+        print("✓ OpenWeatherMap provider enabled")
+    except Exception as e:
+        print(f"✗ OpenWeatherMap failed: {e}")
+
+print(f"Active providers: {[p[0] for p in providers]}")
+
+# Aggregator
 aggregator = WeatherAggregator()
 
 
@@ -108,25 +127,38 @@ async def get_current_weather(request: WeatherRequest):
 
 @app.post("/weather/forecast")
 async def get_weather_forecast(request: WeatherRequest):
-    """Get weather forecast with AI analysis."""
+    """Get weather forecast with AI analysis from multiple sources."""
     try:
-        # Search for location
+        # Search for location using Open-Meteo (always available)
         locations = await open_meteo.search_location(request.location_name)
         if not locations:
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
         
         location = locations[0]
-        weather = await open_meteo.get_weather(location, days=min(request.days, 16))
         
-        # Get AI aggregation
-        aggregated = await aggregator.aggregate([weather], request.language)
+        # Collect weather data from all available providers
+        weather_data_list: list[WeatherData] = []
+        
+        for provider_name, provider in providers:
+            try:
+                weather = await provider.get_weather(location, days=min(request.days, 16))
+                weather_data_list.append(weather)
+            except Exception as e:
+                print(f"Provider {provider_name} failed: {e}")
+                continue
+        
+        if not weather_data_list:
+            raise HTTPException(status_code=500, detail="All weather providers failed")
+        
+        # AI Aggregation - deduce best values from all sources
+        aggregated = await aggregator.aggregate(weather_data_list, request.language)
         
         # Get ambient theme
         from datetime import datetime
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
-            weather.current,
-            weather.astronomy,
+            aggregated.current,
+            aggregated.astronomy,
             current_hour
         )
         
@@ -139,7 +171,8 @@ async def get_weather_forecast(request: WeatherRequest):
             "ai_summary": aggregated.ai_summary,
             "confidence": aggregated.confidence_score,
             "ambient_theme": theme,
-            "sources": aggregated.sources_used
+            "sources": aggregated.sources_used,
+            "provider_count": len(weather_data_list)
         }
     except HTTPException:
         raise
