@@ -1,0 +1,15 @@
+[project]
+name = "mcp-weather"
+version = "0.1.0"
+description = "AI-powered weather aggregation MCP server"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp[cli]>=1.25.0",
+    "openai>=2.15.0",
+    "pydantic>=2.12.5",
+]
+
+[project.scripts]
+mcp-weather = "src.server:main"
