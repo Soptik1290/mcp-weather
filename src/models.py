@@ -79,10 +79,11 @@ class WeatherData(BaseModel):
 class AggregatedForecast(BaseModel):
     """AI-aggregated forecast from multiple sources."""
     location: Location
-    current: CurrentWeather
-    daily_forecast: list[DailyForecast]
-    hourly_forecast: list[HourlyForecast]
+    current: Optional[CurrentWeather] = None
+    daily_forecast: list[DailyForecast] = []
+    hourly_forecast: list[HourlyForecast] = []
     astronomy: Optional[Astronomy] = None
-    ai_summary: str = Field(description="AI-generated weather summary")
-    confidence_score: float = Field(description="Confidence 0-1 based on source agreement")
-    sources_used: list[str] = Field(description="List of weather providers used")
+    ai_summary: Optional[str] = Field(None, description="AI-generated weather summary")
+    confidence_score: float = Field(0.75, description="Confidence 0-1 based on source agreement")
+    sources_used: list[str] = Field(default_factory=list, description="List of weather providers used")
+
