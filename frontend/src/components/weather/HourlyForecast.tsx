@@ -5,6 +5,7 @@ import { getWeatherIcon } from '@/lib/weather-icons';
 import { HourlyForecast } from '@/lib/types';
 import { Card } from '@/components/ui/card';
 import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
+import { useSettings } from '@/lib/settings';
 
 interface HourlyForecastProps {
     forecast: HourlyForecast[];
@@ -12,6 +13,7 @@ interface HourlyForecastProps {
 }
 
 export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastProps) {
+    const { formatTemperature, t } = useSettings();
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
@@ -19,7 +21,7 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
     return (
         <Card className={`p-4 ${bgColor} backdrop-blur-md border-0`}>
             <h3 className={`text-sm font-medium ${subTextColor} mb-3`}>
-                Hourly Forecast
+                {t('hourly_forecast')}
             </h3>
 
             <ScrollArea className="w-full">
@@ -43,11 +45,11 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
                                 <span className={`text-xs ${subTextColor}`}>{hourStr}</span>
                                 <WeatherIcon className={`w-6 h-6 ${textColor}`} />
                                 <span className={`text-sm font-medium ${textColor}`}>
-                                    {Math.round(hour.temperature)}°
+                                    {formatTemperature(hour.temperature)}
                                 </span>
                                 {hour.precipitation_probability !== undefined && hour.precipitation_probability > 0 && (
                                     <span className="text-xs text-blue-400">
-                                        {hour.precipitation_probability}%
+                                        {Math.round(hour.precipitation_probability)}%
                                     </span>
                                 )}
                             </motion.div>

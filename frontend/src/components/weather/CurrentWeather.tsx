@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { getWeatherIcon } from '@/lib/weather-icons';
 import { CurrentWeather as CurrentWeatherType, Astronomy } from '@/lib/types';
 import { Droplets, Wind, Eye, Gauge } from 'lucide-react';
+import { useSettings } from '@/lib/settings';
 
 interface CurrentWeatherProps {
     current: CurrentWeatherType;
@@ -20,6 +21,7 @@ export function CurrentWeatherCard({
     aiSummary,
     isDark = false,
 }: CurrentWeatherProps) {
+    const { formatTemperature, t } = useSettings();
     const WeatherIcon = getWeatherIcon(current.weather_code);
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/80' : 'text-gray-600';
@@ -65,12 +67,12 @@ export function CurrentWeatherCard({
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.4 }}
                     >
-                        {Math.round(current.temperature)}°
+                        {formatTemperature(current.temperature)}
                     </motion.div>
 
                     {current.feels_like !== undefined && (
                         <p className={`text-lg ${subTextColor}`}>
-                            Feels like {Math.round(current.feels_like)}°
+                            {t('feels_like')} {formatTemperature(current.feels_like)}
                         </p>
                     )}
                 </div>
