@@ -1,30 +1,24 @@
 'use client';
 
-import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Globe, Thermometer, Info, Github, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useSettings } from '@/lib/settings';
 
 interface SideMenuProps {
     isOpen: boolean;
     onClose: () => void;
     isDark?: boolean;
-    language: 'en' | 'cs';
-    onLanguageChange: (lang: 'en' | 'cs') => void;
-    temperatureUnit: 'celsius' | 'fahrenheit';
-    onTemperatureUnitChange: (unit: 'celsius' | 'fahrenheit') => void;
 }
 
 export function SideMenu({
     isOpen,
     onClose,
     isDark = false,
-    language,
-    onLanguageChange,
-    temperatureUnit,
-    onTemperatureUnitChange,
 }: SideMenuProps) {
+    const { language, setLanguage, temperatureUnit, setTemperatureUnit, t } = useSettings();
+
     const bgColor = isDark ? 'bg-gray-900/95' : 'bg-white/95';
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-gray-400' : 'text-gray-500';
@@ -55,7 +49,7 @@ export function SideMenu({
                         <div className={`flex items-center justify-between p-4 border-b ${borderColor}`}>
                             <div className="flex items-center gap-2">
                                 <Settings className={`w-5 h-5 ${textColor}`} />
-                                <h2 className={`text-lg font-semibold ${textColor}`}>Settings</h2>
+                                <h2 className={`text-lg font-semibold ${textColor}`}>{t('settings')}</h2>
                             </div>
                             <Button
                                 variant="ghost"
@@ -72,21 +66,21 @@ export function SideMenu({
                             {/* Language Setting */}
                             <SettingSection
                                 icon={Globe}
-                                title="Language"
-                                subtitle="Choose your preferred language"
+                                title={t('language')}
+                                subtitle={t('choose_language')}
                                 isDark={isDark}
                             >
                                 <div className="flex gap-2 mt-3">
                                     <ToggleButton
                                         active={language === 'en'}
-                                        onClick={() => onLanguageChange('en')}
+                                        onClick={() => setLanguage('en')}
                                         isDark={isDark}
                                     >
                                         🇬🇧 English
                                     </ToggleButton>
                                     <ToggleButton
                                         active={language === 'cs'}
-                                        onClick={() => onLanguageChange('cs')}
+                                        onClick={() => setLanguage('cs')}
                                         isDark={isDark}
                                     >
                                         🇨🇿 Čeština
@@ -97,21 +91,21 @@ export function SideMenu({
                             {/* Temperature Unit */}
                             <SettingSection
                                 icon={Thermometer}
-                                title="Temperature"
-                                subtitle="Select temperature unit"
+                                title={t('temperature')}
+                                subtitle={t('select_unit')}
                                 isDark={isDark}
                             >
                                 <div className="flex gap-2 mt-3">
                                     <ToggleButton
                                         active={temperatureUnit === 'celsius'}
-                                        onClick={() => onTemperatureUnitChange('celsius')}
+                                        onClick={() => setTemperatureUnit('celsius')}
                                         isDark={isDark}
                                     >
                                         °C Celsius
                                     </ToggleButton>
                                     <ToggleButton
                                         active={temperatureUnit === 'fahrenheit'}
-                                        onClick={() => onTemperatureUnitChange('fahrenheit')}
+                                        onClick={() => setTemperatureUnit('fahrenheit')}
                                         isDark={isDark}
                                     >
                                         °F Fahrenheit
@@ -122,13 +116,13 @@ export function SideMenu({
                             {/* About Section */}
                             <SettingSection
                                 icon={Info}
-                                title="About"
-                                subtitle="Weather AI Aggregator"
+                                title={t('about')}
+                                subtitle={t('about_desc')}
                                 isDark={isDark}
                             >
                                 <div className={`mt-3 text-sm ${subTextColor}`}>
                                     <p className="mb-2">
-                                        AI-powered weather aggregation from 4 sources with intelligent deduction.
+                                        {t('about_text')}
                                     </p>
                                     <ul className="list-disc list-inside space-y-1 text-xs">
                                         <li>Open-Meteo</li>
@@ -150,7 +144,7 @@ export function SideMenu({
                                     }`}
                             >
                                 <Github className="w-5 h-5" />
-                                <span className="text-sm font-medium">View on GitHub</span>
+                                <span className="text-sm font-medium">{t('view_github')}</span>
                             </a>
                         </div>
                     </motion.div>

@@ -111,10 +111,8 @@ export function WeatherDashboard() {
         }
     };
 
-    // Menu state
+    // Menu state  
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-    const [language, setLanguage] = useState<'en' | 'cs'>('en');
-    const [temperatureUnit, setTemperatureUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
 
     return (
         <AmbientBackground theme={currentTheme}>
@@ -123,10 +121,6 @@ export function WeatherDashboard() {
                 isOpen={isMenuOpen}
                 onClose={() => setIsMenuOpen(false)}
                 isDark={isDark}
-                language={language}
-                onLanguageChange={setLanguage}
-                temperatureUnit={temperatureUnit}
-                onTemperatureUnitChange={setTemperatureUnit}
             />
 
             <div className="min-h-screen p-6">
