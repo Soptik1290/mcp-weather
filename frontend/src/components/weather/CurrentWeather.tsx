@@ -21,10 +21,13 @@ export function CurrentWeatherCard({
     aiSummary,
     isDark = false,
 }: CurrentWeatherProps) {
-    const { formatTemperature, t } = useSettings();
+    const { formatTemperature, t, getWeatherDescription } = useSettings();
     const WeatherIcon = getWeatherIcon(current.weather_code);
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/80' : 'text-gray-600';
+
+    // Get translated weather description
+    const weatherDesc = getWeatherDescription(current.weather_code) || current.weather_description || 'Unknown';
 
     return (
         <motion.div
@@ -46,7 +49,7 @@ export function CurrentWeatherCard({
 
                 {/* Current conditions */}
                 <p className={`text-lg ${subTextColor} mt-1`}>
-                    {current.weather_description || 'Unknown'}
+                    {weatherDesc}
                 </p>
             </div>
 

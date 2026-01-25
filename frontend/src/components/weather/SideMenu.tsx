@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Globe, Thermometer, Info, Github, Settings } from 'lucide-react';
+import { X, Globe, Thermometer, Info, Github, Settings, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSettings } from '@/lib/settings';
@@ -17,7 +17,7 @@ export function SideMenu({
     onClose,
     isDark = false,
 }: SideMenuProps) {
-    const { language, setLanguage, temperatureUnit, setTemperatureUnit, t } = useSettings();
+    const { language, setLanguage, temperatureUnit, setTemperatureUnit, timeFormat, setTimeFormat, t } = useSettings();
 
     const bgColor = isDark ? 'bg-gray-900/95' : 'bg-white/95';
     const textColor = isDark ? 'text-white' : 'text-gray-900';
@@ -109,6 +109,31 @@ export function SideMenu({
                                         isDark={isDark}
                                     >
                                         °F Fahrenheit
+                                    </ToggleButton>
+                                </div>
+                            </SettingSection>
+
+                            {/* Time Format */}
+                            <SettingSection
+                                icon={Clock}
+                                title={t('time_format')}
+                                subtitle={t('select_time_format')}
+                                isDark={isDark}
+                            >
+                                <div className="flex gap-2 mt-3">
+                                    <ToggleButton
+                                        active={timeFormat === '24h'}
+                                        onClick={() => setTimeFormat('24h')}
+                                        isDark={isDark}
+                                    >
+                                        24h
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        active={timeFormat === '12h'}
+                                        onClick={() => setTimeFormat('12h')}
+                                        isDark={isDark}
+                                    >
+                                        12h AM/PM
                                     </ToggleButton>
                                 </div>
                             </SettingSection>

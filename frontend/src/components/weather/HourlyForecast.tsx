@@ -13,7 +13,7 @@ interface HourlyForecastProps {
 }
 
 export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastProps) {
-    const { formatTemperature, t } = useSettings();
+    const { formatTemperature, formatTime, t } = useSettings();
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
@@ -29,10 +29,7 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
                     {forecast.slice(0, 24).map((hour, index) => {
                         const WeatherIcon = getWeatherIcon(hour.weather_code);
                         const time = new Date(hour.time);
-                        const hourStr = index === 0 ? 'Now' : time.toLocaleTimeString('en-US', {
-                            hour: 'numeric',
-                            hour12: true
-                        });
+                        const hourStr = index === 0 ? t('now') : formatTime(time);
 
                         return (
                             <motion.div
