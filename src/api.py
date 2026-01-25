@@ -61,6 +61,16 @@ if os.getenv("WEATHERAPI_KEY"):
     except Exception as e:
         print(f"✗ WeatherAPI failed: {e}")
 
+# Visual Crossing - optional
+if os.getenv("VISUALCROSSING_KEY"):
+    try:
+        from src.providers.visualcrossing import VisualCrossingProvider
+        vc = VisualCrossingProvider()
+        providers.append(("visualcrossing", vc))
+        print("✓ Visual Crossing provider enabled")
+    except Exception as e:
+        print(f"✗ Visual Crossing failed: {e}")
+
 print(f"Active providers: {[p[0] for p in providers]}")
 
 # Aggregator
