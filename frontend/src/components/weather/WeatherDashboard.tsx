@@ -9,6 +9,7 @@ import {
     WindCard,
     HumidityCard,
     UVIndexCard,
+    RainCard,
     SunTimesCard,
     SearchBar,
     HamburgerMenu,
@@ -165,9 +166,11 @@ export function WeatherDashboard() {
                                 uvIndex={weatherData.current?.uv_index}
                                 isDark={isDark}
                             />
-                            <div className="col-span-2 md:col-span-1">
-                                {/* Pressure card or another detail */}
-                            </div>
+                            <RainCard
+                                probability={weatherData.daily_forecast?.[0]?.precipitation_probability}
+                                amount={weatherData.daily_forecast?.[0]?.precipitation_sum}
+                                isDark={isDark}
+                            />
                         </div>
 
                         {/* Sunrise/Sunset */}

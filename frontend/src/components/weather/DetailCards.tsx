@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Wind, Droplets, Sun, Sunrise, Sunset, type LucideIcon } from 'lucide-react';
+import { Wind, Droplets, Sun, Sunrise, Sunset, CloudRain, type LucideIcon } from 'lucide-react';
 
 interface DetailCardProps {
     title: string;
@@ -76,7 +76,7 @@ export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?:
     return (
         <DetailCard
             title="Humidity"
-            value={humidity !== undefined ? humidity : '--'}
+            value={humidity !== undefined ? Math.round(humidity) : '--'}
             unit="%"
             icon={Droplets}
             subtitle={level}
@@ -99,6 +99,35 @@ export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDa
             subtitle={level}
             isDark={isDark}
             delay={0.2}
+        />
+    );
+}
+
+// Rain/Precipitation Card
+export function RainCard({
+    probability,
+    amount,
+    isDark
+}: {
+    probability?: number | null;
+    amount?: number | null;
+    isDark?: boolean
+}) {
+    const hasProb = probability != null && !isNaN(probability);
+    const hasAmount = amount != null && !isNaN(amount);
+
+    // Subtitle shows mm if available
+    const subtitle = hasAmount ? `${amount.toFixed(1)} mm` : (hasProb && probability > 0 ? 'Expected' : '');
+
+    return (
+        <DetailCard
+            title="Rain"
+            value={hasProb ? Math.round(probability) : '--'}
+            unit="%"
+            icon={CloudRain}
+            subtitle={subtitle}
+            isDark={isDark}
+            delay={0.25}
         />
     );
 }
