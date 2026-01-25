@@ -21,17 +21,26 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
-    const nowHighlight = isDark ? 'bg-blue-500/20 border-2 border-blue-400' : 'bg-blue-50 border-2 border-blue-400';
 
-    // Find current hour and build timeline
+    // Get current hour to generate past hours
     const now = new Date();
     const currentHour = now.getHours();
 
-    // Create past hours (6 hours before now)
+    // Build timeline with past and future hours
     const hoursBeforeNow = 6;
-    const timeline: Array<{ time: Date; temperature: number; weather_code: number; precipitation_probability?: number; isNow: boolean; isPast: boolean }> = [];
 
-    // Add past hours
+    type TimelineItem = {
+        time: Date;
+        temperature: number;
+        weather_code: number;
+        precipitation_probability?: number;
+        isNow: boolean;
+        isPast: boolean;
+    };
+
+    const timeline: TimelineItem[] = [];
+
+    // Past hours (estimated with current weather)
     for (let i = hoursBeforeNow; i > 0; i--) {
         const pastTime = new Date(now);
         pastTime.setHours(currentHour - i, 0, 0, 0);
@@ -40,17 +49,14 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
             time: pastTime,
             temperature: forecast[0]?.temperature || 0,
             weather_code: forecast[0]?.weather_code || 0,
-            precipitation_probability: 0,
             isNow: false,
             isPast: true,
         });
     }
 
-    // Add current hour (Now)
-    const nowTime = new Date(now);
-    nowTime.setMinutes(0, 0, 0);
+    // Current hour = "Now" with current weather data
     timeline.push({
-        time: nowTime,
+        time: new Date(now.setMinutes(0, 0, 0)),
         temperature: forecast[0]?.temperature || 0,
         weather_code: forecast[0]?.weather_code || 0,
         precipitation_probability: forecast[0]?.precipitation_probability,
@@ -58,11 +64,11 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
         isPast: false,
     });
 
-    // Add future hours from forecast (skip first as it's "now")
+    // Future hours from forecast data
+    // The forecast array has future hours - use their proper times
     forecast.slice(1, 18).forEach((hour) => {
-        const hourTime = new Date(hour.time);
         timeline.push({
-            time: hourTime,
+            time: new Date(hour.time),
             temperature: hour.temperature,
             weather_code: hour.weather_code,
             precipitation_probability: hour.precipitation_probability,
@@ -71,48 +77,51 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
         });
     });
 
-    // Auto-scroll to "Now" on mount
+    // Auto-scroll to center on "Now"
     useEffect(() => {
-        if (nowRef.current && scrollRef.current) {
-            const scrollContainer = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
-            if (scrollContainer) {
-                const nowElement = nowRef.current;
-                const containerWidth = scrollContainer.clientWidth;
-                const scrollPosition = nowElement.offsetLeft - (containerWidth / 2) + (nowElement.clientWidth / 2);
-                scrollContainer.scrollLeft = Math.max(0, scrollPosition);
+        const timer = setTimeout(() => {
+            if (nowRef.current && scrollRef.current) {
+                const viewport = scrollRef.current.querySelector('[data-radix-scroll-area-viewport]');
+                if (viewport) {
+                    const nowElement = nowRef.current;
+                    const containerWidth = viewport.clientWidth;
+                    const scrollPos = nowElement.offsetLeft - (containerWidth / 2) + (nowElement.clientWidth / 2);
+                    viewport.scrollLeft = Math.max(0, scrollPos);
+                }
             }
-        }
+        }, 100);
+        return () => clearTimeout(timer);
     }, [forecast]);
 
     return (
-        <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 overflow-visible`}>
-            <h3 className={`text-sm font-medium ${subTextColor} mb-3`}>
+        <Card className={`p-4 ${bgColor} backdrop-blur-md border-0`}>
+            <h3 className={`text-sm font-medium ${subTextColor} mb-2`}>
                 {t('hourly_forecast')}
             </h3>
 
-            <ScrollArea className="w-full" ref={scrollRef}>
-                <div className="flex gap-2 py-1 px-1">
+            <ScrollArea className="w-full -mx-1" ref={scrollRef}>
+                <div className="flex gap-1 pb-3 px-1">
                     {timeline.map((item, index) => {
                         const WeatherIcon = getWeatherIcon(item.weather_code);
                         const hourStr = item.isNow ? t('now') : formatTime(item.time);
 
                         return (
                             <motion.div
-                                key={`${item.time.toISOString()}-${index}`}
+                                key={`hour-${index}`}
                                 ref={item.isNow ? nowRef : undefined}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.015 }}
                                 className={`
-                                    flex flex-col items-center gap-1 min-w-[60px] py-2 px-2 rounded-xl
-                                    ${item.isNow ? nowHighlight : ''}
+                                    flex flex-col items-center gap-0.5 min-w-[56px] py-1.5 px-1 rounded-lg
+                                    ${item.isNow ? (isDark ? 'bg-blue-500/20 border border-blue-400' : 'bg-blue-50 border border-blue-400') : ''}
                                     ${item.isPast ? 'opacity-40' : ''}
                                 `}
                             >
-                                <span className={`text-xs font-medium ${item.isNow ? (isDark ? 'text-blue-300' : 'text-blue-600') : subTextColor}`}>
+                                <span className={`text-xs ${item.isNow ? (isDark ? 'text-blue-300 font-semibold' : 'text-blue-600 font-semibold') : subTextColor}`}>
                                     {hourStr}
                                 </span>
-                                <WeatherIcon className={`w-6 h-6 ${item.isPast ? subTextColor : textColor}`} />
+                                <WeatherIcon className={`w-5 h-5 ${item.isPast ? subTextColor : textColor}`} />
                                 <span className={`text-sm font-medium ${item.isPast ? subTextColor : textColor}`}>
                                     {formatTemperature(item.temperature)}
                                 </span>
@@ -125,7 +134,7 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
                         );
                     })}
                 </div>
-                <ScrollBar orientation="horizontal" />
+                <ScrollBar orientation="horizontal" className="mt-0" />
             </ScrollArea>
         </Card>
     );
