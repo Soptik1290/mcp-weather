@@ -38,7 +38,7 @@ class WeatherAggregator:
             try:
                 from openai import AsyncOpenAI
                 self.client = AsyncOpenAI(api_key=self.api_key)
-                self.model = "gpt-4o-mini"  # Fast + cheap model for aggregation
+                self.model = "gpt-5-mini"  # GPT-5 mini for intelligent aggregation
                 print(f"✓ AI aggregation enabled (model: {self.model})")
             except Exception as e:
                 print(f"✗ AI aggregation failed: {e}")
@@ -225,7 +225,6 @@ Analyze these sources and deduce the most accurate current weather."""
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                temperature=0.3,  # Low temp for consistent deductions
                 max_tokens=500,
                 response_format={"type": "json_object"}
             )
