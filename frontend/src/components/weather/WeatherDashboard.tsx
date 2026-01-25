@@ -13,6 +13,7 @@ import {
     SunTimesCard,
     SearchBar,
     HamburgerMenu,
+    SideMenu,
     AmbientBackground,
 } from '@/components/weather';
 import { type WeatherResponse } from '@/lib/types';
@@ -110,12 +111,28 @@ export function WeatherDashboard() {
         }
     };
 
+    // Menu state
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [language, setLanguage] = useState<'en' | 'cs'>('en');
+    const [temperatureUnit, setTemperatureUnit] = useState<'celsius' | 'fahrenheit'>('celsius');
+
     return (
         <AmbientBackground theme={currentTheme}>
+            {/* Side Menu */}
+            <SideMenu
+                isOpen={isMenuOpen}
+                onClose={() => setIsMenuOpen(false)}
+                isDark={isDark}
+                language={language}
+                onLanguageChange={setLanguage}
+                temperatureUnit={temperatureUnit}
+                onTemperatureUnitChange={setTemperatureUnit}
+            />
+
             <div className="min-h-screen p-6">
                 {/* Header with search and menu */}
                 <header className="flex items-center justify-between mb-8">
-                    <HamburgerMenu isDark={isDark} />
+                    <HamburgerMenu isDark={isDark} onOpenMenu={() => setIsMenuOpen(true)} />
                     <div className="flex-1 max-w-md mx-4">
                         <SearchBar onSearch={handleSearch} isLoading={isLoading} isDark={isDark} />
                     </div>
