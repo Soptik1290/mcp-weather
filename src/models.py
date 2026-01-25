@@ -20,15 +20,15 @@ class CurrentWeather(BaseModel):
     """Current weather conditions."""
     temperature: float = Field(description="Temperature in Celsius")
     feels_like: Optional[float] = Field(None, description="Feels like temperature in Celsius")
-    humidity: Optional[int] = Field(None, description="Humidity percentage")
+    humidity: Optional[float] = Field(None, description="Humidity percentage")
     wind_speed: Optional[float] = Field(None, description="Wind speed in km/h")
-    wind_direction: Optional[int] = Field(None, description="Wind direction in degrees")
+    wind_direction: Optional[float] = Field(None, description="Wind direction in degrees")
     weather_code: Optional[int] = Field(None, description="WMO weather code")
     weather_description: Optional[str] = Field(None, description="Human-readable weather description")
     uv_index: Optional[float] = None
     visibility: Optional[float] = Field(None, description="Visibility in km")
     pressure: Optional[float] = Field(None, description="Pressure in hPa")
-    cloud_cover: Optional[int] = Field(None, description="Cloud cover percentage")
+    cloud_cover: Optional[float] = Field(None, description="Cloud cover percentage")
 
 
 class DailyForecast(BaseModel):
@@ -38,7 +38,7 @@ class DailyForecast(BaseModel):
     temperature_min: float
     weather_code: Optional[int] = None
     weather_description: Optional[str] = None
-    precipitation_probability: Optional[int] = None
+    precipitation_probability: Optional[float] = None
     precipitation_sum: Optional[float] = None
     wind_speed_max: Optional[float] = None
     uv_index_max: Optional[float] = None
@@ -52,9 +52,9 @@ class HourlyForecast(BaseModel):
     temperature: float
     weather_code: Optional[int] = None
     weather_description: Optional[str] = None
-    precipitation_probability: Optional[int] = None
+    precipitation_probability: Optional[float] = None
     wind_speed: Optional[float] = None
-    humidity: Optional[int] = None
+    humidity: Optional[float] = None
 
 
 class Astronomy(BaseModel):
