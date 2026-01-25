@@ -51,6 +51,16 @@ if os.getenv("OPENWEATHERMAP_API_KEY"):
     except Exception as e:
         print(f"✗ OpenWeatherMap failed: {e}")
 
+# WeatherAPI.com - optional
+if os.getenv("WEATHERAPI_KEY"):
+    try:
+        from src.providers.weatherapi import WeatherAPIProvider
+        wapi = WeatherAPIProvider()
+        providers.append(("weatherapi", wapi))
+        print("✓ WeatherAPI.com provider enabled")
+    except Exception as e:
+        print(f"✗ WeatherAPI failed: {e}")
+
 print(f"Active providers: {[p[0] for p in providers]}")
 
 # Aggregator
