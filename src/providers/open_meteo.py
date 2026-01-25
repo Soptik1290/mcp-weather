@@ -182,20 +182,36 @@ class OpenMeteoProvider(WeatherProvider):
                 sunset=daily_data.get("sunset", [])[i] if i < len(daily_data.get("sunset", [])) else None
             ))
         
-        # Parse hourly forecast (next 24 hours)
+        # Parse hourly forecast (next 24 hours from current time)
+        from datetime import datetime
         hourly_data = data.get("hourly", {})
         hourly_forecast = []
-        times = hourly_data.get("time", [])[:24]  # Only next 24 hours
+        all_times = hourly_data.get("time", [])
+        
+        # Get current hour to filter out past hours
+        now = datetime.now()
+        current_hour_str = now.strftime("%Y-%m-%dT%H:00")
+        
+        # Find the index of the current hour or the next available hour
+        start_idx = 0
+        for i, time_str in enumerate(all_times):
+            if time_str >= current_hour_str:
+                start_idx = i
+                break
+        
+        # Get 24 hours starting from current hour
+        times = all_times[start_idx:start_idx + 24]
         for i, time in enumerate(times):
-            weather_code = hourly_data.get("weather_code", [])[i] if i < len(hourly_data.get("weather_code", [])) else None
+            original_idx = start_idx + i
+            weather_code = hourly_data.get("weather_code", [])[original_idx] if original_idx < len(hourly_data.get("weather_code", [])) else None
             hourly_forecast.append(HourlyForecast(
                 time=time,
-                temperature=hourly_data.get("temperature_2m", [])[i] if i < len(hourly_data.get("temperature_2m", [])) else 0,
+                temperature=hourly_data.get("temperature_2m", [])[original_idx] if original_idx < len(hourly_data.get("temperature_2m", [])) else 0,
                 weather_code=weather_code,
                 weather_description=WMO_CODES.get(weather_code, "Unknown") if weather_code else None,
-                precipitation_probability=hourly_data.get("precipitation_probability", [])[i] if i < len(hourly_data.get("precipitation_probability", [])) else None,
-                wind_speed=hourly_data.get("wind_speed_10m", [])[i] if i < len(hourly_data.get("wind_speed_10m", [])) else None,
-                humidity=hourly_data.get("relative_humidity_2m", [])[i] if i < len(hourly_data.get("relative_humidity_2m", [])) else None
+                precipitation_probability=hourly_data.get("precipitation_probability", [])[original_idx] if original_idx < len(hourly_data.get("precipitation_probability", [])) else None,
+                wind_speed=hourly_data.get("wind_speed_10m", [])[original_idx] if original_idx < len(hourly_data.get("wind_speed_10m", [])) else None,
+                humidity=hourly_data.get("relative_humidity_2m", [])[original_idx] if original_idx < len(hourly_data.get("relative_humidity_2m", [])) else None
             ))
         
         # Astronomy data (from first day's sunrise/sunset)

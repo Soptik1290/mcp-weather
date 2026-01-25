@@ -229,7 +229,11 @@ Analyze these sources and deduce the most accurate current weather."""
                 response_format={"type": "json_object"}
             )
             
-            result = json.loads(response.choices[0].message.content)
+            content = response.choices[0].message.content
+            if not content:
+                raise ValueError("Empty response from AI model")
+            
+            result = json.loads(content)
             
             # Create aggregated weather with AI-deduced values
             aggregated_current = CurrentWeather(

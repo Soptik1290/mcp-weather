@@ -70,7 +70,7 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
         timeline.push({
             time: new Date(hour.time),
             temperature: hour.temperature,
-            weather_code: hour.weather_code,
+            weather_code: hour.weather_code || 0,
             precipitation_probability: hour.precipitation_probability,
             isNow: false,
             isPast: false,
@@ -95,7 +95,7 @@ export function HourlyForecastCard({ forecast, isDark = false }: HourlyForecastP
 
     return (
         <Card className={`p-4 ${bgColor} backdrop-blur-md border-0`}>
-            <h3 className={`text-sm font-medium ${subTextColor} mb-2`}>
+            <h3 className={`text-sm font-medium ${subTextColor}`}>
                 {t('hourly_forecast')}
             </h3>
 
