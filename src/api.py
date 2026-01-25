@@ -3,6 +3,10 @@ HTTP API Server for Weather MCP.
 Wraps MCP tools as REST endpoints for frontend access.
 """
 
+# Load .env file FIRST before any other imports
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
