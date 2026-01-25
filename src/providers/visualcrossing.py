@@ -43,6 +43,13 @@ class VisualCrossingProvider(WeatherProvider):
         "sleet": 85,
     }
     
+    @staticmethod
+    def _safe_int(value) -> Optional[int]:
+        """Safely convert value to int, handling floats and None."""
+        if value is None:
+            return None
+        return int(round(value))
+    
     def __init__(self, api_key: Optional[str] = None):
         """Initialize provider."""
         self.api_key = api_key or os.getenv("VISUALCROSSING_KEY")
@@ -73,18 +80,24 @@ class VisualCrossingProvider(WeatherProvider):
             current_data = data.get("currentConditions", {})
             icon = current_data.get("icon", "clear-day")
             
+            # Temperature is required - use first day's temp if current not available
+            temp = current_data.get("temp")
+            if temp is None:
+                first_day = data.get("days", [{}])[0]
+                temp = first_day.get("temp", first_day.get("tempmax", 0))
+            
             current = CurrentWeather(
-                temperature=current_data.get("temp"),
+                temperature=temp,
                 feels_like=current_data.get("feelslike"),
-                humidity=current_data.get("humidity"),
+                humidity=self._safe_int(current_data.get("humidity")),
                 wind_speed=current_data.get("windspeed"),
-                wind_direction=current_data.get("winddir"),
+                wind_direction=self._safe_int(current_data.get("winddir")),
                 weather_code=self.ICON_TO_WMO.get(icon, 0),
                 weather_description=current_data.get("conditions", ""),
                 uv_index=current_data.get("uvindex"),
                 visibility=current_data.get("visibility"),
                 pressure=current_data.get("pressure"),
-                cloud_cover=current_data.get("cloudcover"),
+                cloud_cover=self._safe_int(current_data.get("cloudcover")),
             )
             
             # Parse daily forecast
@@ -97,7 +110,7 @@ class VisualCrossingProvider(WeatherProvider):
                     temperature_min=day_data.get("tempmin"),
                     weather_code=self.ICON_TO_WMO.get(icon, 0),
                     weather_description=day_data.get("conditions", ""),
-                    precipitation_probability=day_data.get("precipprob"),
+                    precipitation_probability=self._safe_int(day_data.get("precipprob")),
                     precipitation_sum=day_data.get("precip"),
                     wind_speed_max=day_data.get("windspeed"),
                     uv_index_max=day_data.get("uvindex"),
@@ -115,9 +128,9 @@ class VisualCrossingProvider(WeatherProvider):
                         temperature=hour_data.get("temp"),
                         weather_code=self.ICON_TO_WMO.get(icon, 0),
                         weather_description=hour_data.get("conditions", ""),
-                        precipitation_probability=hour_data.get("precipprob"),
+                        precipitation_probability=self._safe_int(hour_data.get("precipprob")),
                         wind_speed=hour_data.get("windspeed"),
-                        humidity=hour_data.get("humidity"),
+                        humidity=self._safe_int(hour_data.get("humidity")),
                     ))
             
             # Astronomy from first day
