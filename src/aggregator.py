@@ -39,12 +39,12 @@ class WeatherAggregator:
                 from openai import AsyncOpenAI
                 self.client = AsyncOpenAI(api_key=self.api_key)
                 self.model = "gpt-5-mini"  # GPT-5 mini for intelligent aggregation
-                print(f"✓ AI aggregation enabled (model: {self.model})")
+                print(f"[OK] AI aggregation enabled (model: {self.model})")
             except Exception as e:
-                print(f"✗ AI aggregation failed: {e}")
+                print(f"[ERR] AI aggregation failed: {e}")
                 self.has_ai = False
         else:
-            print("⚠ No OPENAI_API_KEY - using statistical aggregation only")
+                print("! No OPENAI_API_KEY - using statistical aggregation only")
     
     async def aggregate(
         self,
@@ -261,7 +261,7 @@ Analyze these sources and deduce the most accurate current weather."""
             
         except Exception as e:
             # Fallback to statistical if AI fails
-            print(f"⚠ AI aggregation error: {e}")
+            print(f"[WARN] AI aggregation error: {e}")
             return await self._statistical_aggregate(weather_data)
     
     async def get_ambient_theme(

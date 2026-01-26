@@ -59,6 +59,35 @@ uv run mcp-weather
 uv run python -m src.server
 ```
 
+### 5. Configure Claude Desktop
+
+To use this server with Claude Desktop, edit your config file:
+- **Windows**: `C:\Users\USERNAME\AppData\Roaming\Claude\claude_desktop_config.json`
+- **Mac/Linux**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+
+Add the following configuration (adjust path to your project):
+
+```json
+{
+  "mcpServers": {
+    "weather": {
+      "command": "C:\\Path\\To\\mcp-weather\\.venv\\Scripts\\python.exe",
+      "args": [
+        "-m",
+        "src.server"
+      ],
+      "cwd": "C:\\Path\\To\\mcp-weather",
+      "env": {
+        "PYTHONPATH": "C:\\Path\\To\\mcp-weather"
+      }
+    }
+  }
+}
+```
+
+> **Note:** The `PYTHONPATH` environment variable is crucial for the server to find the `src` module correctly.
+
+
 **Available MCP Tools:**
 - `search_location(query)` - Find coordinates for a city
 - `get_current_weather(location_name)` - Get current weather + AI summary

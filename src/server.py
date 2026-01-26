@@ -4,9 +4,16 @@ Uses FastMCP to expose weather tools to AI clients.
 """
 
 import os
+from dotenv import load_dotenv
+load_dotenv()
+
+import asyncio
 from datetime import datetime
 from mcp.server.fastmcp import FastMCP
 from src.providers.open_meteo import OpenMeteoProvider
+from src.providers.openweathermap import OpenWeatherMapProvider
+from src.providers.weatherapi import WeatherAPIProvider
+from src.providers.visualcrossing import VisualCrossingProvider
 from src.aggregator import WeatherAggregator
 from src.models import Location
 import json
@@ -15,8 +22,58 @@ import json
 mcp = FastMCP("weather-aggregator")
 
 # Initialize components
-open_meteo = OpenMeteoProvider()
 aggregator = WeatherAggregator()
+providers = []
+
+# 1. OpenMeteo (Free, no key required)
+try:
+    providers.append(OpenMeteoProvider())
+    print("[OK] OpenMeteo provider initialized")
+except Exception as e:
+    print(f"[ERR] Failed to initialize OpenMeteo: {e}")
+
+# 2. OpenWeatherMap
+try:
+    if os.getenv("OPENWEATHERMAP_API_KEY"):
+        providers.append(OpenWeatherMapProvider())
+        print("[OK] OpenWeatherMap provider initialized")
+except Exception as e:
+    print(f"[WARN] OpenWeatherMap not available: {e}")
+
+# 3. WeatherAPI
+try:
+    if os.getenv("WEATHERAPI_KEY"):
+        providers.append(WeatherAPIProvider())
+        print("[OK] WeatherAPI provider initialized")
+except Exception as e:
+    print(f"[WARN] WeatherAPI not available: {e}")
+
+# 4. Visual Crossing
+try:
+    if os.getenv("VISUALCROSSING_KEY"):
+        providers.append(VisualCrossingProvider())
+        print("[OK] Visual Crossing provider initialized")
+except Exception as e:
+    print(f"[WARN] Visual Crossing not available: {e}")
+
+if not providers:
+    print("[ERR] No weather providers available!")
+
+
+async def get_all_weather(location: Location, days: int) -> list:
+    """Fetch weather from all available providers."""
+    tasks = [p.get_weather(location, days=days) for p in providers]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    
+    valid_results = []
+    for i, res in enumerate(results):
+        if isinstance(res, Exception):
+            provider_name = providers[i].__class__.__name__
+            print(f"[WARN] Failed to fetch from {provider_name}: {res}")
+        else:
+            valid_results.append(res)
+            
+    return valid_results
 
 
 @mcp.tool()
@@ -30,7 +87,11 @@ async def search_location(query: str) -> str:
     Returns:
         JSON list of matching locations with name, country, latitude, longitude
     """
-    locations = await open_meteo.search_location(query)
+    # Use the first available provider for search (usually OpenMeteo)
+    if not providers:
+        return json.dumps({"error": "No providers available"})
+        
+    locations = await providers[0].search_location(query)
     return json.dumps([loc.model_dump() for loc in locations], indent=2)
 
 
@@ -46,22 +107,30 @@ async def get_current_weather(location_name: str, language: str = "en") -> str:
     Returns:
         JSON with current weather, AI summary, and ambient theme
     """
-    # Search for location
-    locations = await open_meteo.search_location(location_name)
+    if not providers:
+        return json.dumps({"error": "No providers available"})
+
+    # Search for location using first provider
+    locations = await providers[0].search_location(location_name)
     if not locations:
         return json.dumps({"error": f"Location '{location_name}' not found"})
     
     location = locations[0]
-    weather = await open_meteo.get_weather(location, days=1)
+    
+    # Get weather from all providers
+    weather_data_list = await get_all_weather(location, days=1)
+    
+    if not weather_data_list:
+        return json.dumps({"error": "Failed to fetch weather data from any provider"})
     
     # Get AI aggregation
-    aggregated = await aggregator.aggregate([weather], language)
+    aggregated = await aggregator.aggregate(weather_data_list, language)
     
     # Get ambient theme
     current_hour = datetime.now().hour
     theme = await aggregator.get_ambient_theme(
-        weather.current,
-        weather.astronomy,
+        aggregated.current,
+        aggregated.astronomy,
         current_hour
     )
     
@@ -91,22 +160,30 @@ async def get_weather_forecast(location_name: str, days: int = 7, language: str 
     Returns:
         JSON with forecast, AI analysis, and ambient theme
     """
+    if not providers:
+        return json.dumps({"error": "No providers available"})
+
     # Search for location
-    locations = await open_meteo.search_location(location_name)
+    locations = await providers[0].search_location(location_name)
     if not locations:
         return json.dumps({"error": f"Location '{location_name}' not found"})
     
     location = locations[0]
-    weather = await open_meteo.get_weather(location, days=min(days, 16))
+    
+    # Get weather from all providers
+    weather_data_list = await get_all_weather(location, days=min(days, 16))
+    
+    if not weather_data_list:
+        return json.dumps({"error": "Failed to fetch weather data from any provider"})
     
     # Get AI aggregation
-    aggregated = await aggregator.aggregate([weather], language)
+    aggregated = await aggregator.aggregate(weather_data_list, language)
     
     # Get ambient theme
     current_hour = datetime.now().hour
     theme = await aggregator.get_ambient_theme(
-        weather.current,
-        weather.astronomy,
+        aggregated.current,
+        aggregated.astronomy,
         current_hour
     )
     
@@ -150,16 +227,20 @@ async def get_weather_by_coordinates(
         longitude=longitude
     )
     
-    weather = await open_meteo.get_weather(location, days=min(days, 16))
+    # Get weather from all providers
+    weather_data_list = await get_all_weather(location, days=min(days, 16))
+    
+    if not weather_data_list:
+        return json.dumps({"error": "Failed to fetch weather data from any provider"})
     
     # Get AI aggregation
-    aggregated = await aggregator.aggregate([weather], language)
+    aggregated = await aggregator.aggregate(weather_data_list, language)
     
     # Get ambient theme
     current_hour = datetime.now().hour
     theme = await aggregator.get_ambient_theme(
-        weather.current,
-        weather.astronomy,
+        aggregated.current,
+        aggregated.astronomy,
         current_hour
     )
     
@@ -189,12 +270,21 @@ async def get_ambient_theme(location_name: str) -> str:
     Returns:
         JSON with theme name, gradient colors, and special effects
     """
-    locations = await open_meteo.search_location(location_name)
+    if not providers:
+        return json.dumps({"error": "No providers available"})
+
+    locations = await providers[0].search_location(location_name)
     if not locations:
         return json.dumps({"error": f"Location '{location_name}' not found"})
     
     location = locations[0]
-    weather = await open_meteo.get_weather(location, days=1)
+    
+    # For theme we just need basic weather, using one provider is enough/fastest
+    # But for consistency let's use the aggregator if we want best accuracy, 
+    # OR just use the first provider for speed since it's just a theme.
+    # The original code acted on single provider result passed to aggregator.get_ambient_theme
+    # Let's keep it simple and use just the first provider for speed.
+    weather = await providers[0].get_weather(location, days=1)
     
     current_hour = datetime.now().hour
     theme = await aggregator.get_ambient_theme(
