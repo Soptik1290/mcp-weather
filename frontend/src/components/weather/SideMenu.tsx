@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Globe, Thermometer, Info, Github, Settings, Clock } from 'lucide-react';
+import { X, Globe, Thermometer, Info, Github, Settings, Clock, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSettings } from '@/lib/settings';
@@ -17,7 +17,7 @@ export function SideMenu({
     onClose,
     isDark = false,
 }: SideMenuProps) {
-    const { language, setLanguage, temperatureUnit, setTemperatureUnit, timeFormat, setTimeFormat, t } = useSettings();
+    const { language, setLanguage, temperatureUnit, setTemperatureUnit, timeFormat, setTimeFormat, auroraDisplay, setAuroraDisplay, t } = useSettings();
 
     const bgColor = isDark ? 'bg-gray-900/95' : 'bg-white/95';
     const textColor = isDark ? 'text-white' : 'text-gray-900';
@@ -134,6 +134,38 @@ export function SideMenu({
                                         isDark={isDark}
                                     >
                                         12h AM/PM
+                                    </ToggleButton>
+                                </div>
+                            </SettingSection>
+
+                            {/* Aurora Display */}
+                            <SettingSection
+                                icon={Sparkles}
+                                title={t('aurora_setting')}
+                                subtitle={t('aurora_setting_desc')}
+                                isDark={isDark}
+                            >
+                                <div className="flex flex-col gap-2 mt-3">
+                                    <ToggleButton
+                                        active={auroraDisplay === 'auto'}
+                                        onClick={() => setAuroraDisplay('auto')}
+                                        isDark={isDark}
+                                    >
+                                        {t('aurora_auto')}
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        active={auroraDisplay === 'always'}
+                                        onClick={() => setAuroraDisplay('always')}
+                                        isDark={isDark}
+                                    >
+                                        {t('aurora_always')}
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        active={auroraDisplay === 'never'}
+                                        onClick={() => setAuroraDisplay('never')}
+                                        isDark={isDark}
+                                    >
+                                        {t('aurora_never')}
                                     </ToggleButton>
                                 </div>
                             </SettingSection>

@@ -20,6 +20,7 @@ import {
 import { type WeatherResponse } from '@/lib/types';
 import { THEMES, isDarkTheme, type AmbientTheme, type ThemeName } from '@/lib/themes';
 import { getWeatherForecast, getAuroraData } from '@/lib/api';
+import { useSettings } from '@/lib/settings';
 
 // Demo data for initial display (fallback when API unavailable)
 const DEMO_DATA: WeatherResponse = {
@@ -76,6 +77,7 @@ export function WeatherDashboard() {
     );
 
     const isDark = isDarkTheme(currentTheme.theme);
+    const { shouldShowAurora } = useSettings();
 
     // Fetch aurora data
     const fetchAuroraData = async (latitude: number) => {
@@ -212,12 +214,14 @@ export function WeatherDashboard() {
                             isDark={isDark}
                         />
 
-                        {/* Aurora Forecast */}
-                        <AuroraCard
-                            data={auroraData}
-                            isDark={isDark}
-                            locationName={weatherData.location.name}
-                        />
+                        {/* Aurora Forecast - conditional based on settings */}
+                        {shouldShowAurora(auroraData?.visibility_probability ?? 0) && (
+                            <AuroraCard
+                                data={auroraData}
+                                isDark={isDark}
+                                locationName={weatherData.location.name}
+                            />
+                        )}
 
                         {/* 7-Day Forecast */}
                         {weatherData.daily_forecast && (

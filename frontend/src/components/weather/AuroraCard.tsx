@@ -2,7 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Sparkles, TrendingUp, MapPin, AlertTriangle } from 'lucide-react';
+import { Sparkles, TrendingUp, MapPin, AlertTriangle, Clock } from 'lucide-react';
 import { useSettings } from '@/lib/settings';
 
 interface AuroraData {
@@ -11,6 +11,8 @@ interface AuroraData {
     visibility_probability: number;
     max_forecast_kp: number | null;
     max_visibility_probability: number;
+    best_viewing_time: string | null;
+    best_viewing_kp: number | null;
     forecast: Array<{
         time: string;
         kp: number;
@@ -27,11 +29,21 @@ interface AuroraCardProps {
 }
 
 export function AuroraCard({ data, isDark = false, locationName }: AuroraCardProps) {
-    const { t } = useSettings();
+    const { t, formatTime } = useSettings();
 
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
+
+    // Format best viewing time to local time string
+    const formatBestTime = (utcTimeStr: string): string => {
+        try {
+            const date = new Date(utcTimeStr.replace(' ', 'T') + 'Z');
+            return formatTime(date);
+        } catch {
+            return utcTimeStr;
+        }
+    };
 
     // Kp index color gradient (green -> yellow -> red -> purple)
     const getKpColor = (kp: number) => {
@@ -154,6 +166,16 @@ export function AuroraCard({ data, isDark = false, locationName }: AuroraCardPro
                             </div>
                         </div>
                     </div>
+
+                    {/* Best viewing time */}
+                    {data.best_viewing_time && (
+                        <div className={`mt-3 pt-3 border-t border-white/10 flex items-center gap-2 ${subTextColor}`}>
+                            <Clock className="w-4 h-4" />
+                            <span className="text-xs">
+                                {t('aurora_best_time')}: {formatBestTime(data.best_viewing_time)} (Kp {data.best_viewing_kp?.toFixed(1)})
+                            </span>
+                        </div>
+                    )}
 
                     {/* Mini forecast chart */}
                     <div className="mt-4 pt-3 border-t border-white/10">

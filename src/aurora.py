@@ -153,12 +153,36 @@ async def get_aurora_data(latitude: float = 50.0, lang: str = "en") -> dict:
             # Calculate max forecast Kp for visibility prediction
             max_forecast_kp = max([f["kp"] for f in forecast[:8]] + [current_kp]) if forecast else current_kp
             
+            # Find best viewing time (highest Kp in next 24h that's also at night)
+            best_time = None
+            best_kp = current_kp
+            for f in forecast[:8]:  # Next 24 hours (8 x 3h periods)
+                try:
+                    time = datetime.strptime(f["time"], "%Y-%m-%d %H:%M:%S")
+                    hour = time.hour
+                    # Aurora is best visible at night (20:00 - 04:00)
+                    is_night = hour >= 20 or hour <= 4
+                    if f["kp"] > best_kp and is_night:
+                        best_kp = f["kp"]
+                        best_time = f["time"]
+                except:
+                    continue
+            
+            # If no nighttime peak found, just use highest Kp time
+            if best_time is None and forecast:
+                best_entry = max(forecast[:8], key=lambda x: x["kp"], default=None)
+                if best_entry:
+                    best_time = best_entry["time"]
+                    best_kp = best_entry["kp"]
+            
             return {
                 "current_kp": round(current_kp, 1),
                 "current_description": get_kp_description(current_kp, lang),
                 "visibility_probability": calculate_visibility_probability(current_kp, latitude),
                 "max_forecast_kp": round(max_forecast_kp, 1),
                 "max_visibility_probability": calculate_visibility_probability(max_forecast_kp, latitude),
+                "best_viewing_time": best_time,
+                "best_viewing_kp": round(best_kp, 1),
                 "forecast": forecast[:24],  # Next 24 3-hour periods (3 days)
                 "timestamp": datetime.utcnow().isoformat(),
                 "source": "NOAA Space Weather Prediction Center",

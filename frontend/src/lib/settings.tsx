@@ -6,22 +6,26 @@ import { createContext, useContext, useState, useEffect, ReactNode } from 'react
 export type Language = 'en' | 'cs';
 export type TemperatureUnit = 'celsius' | 'fahrenheit';
 export type TimeFormat = '24h' | '12h';
+export type AuroraDisplay = 'auto' | 'always' | 'never';
 
 interface Settings {
     language: Language;
     temperatureUnit: TemperatureUnit;
     timeFormat: TimeFormat;
+    auroraDisplay: AuroraDisplay;
 }
 
 interface SettingsContextType extends Settings {
     setLanguage: (lang: Language) => void;
     setTemperatureUnit: (unit: TemperatureUnit) => void;
     setTimeFormat: (format: TimeFormat) => void;
+    setAuroraDisplay: (display: AuroraDisplay) => void;
     formatTemperature: (celsius: number) => string;
     formatTime: (date: Date) => string;
     t: (key: string) => string;
     getDayName: (date: Date, short?: boolean) => string;
     getWeatherDescription: (code: number | undefined | null) => string;
+    shouldShowAurora: (visibilityProbability: number) => boolean;
 }
 
 // Weather code to description mapping
@@ -167,6 +171,12 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_possible': 'Possible',
         'aurora_likely': 'Likely',
         'aurora_unavailable': 'Aurora data unavailable',
+        'aurora_best_time': 'Best viewing',
+        'aurora_setting': 'Aurora Forecast',
+        'aurora_setting_desc': 'Show aurora forecast card',
+        'aurora_auto': 'Auto (when visible)',
+        'aurora_always': 'Always show',
+        'aurora_never': 'Never show',
     },
     cs: {
         // Weather cards
@@ -233,6 +243,12 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_possible': 'Možná',
         'aurora_likely': 'Pravděpodobná',
         'aurora_unavailable': 'Data o polární záři nedostupná',
+        'aurora_best_time': 'Nejlepší čas',
+        'aurora_setting': 'Polární záře',
+        'aurora_setting_desc': 'Zobrazit kartu polární záře',
+        'aurora_auto': 'Auto (když je viditelná)',
+        'aurora_always': 'Vždy zobrazit',
+        'aurora_never': 'Nikdy nezobrazovat',
     },
 };
 
@@ -252,6 +268,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         language: 'en',
         temperatureUnit: 'celsius',
         timeFormat: '24h',
+        auroraDisplay: 'auto',
     });
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -265,6 +282,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                     language: parsed.language || 'en',
                     temperatureUnit: parsed.temperatureUnit || 'celsius',
                     timeFormat: parsed.timeFormat || '24h',
+                    auroraDisplay: parsed.auroraDisplay || 'auto',
                 });
             } else {
                 // First visit - detect browser language
@@ -273,6 +291,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                     language: detectedLang,
                     temperatureUnit: 'celsius',
                     timeFormat: '24h',
+                    auroraDisplay: 'auto',
                 });
             }
         } catch (e) {
@@ -355,11 +374,18 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                 setLanguage,
                 setTemperatureUnit,
                 setTimeFormat,
+                setAuroraDisplay: (display: AuroraDisplay) => setSettings(prev => ({ ...prev, auroraDisplay: display })),
                 formatTemperature,
                 formatTime,
                 t,
                 getDayName,
                 getWeatherDescription,
+                shouldShowAurora: (visibilityProbability: number) => {
+                    if (settings.auroraDisplay === 'always') return true;
+                    if (settings.auroraDisplay === 'never') return false;
+                    // 'auto' - show if there's any chance of visibility
+                    return visibilityProbability > 0 || settings.language === 'en'; // Show for demo/testing in EN
+                },
             }}
         >
             {children}
