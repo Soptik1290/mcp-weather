@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Wind, Droplets, Sun, Sunrise, Sunset, CloudRain, type LucideIcon } from 'lucide-react';
+import { useSettings } from '@/lib/settings';
 
 interface DetailCardProps {
     title: string;
@@ -54,11 +55,12 @@ export function DetailCard({
 
 // Wind Speed Card
 export function WindCard({ speed, direction, isDark }: { speed?: number; direction?: number; isDark?: boolean }) {
-    const directionLabel = direction !== undefined ? getWindDirection(direction) : '';
+    const { t } = useSettings();
+    const directionLabel = direction !== undefined ? getWindDirection(direction, t) : '';
 
     return (
         <DetailCard
-            title="Wind"
+            title={t('wind')}
             value={speed !== undefined ? Math.round(speed) : '--'}
             unit="km/h"
             icon={Wind}
@@ -71,11 +73,12 @@ export function WindCard({ speed, direction, isDark }: { speed?: number; directi
 
 // Humidity Card
 export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?: boolean }) {
-    const level = humidity !== undefined ? getHumidityLevel(humidity) : '';
+    const { t } = useSettings();
+    const level = humidity !== undefined ? getHumidityLevel(humidity, t) : '';
 
     return (
         <DetailCard
-            title="Humidity"
+            title={t('humidity')}
             value={humidity !== undefined ? Math.round(humidity) : '--'}
             unit="%"
             icon={Droplets}
@@ -88,12 +91,13 @@ export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?:
 
 // UV Index Card
 export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDark?: boolean }) {
+    const { t } = useSettings();
     const hasValue = uvIndex != null && !isNaN(uvIndex);
-    const level = hasValue ? getUVLevel(uvIndex) : '';
+    const level = hasValue ? getUVLevel(uvIndex, t) : '';
 
     return (
         <DetailCard
-            title="UV Index"
+            title={t('uv_index')}
             value={hasValue ? uvIndex.toFixed(1) : '--'}
             icon={Sun}
             subtitle={level}
@@ -113,15 +117,16 @@ export function RainCard({
     amount?: number | null;
     isDark?: boolean
 }) {
+    const { t } = useSettings();
     const hasProb = probability != null && !isNaN(probability);
     const hasAmount = amount != null && !isNaN(amount);
 
     // Subtitle shows mm if available
-    const subtitle = hasAmount ? `${amount.toFixed(1)} mm` : (hasProb && probability > 0 ? 'Expected' : '');
+    const subtitle = hasAmount ? `${amount.toFixed(1)} mm` : (hasProb && probability > 0 ? t('expected') : '');
 
     return (
         <DetailCard
-            title="Rain"
+            title={t('rain')}
             value={hasProb ? Math.round(probability) : '--'}
             unit="%"
             icon={CloudRain}
@@ -142,6 +147,7 @@ export function SunTimesCard({
     sunset?: string;
     isDark?: boolean
 }) {
+    const { t, formatTime: formatTimeSettings } = useSettings();
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
@@ -149,7 +155,7 @@ export function SunTimesCard({
     const formatTime = (isoTime?: string) => {
         if (!isoTime) return '--:--';
         const date = new Date(isoTime);
-        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        return formatTimeSettings(date);
     };
 
     return (
@@ -163,14 +169,14 @@ export function SunTimesCard({
                     <div className="flex items-center gap-2">
                         <Sunrise className={`w-5 h-5 ${subTextColor}`} />
                         <div>
-                            <p className={`text-xs ${subTextColor}`}>Sunrise</p>
+                            <p className={`text-xs ${subTextColor}`}>{t('sunrise')}</p>
                             <p className={`text-lg font-medium ${textColor}`}>{formatTime(sunrise)}</p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-2">
                         <div className="text-right">
-                            <p className={`text-xs ${subTextColor}`}>Sunset</p>
+                            <p className={`text-xs ${subTextColor}`}>{t('sunset')}</p>
                             <p className={`text-lg font-medium ${textColor}`}>{formatTime(sunset)}</p>
                         </div>
                         <Sunset className={`w-5 h-5 ${subTextColor}`} />
@@ -181,24 +187,24 @@ export function SunTimesCard({
     );
 }
 
-// Helper functions
-function getWindDirection(degrees: number): string {
+// Helper functions - now with translations
+function getWindDirection(degrees: number, t: (key: string) => string): string {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round(degrees / 45) % 8;
     return directions[index];
 }
 
-function getHumidityLevel(humidity: number): string {
-    if (humidity < 30) return 'Dry';
-    if (humidity < 60) return 'Comfortable';
-    if (humidity < 80) return 'Humid';
-    return 'Very humid';
+function getHumidityLevel(humidity: number, t: (key: string) => string): string {
+    if (humidity < 30) return t('dry');
+    if (humidity < 60) return t('comfortable');
+    if (humidity < 80) return t('humid');
+    return t('very_humid');
 }
 
-function getUVLevel(uv: number): string {
-    if (uv < 3) return 'Low';
-    if (uv < 6) return 'Moderate';
-    if (uv < 8) return 'High';
-    if (uv < 11) return 'Very High';
-    return 'Extreme';
+function getUVLevel(uv: number, t: (key: string) => string): string {
+    if (uv < 3) return t('low');
+    if (uv < 6) return t('moderate');
+    if (uv < 8) return t('high');
+    if (uv < 11) return t('very_high');
+    return t('extreme');
 }
