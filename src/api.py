@@ -13,6 +13,50 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 import json
+import httpx
+
+# HTTP client for reverse geocoding
+_http_client = httpx.AsyncClient(timeout=10.0)
+
+
+async def reverse_geocode(latitude: float, longitude: float) -> tuple[str, str | None]:
+    """
+    Reverse geocode coordinates to get city name using Nominatim API.
+    Returns (city_name, country) tuple.
+    """
+    try:
+        response = await _http_client.get(
+            "https://nominatim.openstreetmap.org/reverse",
+            params={
+                "lat": latitude,
+                "lon": longitude,
+                "format": "json",
+                "zoom": 10,  # City level
+                "addressdetails": 1
+            },
+            headers={
+                "User-Agent": "MCP-Weather-App/1.0"
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        address = data.get("address", {})
+        # Try to get city name from various fields
+        city = (
+            address.get("city") or
+            address.get("town") or
+            address.get("village") or
+            address.get("municipality") or
+            address.get("county") or
+            data.get("name", f"Location ({latitude:.2f}, {longitude:.2f})")
+        )
+        country = address.get("country")
+        
+        return city, country
+    except Exception as e:
+        print(f"[WARN] Reverse geocoding failed: {e}")
+        return f"Location ({latitude:.2f}, {longitude:.2f})", None
 
 from src.providers.open_meteo import OpenMeteoProvider
 from src.aggregator import WeatherAggregator
@@ -208,10 +252,14 @@ async def get_weather_forecast(request: WeatherRequest):
 async def get_weather_by_coordinates(request: CoordinatesRequest):
     """Get weather by coordinates (for geolocation)."""
     try:
+        # Reverse geocode to get city name
+        city_name, country = await reverse_geocode(request.latitude, request.longitude)
+        
         location = Location(
-            name=f"Location ({request.latitude:.2f}, {request.longitude:.2f})",
+            name=city_name,
             latitude=request.latitude,
-            longitude=request.longitude
+            longitude=request.longitude,
+            country=country
         )
         
         weather = await open_meteo.get_weather(location, days=min(request.days, 16))

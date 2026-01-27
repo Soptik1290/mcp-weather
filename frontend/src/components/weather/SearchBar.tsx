@@ -2,25 +2,52 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Menu, X } from 'lucide-react';
+import { Search, Menu, X, MapPin, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { useSettings } from '@/lib/settings';
 
 interface SearchBarProps {
     onSearch: (query: string) => void;
+    onLocationDetected?: (lat: number, lon: number) => void;
     isLoading?: boolean;
     isDark?: boolean;
 }
 
-export function SearchBar({ onSearch, isLoading = false, isDark = false }: SearchBarProps) {
+export function SearchBar({ onSearch, onLocationDetected, isLoading = false, isDark = false }: SearchBarProps) {
     const [query, setQuery] = useState('');
     const [isFocused, setIsFocused] = useState(false);
+    const [isGeoLoading, setIsGeoLoading] = useState(false);
+    const { t } = useSettings();
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (query.trim()) {
             onSearch(query.trim());
         }
+    };
+
+    const handleGeolocation = () => {
+        if (!navigator.geolocation) {
+            alert(t('geo_not_supported'));
+            return;
+        }
+
+        setIsGeoLoading(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setIsGeoLoading(false);
+                if (onLocationDetected) {
+                    onLocationDetected(position.coords.latitude, position.coords.longitude);
+                }
+            },
+            (error) => {
+                setIsGeoLoading(false);
+                console.error('Geolocation error:', error);
+                alert(t('geo_error'));
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
     };
 
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
@@ -39,14 +66,30 @@ export function SearchBar({ onSearch, isLoading = false, isDark = false }: Searc
                     <Search className={`w-5 h-5 ${isDark ? 'text-white/50' : 'text-gray-400'}`} />
                     <Input
                         type="text"
-                        placeholder="Search city..."
+                        placeholder={t('search_placeholder')}
                         value={query}
                         onChange={(e) => setQuery(e.target.value)}
                         onFocus={() => setIsFocused(true)}
                         onBlur={() => setIsFocused(false)}
-                        disabled={isLoading}
+                        disabled={isLoading || isGeoLoading}
                         className={`border-0 bg-transparent ${textColor} ${placeholderColor} focus-visible:ring-0 focus-visible:ring-offset-0`}
                     />
+                    {/* Geolocation button */}
+                    <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={handleGeolocation}
+                        disabled={isLoading || isGeoLoading}
+                        className={`rounded-full h-8 w-8 ${isDark ? 'text-white/70 hover:bg-white/10' : 'text-gray-500 hover:bg-black/5'}`}
+                        title={t('use_my_location')}
+                    >
+                        {isGeoLoading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                            <MapPin className="w-4 h-4" />
+                        )}
+                    </Button>
                     {isLoading && (
                         <motion.div
                             animate={{ rotate: 360 }}

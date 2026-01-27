@@ -19,7 +19,7 @@ import {
 } from '@/components/weather';
 import { type WeatherResponse } from '@/lib/types';
 import { THEMES, isDarkTheme, type AmbientTheme, type ThemeName } from '@/lib/themes';
-import { getWeatherForecast, getAuroraData } from '@/lib/api';
+import { getWeatherForecast, getAuroraData, getWeatherByCoordinates } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
 
 // Demo data for initial display (fallback when API unavailable)
@@ -129,6 +129,32 @@ export function WeatherDashboard() {
         }
     };
 
+    const handleLocationDetected = async (lat: number, lon: number) => {
+        setIsLoading(true);
+        setError(null);
+        try {
+            const data = await getWeatherByCoordinates(lat, lon, 7, 'en');
+
+            if (data) {
+                setWeatherData(data);
+                if (data.ambient_theme?.theme) {
+                    const themeName = data.ambient_theme.theme as ThemeName;
+                    if (THEMES[themeName]) {
+                        setCurrentTheme(THEMES[themeName]);
+                    }
+                }
+                fetchAuroraData(lat);
+            } else {
+                setError('API not available');
+            }
+        } catch (err) {
+            console.error('Location error:', err);
+            setError('Failed to fetch weather for your location');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // Fetch aurora data on mount for default location
     useEffect(() => {
         fetchAuroraData(weatherData.location.latitude);
@@ -151,7 +177,12 @@ export function WeatherDashboard() {
                 <header className="flex items-center justify-between mb-8">
                     <HamburgerMenu isDark={isDark} onOpenMenu={() => setIsMenuOpen(true)} />
                     <div className="flex-1 max-w-md mx-4">
-                        <SearchBar onSearch={handleSearch} isLoading={isLoading} isDark={isDark} />
+                        <SearchBar
+                            onSearch={handleSearch}
+                            onLocationDetected={handleLocationDetected}
+                            isLoading={isLoading}
+                            isDark={isDark}
+                        />
                     </div>
                     <div className="w-10" /> {/* Spacer for balance */}
                 </header>

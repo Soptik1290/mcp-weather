@@ -13,6 +13,8 @@ Works as both a **REST API** for web apps and an **MCP Server** for AI assistant
 - 📅 **Forecasts** - Daily (up to 16 days) + Hourly (24 hours)
 - 🌅 **Astronomy** - Sunrise/sunset, moon phases
 - 🌍 **Multi-language** - EN, CZ
+- 📍 **Geolocation** - Automatic location detection with reverse geocoding (shows city name, not coordinates)
+- 🌌 **Aurora forecast** - Real-time aurora borealis visibility prediction from NOAA data
 
 ## 🚀 Quick Start
 
@@ -124,7 +126,8 @@ Open **http://localhost:3000** 🚀
 | `/search` | POST | Search locations by name |
 | `/weather/current` | POST | Current weather + AI summary |
 | `/weather/forecast` | POST | Full forecast + AI analysis |
-| `/weather/coordinates` | POST | Weather by lat/lon |
+| `/weather/coordinates` | POST | Weather by lat/lon (auto-resolves city name) |
+| `/aurora` | POST | Aurora borealis forecast from NOAA |
 | `/theme` | POST | Get ambient theme colors |
 
 ### Example Request

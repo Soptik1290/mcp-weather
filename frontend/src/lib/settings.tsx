@@ -138,6 +138,11 @@ const translations: Record<Language, Record<string, string>> = {
 
         // Search
         'search_city': 'Search city...',
+        'search_placeholder': 'Search city...',
+        'use_my_location': 'Use my location',
+        'geo_not_supported': 'Geolocation is not supported by your browser',
+        'geo_error': 'Unable to retrieve your location. Please check your permissions.',
+        'detecting_location': 'Detecting your location...',
 
         // Menu
         'settings': 'Settings',
@@ -210,6 +215,11 @@ const translations: Record<Language, Record<string, string>> = {
 
         // Search
         'search_city': 'Hledat město...',
+        'search_placeholder': 'Hledat město...',
+        'use_my_location': 'Použít moji polohu',
+        'geo_not_supported': 'Váš prohlížeč nepodporuje geolokaci',
+        'geo_error': 'Nepodařilo se zjistit vaši polohu. Zkontrolujte oprávnění.',
+        'detecting_location': 'Zjišťuji vaši polohu...',
 
         // Menu
         'settings': 'Nastavení',
