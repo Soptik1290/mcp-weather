@@ -243,6 +243,22 @@ async def get_weather_by_coordinates(request: CoordinatesRequest):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class AuroraRequest(BaseModel):
+    latitude: float = 50.0  # Default to Prague
+    language: str = "en"
+
+
+@app.post("/aurora")
+async def get_aurora(request: AuroraRequest):
+    """Get aurora forecast from NOAA SWPC."""
+    try:
+        from src.aurora import get_aurora_data
+        data = await get_aurora_data(request.latitude, request.language)
+        return data
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @app.post("/theme")
 async def get_ambient_theme(request: WeatherRequest):
     """Get ambient theme for current weather."""

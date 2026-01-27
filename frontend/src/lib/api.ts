@@ -99,3 +99,35 @@ export async function getWeatherByCoordinates(
         return null;
     }
 }
+
+/**
+ * Get aurora forecast data
+ */
+export async function getAuroraData(
+    latitude: number = 50.0,
+    language: string = 'en'
+): Promise<{
+    current_kp: number | null;
+    current_description: string;
+    visibility_probability: number;
+    max_forecast_kp: number | null;
+    max_visibility_probability: number;
+    forecast: Array<{ time: string; kp: number; scale: string | null }>;
+    source: string;
+    error?: string;
+} | null> {
+    try {
+        const response = await fetch(`${API_URL}/aurora`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ latitude, language }),
+        });
+
+        if (!response.ok) throw new Error('Aurora fetch failed');
+        return await response.json();
+    } catch (error) {
+        console.error('Failed to get aurora data:', error);
+        return null;
+    }
+}
+

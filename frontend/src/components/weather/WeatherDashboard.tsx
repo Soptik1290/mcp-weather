@@ -15,10 +15,11 @@ import {
     HamburgerMenu,
     SideMenu,
     AmbientBackground,
+    AuroraCard,
 } from '@/components/weather';
 import { type WeatherResponse } from '@/lib/types';
 import { THEMES, isDarkTheme, type AmbientTheme, type ThemeName } from '@/lib/themes';
-import { getWeatherForecast } from '@/lib/api';
+import { getWeatherForecast, getAuroraData } from '@/lib/api';
 
 // Demo data for initial display (fallback when API unavailable)
 const DEMO_DATA: WeatherResponse = {
@@ -67,6 +68,7 @@ const DEMO_DATA: WeatherResponse = {
 
 export function WeatherDashboard() {
     const [weatherData, setWeatherData] = useState<WeatherResponse>(DEMO_DATA);
+    const [auroraData, setAuroraData] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [currentTheme, setCurrentTheme] = useState<AmbientTheme>(
@@ -74,6 +76,18 @@ export function WeatherDashboard() {
     );
 
     const isDark = isDarkTheme(currentTheme.theme);
+
+    // Fetch aurora data
+    const fetchAuroraData = async (latitude: number) => {
+        try {
+            const data = await getAuroraData(latitude);
+            if (data) {
+                setAuroraData(data);
+            }
+        } catch (err) {
+            console.error('Failed to fetch aurora data:', err);
+        }
+    };
 
     const handleSearch = async (query: string) => {
         setIsLoading(true);
@@ -91,6 +105,8 @@ export function WeatherDashboard() {
                         setCurrentTheme(THEMES[themeName]);
                     }
                 }
+                // Fetch aurora data for this location
+                fetchAuroraData(data.location.latitude);
             } else {
                 // API not available, use demo with location name
                 setError('API not available - showing demo data');
@@ -110,6 +126,11 @@ export function WeatherDashboard() {
             setIsLoading(false);
         }
     };
+
+    // Fetch aurora data on mount for default location
+    useEffect(() => {
+        fetchAuroraData(weatherData.location.latitude);
+    }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Menu state  
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -189,6 +210,13 @@ export function WeatherDashboard() {
                             sunrise={weatherData.astronomy?.sunrise}
                             sunset={weatherData.astronomy?.sunset}
                             isDark={isDark}
+                        />
+
+                        {/* Aurora Forecast */}
+                        <AuroraCard
+                            data={auroraData}
+                            isDark={isDark}
+                            locationName={weatherData.location.name}
                         />
 
                         {/* 7-Day Forecast */}

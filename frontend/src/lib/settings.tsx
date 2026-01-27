@@ -153,6 +153,20 @@ const translations: Record<Language, Record<string, string>> = {
         'confidence': 'Confidence',
         'aggregated_from': 'Aggregated from',
         'sources': 'sources',
+
+        // Aurora
+        'aurora': 'Aurora Borealis',
+        'aurora_visibility': 'Visibility',
+        'aurora_max_24h': 'Max 24h',
+        'aurora_max_visibility': 'Max visibility',
+        'aurora_3day_forecast': '3-Day Kp Forecast',
+        'aurora_active': 'Storm Active!',
+        'aurora_unlikely': 'Not visible',
+        'aurora_very_low': 'Very unlikely',
+        'aurora_low': 'Unlikely',
+        'aurora_possible': 'Possible',
+        'aurora_likely': 'Likely',
+        'aurora_unavailable': 'Aurora data unavailable',
     },
     cs: {
         // Weather cards
@@ -205,6 +219,20 @@ const translations: Record<Language, Record<string, string>> = {
         'confidence': 'Spolehlivost',
         'aggregated_from': 'Agregováno z',
         'sources': 'zdrojů',
+
+        // Aurora
+        'aurora': 'Polární záře',
+        'aurora_visibility': 'Viditelnost',
+        'aurora_max_24h': 'Max 24h',
+        'aurora_max_visibility': 'Max viditelnost',
+        'aurora_3day_forecast': '3denní Kp předpověď',
+        'aurora_active': 'Bouře aktivní!',
+        'aurora_unlikely': 'Neviditelná',
+        'aurora_very_low': 'Velmi nepravděpodobná',
+        'aurora_low': 'Nepravděpodobná',
+        'aurora_possible': 'Možná',
+        'aurora_likely': 'Pravděpodobná',
+        'aurora_unavailable': 'Data o polární záři nedostupná',
     },
 };
 

@@ -5,4 +5,6 @@ export { DetailCard, WindCard, HumidityCard, UVIndexCard, RainCard, SunTimesCard
 export { SearchBar, HamburgerMenu } from './SearchBar';
 export { SideMenu } from './SideMenu';
 export { AmbientBackground } from './AmbientBackground';
+export { AuroraCard } from './AuroraCard';
 export { WeatherDashboard } from './WeatherDashboard';
+
