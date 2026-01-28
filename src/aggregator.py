@@ -282,8 +282,9 @@ Analyze these sources and deduce the most accurate current weather."""
         is_sunset = 18 <= current_hour <= 20
         
         weather_code = current_weather.weather_code or 0
+        cloud_cover = current_weather.cloud_cover or 0
         
-        # Storm conditions (codes 95-99)
+        # Storm conditions (codes 95-99) - highest priority
         if weather_code >= 95:
             return {
                 "theme": "storm",
@@ -307,15 +308,31 @@ Analyze these sources and deduce the most accurate current weather."""
                 "effect": None
             }
         
-        # Time-based themes for clear/cloudy weather
-        if is_sunrise:
+        # Cloudy/overcast conditions (codes 2-3, 45-48) - prioritize over time-based themes
+        # Also use cloudy if cloud cover is high
+        if weather_code in [2, 3, 45, 48] or cloud_cover >= 70:
+            if is_night:
+                return {
+                    "theme": "cloudy_night",
+                    "gradient": ["#2c3e50", "#34495e", "#1a1a2e"],
+                    "effect": None
+                }
+            else:
+                return {
+                    "theme": "cloudy",
+                    "gradient": ["#8e9eab", "#c5d5e4", "#eef2f3"],
+                    "effect": None
+                }
+        
+        # Time-based themes ONLY for clear/fair weather (codes 0-1)
+        if is_sunrise and weather_code <= 1:
             return {
                 "theme": "sunrise",
                 "gradient": ["#ff9a9e", "#fecfef", "#ffd89b"],
                 "effect": None
             }
         
-        if is_sunset:
+        if is_sunset and weather_code <= 1:
             return {
                 "theme": "sunset",
                 "gradient": ["#fa709a", "#fee140", "#642b73"],
@@ -323,7 +340,7 @@ Analyze these sources and deduce the most accurate current weather."""
             }
         
         if is_night:
-            if current_weather.cloud_cover and current_weather.cloud_cover > 50:
+            if cloud_cover > 50:
                 return {
                     "theme": "cloudy_night",
                     "gradient": ["#2c3e50", "#34495e", "#1a1a2e"],
@@ -336,15 +353,7 @@ Analyze these sources and deduce the most accurate current weather."""
                     "effect": "stars"
                 }
         
-        # Cloudy day (codes 2-3, 45-48)
-        if weather_code in [2, 3, 45, 48]:
-            return {
-                "theme": "cloudy",
-                "gradient": ["#8e9eab", "#c5d5e4", "#eef2f3"],
-                "effect": None
-            }
-        
-        # Sunny day (default)
+        # Sunny day (default for clear weather codes 0-1)
         return {
             "theme": "sunny",
             "gradient": ["#f6d365", "#fda085", "#ffecd2"],
