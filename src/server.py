@@ -13,6 +13,8 @@ from mcp.server.fastmcp import FastMCP
 from src.providers.open_meteo import OpenMeteoProvider
 from src.providers.openweathermap import OpenWeatherMapProvider
 from src.providers.weatherapi import WeatherAPIProvider
+from src.providers.met_norway import METNorwayProvider
+from src.providers.bright_sky import BrightSkyProvider
 from src.providers.visualcrossing import VisualCrossingProvider
 from src.aggregator import WeatherAggregator
 from src.models import Location
@@ -100,6 +102,20 @@ try:
         print("[OK] Visual Crossing provider initialized")
 except Exception as e:
     print(f"[WARN] Visual Crossing not available: {e}")
+
+# 5. MET Norway (Free, no key required)
+try:
+    providers.append(METNorwayProvider())
+    print("[OK] MET Norway (Yr.no) provider initialized")
+except Exception as e:
+    print(f"[WARN] MET Norway not available: {e}")
+
+# 6. Bright Sky / DWD (Free, no key required)
+try:
+    providers.append(BrightSkyProvider())
+    print("[OK] Bright Sky (DWD) provider initialized")
+except Exception as e:
+    print(f"[WARN] Bright Sky not available: {e}")
 
 if not providers:
     print("[ERR] No weather providers available!")

@@ -1,11 +1,11 @@
 # MCP Weather Aggregator
 
-AI-powered weather aggregation from **4 sources** with intelligent deduction using GPT-5-mini. 
+AI-powered weather aggregation from **6 sources** with intelligent deduction using GPT-5-mini. 
 Works as both a **REST API** for web apps and an **MCP Server** for AI assistants (Claude, Cursor, etc.).
 
 ## ✨ Features
 
-- 🌤️ **Multi-source aggregation** - Open-Meteo, OpenWeatherMap, WeatherAPI, Visual Crossing
+- 🌤️ **Multi-source aggregation** - Open-Meteo, OpenWeatherMap, WeatherAPI, Visual Crossing, MET Norway (Yr.no), DWD (Bright Sky)
 - 🤖 **AI-powered deduction** - GPT-5-mini analyzes differences and deduces most accurate values
 - 🔌 **Dual Mode** - Runs as REST API (FastAPI) or MCP Server (FastMCP)
 - 🎨 **Ambient theming** - Dynamic gradients based on weather/time (sunny, rainy, storm, night...)
@@ -177,6 +177,12 @@ mcp-weather/
 ├── pyproject.toml       # Python dependencies
 └── uv.lock              # Lock file
 ```
+
+## 🔮 Future Plans
+
+- **NOAA Aviation Weather** - METARs, TAFs, aviation advisories
+- **NOAA Marine Weather** - Ocean/coastal forecasts
+- **NOAA Solar/Space** - Enhanced UV index and solar radiation data
 
 ## License
 

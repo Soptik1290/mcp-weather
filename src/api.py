@@ -115,6 +115,24 @@ if os.getenv("VISUALCROSSING_KEY"):
     except Exception as e:
         print(f"✗ Visual Crossing failed: {e}")
 
+# MET Norway (Yr.no) - always available, no API key needed
+try:
+    from src.providers.met_norway import METNorwayProvider
+    met_norway = METNorwayProvider()
+    providers.append(("met_norway", met_norway))
+    print("✓ MET Norway (Yr.no) provider enabled")
+except Exception as e:
+    print(f"✗ MET Norway failed: {e}")
+
+# Bright Sky (DWD) - always available, no API key needed
+try:
+    from src.providers.bright_sky import BrightSkyProvider
+    bright_sky = BrightSkyProvider()
+    providers.append(("bright_sky", bright_sky))
+    print("✓ Bright Sky (DWD) provider enabled")
+except Exception as e:
+    print(f"✗ Bright Sky failed: {e}")
+
 print(f"Active providers: {[p[0] for p in providers]}")
 
 # Aggregator
