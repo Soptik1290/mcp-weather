@@ -59,6 +59,15 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
         highlight: false,
     }));
 
+    // Prepare rain probability chart data
+    const rainChartData = selectedDayHourly
+        .filter(hour => hour.precipitation_probability !== undefined)
+        .map((hour) => ({
+            label: new Date(hour.time).getHours().toString().padStart(2, '0'),
+            value: hour.precipitation_probability || 0,
+            highlight: false,
+        }));
+
     const handleDayClick = (day: DailyForecast, index: number) => {
         setSelectedDay(day);
         setSelectedDayIndex(index);
@@ -140,6 +149,7 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                 title={selectedDayName}
                 subtitle={selectedFullDate}
                 isDark={isDark}
+                size="lg"
             >
                 {selectedDay && (
                     <div className="space-y-5">
@@ -206,18 +216,40 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                             </div>
                         )}
 
-                        {/* Hourly Temperature Chart */}
-                        {tempChartData.length > 0 && (
-                            <div>
-                                <p className={`text-sm font-medium ${subTextColor} mb-2`}>{t('hourly_temperature')}</p>
-                                <WeatherChart
-                                    data={tempChartData}
-                                    height={140}
-                                    color="#f97316"
-                                    unit="°"
-                                    isDark={isDark}
-                                    showArea={true}
-                                />
+                        {/* Charts Section */}
+                        {(tempChartData.length > 0 || rainChartData.length > 0) && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {/* Hourly Temperature Chart */}
+                                {tempChartData.length > 0 && (
+                                    <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                                        <p className={`text-sm font-medium ${subTextColor} mb-2`}>{t('hourly_temperature')}</p>
+                                        <WeatherChart
+                                            data={tempChartData}
+                                            height={140}
+                                            color="#f97316"
+                                            unit="°"
+                                            isDark={isDark}
+                                            showArea={true}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Hourly Rain Probability Chart */}
+                                {rainChartData.length > 0 && (
+                                    <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'}`}>
+                                        <p className={`text-sm font-medium ${subTextColor} mb-2`}>{t('precipitation_probability')}</p>
+                                        <WeatherChart
+                                            data={rainChartData}
+                                            height={140}
+                                            color="#3b82f6"
+                                            unit="%"
+                                            isDark={isDark}
+                                            showArea={true}
+                                            minValue={0}
+                                            maxValue={100}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         )}
 
