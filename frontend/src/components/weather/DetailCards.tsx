@@ -53,25 +53,15 @@ export function DetailCard({
     );
 }
 
-
-// Wind Speed Card with Compass
+// Wind Speed Card - Elegant Compass
 export function WindCard({ speed, direction, isDark }: { speed?: number; direction?: number; isDark?: boolean }) {
     const { t } = useSettings();
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
+    const strokeColor = isDark ? 'rgba(255,255,255,0.3)' : 'rgba(59,130,246,0.3)';
+    const arrowColor = isDark ? '#60a5fa' : '#3b82f6';
 
-    // Get wind intensity color (green = calm, red = strong)
-    const getWindColor = (s: number): string => {
-        if (s < 10) return '#22c55e'; // green - calm
-        if (s < 20) return '#84cc16'; // lime - light
-        if (s < 35) return '#eab308'; // yellow - moderate
-        if (s < 50) return '#f97316'; // orange - strong
-        if (s < 75) return '#ef4444'; // red - very strong
-        return '#dc2626'; // dark red - storm
-    };
-
-    const windColor = speed !== undefined ? getWindColor(speed) : '#6b7280';
     const directionLabel = direction !== undefined ? getWindDirection(direction, t) : '--';
     const rotation = direction !== undefined ? direction : 0;
 
@@ -82,82 +72,121 @@ export function WindCard({ speed, direction, isDark }: { speed?: number; directi
             transition={{ delay: 0.1, type: 'spring' }}
         >
             <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full`}>
-                <div className="flex items-center gap-2 mb-2">
-                    <Wind className={`w-4 h-4 ${subTextColor}`} />
-                    <span className={`text-sm ${subTextColor}`}>{t('wind')}</span>
+                <div className={`text-xs uppercase tracking-wide ${subTextColor} mb-3 text-center`}>
+                    {t('wind')}
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className={`text-2xl font-semibold ${textColor}`}>
-                            {speed !== undefined ? Math.round(speed) : '--'}
-                            <span className="text-lg ml-1">km/h</span>
-                        </div>
-                        <p className={`text-sm ${subTextColor} mt-1`}>{directionLabel}</p>
-                    </div>
-
-                    {/* Compass SVG */}
-                    <div className="relative w-14 h-14">
+                {/* Compass */}
+                <div className="flex justify-center mb-3">
+                    <div className="relative w-16 h-16">
                         <svg viewBox="0 0 100 100" className="w-full h-full">
-                            {/* Compass circle */}
+                            {/* Outer ring */}
                             <circle
                                 cx="50"
                                 cy="50"
                                 r="45"
                                 fill="none"
-                                stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
+                                stroke={strokeColor}
                                 strokeWidth="2"
                             />
-                            {/* Cardinal directions */}
-                            <text x="50" y="15" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>N</text>
-                            <text x="90" y="54" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>E</text>
-                            <text x="50" y="95" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>S</text>
-                            <text x="10" y="54" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>W</text>
-                            {/* Wind direction arrow */}
-                            <g transform={`rotate(${rotation}, 50, 50)`}>
+                            {/* Arrow with animation */}
+                            <motion.g
+                                animate={{ rotate: rotation }}
+                                transition={{ type: 'spring', stiffness: 100, damping: 15 }}
+                                style={{ originX: '50px', originY: '50px' }}
+                            >
                                 <polygon
-                                    points="50,15 45,40 50,35 55,40"
-                                    fill={windColor}
+                                    points="50,12 44,50 50,45 56,50"
+                                    fill={arrowColor}
                                 />
-                                <line
-                                    x1="50"
-                                    y1="35"
-                                    x2="50"
-                                    y2="70"
-                                    stroke={windColor}
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
+                                <polygon
+                                    points="50,88 44,50 50,55 56,50"
+                                    fill={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
                                 />
-                            </g>
+                            </motion.g>
                             {/* Center dot */}
-                            <circle cx="50" cy="50" r="4" fill={windColor} />
+                            <circle cx="50" cy="50" r="5" fill={arrowColor} />
                         </svg>
                     </div>
+                </div>
+
+                <div className="text-center">
+                    <div className={`text-2xl font-semibold ${textColor}`}>
+                        {speed !== undefined ? Math.round(speed) : '--'}
+                        <span className="text-lg ml-1 font-normal">km/h</span>
+                    </div>
+                    <p className={`text-sm ${subTextColor}`}>{directionLabel}</p>
                 </div>
             </Card>
         </motion.div>
     );
 }
 
-// Humidity Card
+// Humidity Card - Droplet with Fill Level
 export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?: boolean }) {
     const { t } = useSettings();
+    const textColor = isDark ? 'text-white' : 'text-gray-900';
+    const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
+    const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
     const level = humidity !== undefined ? getHumidityLevel(humidity, t) : '';
+    const fillPercent = humidity !== undefined ? Math.min(humidity, 100) : 0;
 
     return (
-        <DetailCard
-            title={t('humidity')}
-            value={humidity !== undefined ? Math.round(humidity) : '--'}
-            unit="%"
-            icon={Droplets}
-            subtitle={level}
-            isDark={isDark}
-            delay={0.15}
-        />
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, type: 'spring' }}
+        >
+            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full`}>
+                <div className={`text-xs uppercase tracking-wide ${subTextColor} mb-3 text-center`}>
+                    {t('humidity')}
+                </div>
+
+                {/* Droplet */}
+                <div className="flex justify-center mb-3">
+                    <div className="relative w-12 h-16">
+                        <svg viewBox="0 0 60 80" className="w-full h-full">
+                            <defs>
+                                <clipPath id="dropletClip">
+                                    <path d="M30 5 C30 5, 5 35, 5 50 C5 65, 15 75, 30 75 C45 75, 55 65, 55 50 C55 35, 30 5, 30 5 Z" />
+                                </clipPath>
+                            </defs>
+                            {/* Droplet outline */}
+                            <path
+                                d="M30 5 C30 5, 5 35, 5 50 C5 65, 15 75, 30 75 C45 75, 55 65, 55 50 C55 35, 30 5, 30 5 Z"
+                                fill="none"
+                                stroke={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(59,130,246,0.3)'}
+                                strokeWidth="2"
+                            />
+                            {/* Fill level */}
+                            <motion.rect
+                                x="0"
+                                y={80 - (fillPercent * 0.7)}
+                                width="60"
+                                height={fillPercent * 0.7}
+                                fill={isDark ? 'rgba(96,165,250,0.6)' : 'rgba(59,130,246,0.4)'}
+                                clipPath="url(#dropletClip)"
+                                initial={{ y: 80 }}
+                                animate={{ y: 80 - (fillPercent * 0.7) }}
+                                transition={{ duration: 1, ease: 'easeOut' }}
+                            />
+                        </svg>
+                    </div>
+                </div>
+
+                <div className="text-center">
+                    <div className={`text-2xl font-semibold ${textColor}`}>
+                        {humidity !== undefined ? Math.round(humidity) : '--'}
+                        <span className="text-lg ml-1 font-normal">%</span>
+                    </div>
+                    <p className={`text-sm ${subTextColor}`}>{level}</p>
+                </div>
+            </Card>
+        </motion.div>
     );
 }
 
-// UV Index Card with Gauge
+// UV Index Card - Thin Arc Gauge
 export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDark?: boolean }) {
     const { t } = useSettings();
     const textColor = isDark ? 'text-white' : 'text-gray-900';
@@ -168,19 +197,11 @@ export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDa
     const level = hasValue ? getUVLevel(uvIndex, t) : '';
     const value = hasValue ? Math.min(uvIndex, 11) : 0;
 
-    // Calculate needle angle (0 UV = -90deg, 11 UV = 90deg)
-    const needleAngle = hasValue ? -90 + (value / 11) * 180 : -90;
-
-    // Get color for current UV value
-    const getUVColor = (uv: number): string => {
-        if (uv < 3) return '#22c55e'; // green - low
-        if (uv < 6) return '#eab308'; // yellow - moderate
-        if (uv < 8) return '#f97316'; // orange - high
-        if (uv < 11) return '#ef4444'; // red - very high
-        return '#a855f7'; // purple - extreme
-    };
-
-    const uvColor = hasValue ? getUVColor(uvIndex) : '#6b7280';
+    // Calculate dot position on arc (0-11 scale)
+    const angle = -90 + (value / 11) * 180;
+    const radius = 35;
+    const dotX = 50 + radius * Math.cos((angle * Math.PI) / 180);
+    const dotY = 50 + radius * Math.sin((angle * Math.PI) / 180);
 
     return (
         <motion.div
@@ -189,65 +210,59 @@ export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDa
             transition={{ delay: 0.2, type: 'spring' }}
         >
             <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full`}>
-                <div className="flex items-center gap-2 mb-2">
-                    <Sun className={`w-4 h-4 ${subTextColor}`} />
-                    <span className={`text-sm ${subTextColor}`}>{t('uv_index')}</span>
+                <div className={`text-xs uppercase tracking-wide ${subTextColor} mb-3 text-center`}>
+                    {t('uv_index')}
                 </div>
 
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className={`text-2xl font-semibold ${textColor}`}>
-                            {hasValue ? uvIndex.toFixed(1) : '--'}
-                        </div>
-                        <p className={`text-sm ${subTextColor} mt-1`}>{level}</p>
-                    </div>
-
-                    {/* UV Gauge SVG */}
+                {/* Arc Gauge */}
+                <div className="flex justify-center mb-3">
                     <div className="relative w-16 h-10">
                         <svg viewBox="0 0 100 55" className="w-full h-full">
-                            {/* Background arc segments */}
                             <defs>
-                                <linearGradient id="uvGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <linearGradient id="uvArcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
                                     <stop offset="0%" stopColor="#22c55e" />
-                                    <stop offset="27%" stopColor="#eab308" />
-                                    <stop offset="54%" stopColor="#f97316" />
-                                    <stop offset="82%" stopColor="#ef4444" />
+                                    <stop offset="30%" stopColor="#eab308" />
+                                    <stop offset="60%" stopColor="#f97316" />
+                                    <stop offset="85%" stopColor="#ef4444" />
                                     <stop offset="100%" stopColor="#a855f7" />
                                 </linearGradient>
                             </defs>
+                            {/* Arc */}
                             <path
-                                d="M 10 50 A 40 40 0 0 1 90 50"
+                                d="M 15 50 A 35 35 0 0 1 85 50"
                                 fill="none"
-                                stroke="url(#uvGradient)"
-                                strokeWidth="8"
+                                stroke="url(#uvArcGradient)"
+                                strokeWidth="6"
                                 strokeLinecap="round"
                             />
-                            {/* Needle */}
-                            <g transform={`rotate(${needleAngle}, 50, 50)`}>
-                                <line
-                                    x1="50"
-                                    y1="50"
-                                    x2="50"
-                                    y2="18"
-                                    stroke={uvColor}
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                />
-                            </g>
-                            {/* Center dot */}
-                            <circle cx="50" cy="50" r="4" fill={uvColor} />
-                            {/* Scale labels */}
-                            <text x="8" y="54" className={`text-[8px] ${isDark ? 'fill-white/50' : 'fill-gray-400'}`}>0</text>
-                            <text x="88" y="54" className={`text-[8px] ${isDark ? 'fill-white/50' : 'fill-gray-400'}`}>11</text>
+                            {/* Indicator dot */}
+                            <motion.circle
+                                cx={dotX}
+                                cy={dotY}
+                                r="6"
+                                fill="white"
+                                stroke={isDark ? '#1f2937' : '#e5e7eb'}
+                                strokeWidth="2"
+                                initial={{ cx: 15, cy: 50 }}
+                                animate={{ cx: dotX, cy: dotY }}
+                                transition={{ duration: 0.8, ease: 'easeOut' }}
+                            />
                         </svg>
                     </div>
+                </div>
+
+                <div className="text-center">
+                    <div className={`text-2xl font-semibold ${textColor}`}>
+                        {hasValue ? uvIndex.toFixed(1) : '--'}
+                    </div>
+                    <p className={`text-sm ${subTextColor}`}>{level}</p>
                 </div>
             </Card>
         </motion.div>
     );
 }
 
-// Rain/Precipitation Card
+// Rain Card - Cloud with Animated Droplets
 export function RainCard({
     probability,
     amount,
@@ -258,22 +273,77 @@ export function RainCard({
     isDark?: boolean
 }) {
     const { t } = useSettings();
+    const textColor = isDark ? 'text-white' : 'text-gray-900';
+    const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
+    const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
+
     const hasProb = probability != null && !isNaN(probability);
     const hasAmount = amount != null && !isNaN(amount);
-
-    // Subtitle shows mm if available
-    const subtitle = hasAmount ? `${amount.toFixed(1)} mm` : (hasProb && probability > 0 ? t('expected') : '');
+    const subtitle = hasAmount ? `${amount.toFixed(1)} mm` : '';
+    const showDrops = hasProb && probability > 20;
 
     return (
-        <DetailCard
-            title={t('rain')}
-            value={hasProb ? Math.round(probability) : '--'}
-            unit="%"
-            icon={CloudRain}
-            subtitle={subtitle}
-            isDark={isDark}
-            delay={0.25}
-        />
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.25, type: 'spring' }}
+        >
+            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full`}>
+                <div className={`text-xs uppercase tracking-wide ${subTextColor} mb-3 text-center`}>
+                    {t('rain')}
+                </div>
+
+                {/* Cloud with drops */}
+                <div className="flex justify-center mb-3">
+                    <div className="relative w-16 h-12">
+                        <svg viewBox="0 0 100 75" className="w-full h-full">
+                            {/* Cloud */}
+                            <path
+                                d="M25 45 C10 45, 10 30, 25 28 C25 15, 45 10, 55 20 C75 15, 90 25, 85 40 C95 45, 90 55, 75 55 L25 55 C10 55, 10 45, 25 45 Z"
+                                fill={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(59,130,246,0.3)'}
+                            />
+                            {/* Rain drops - animated */}
+                            {showDrops && (
+                                <>
+                                    <motion.line
+                                        x1="35" y1="58" x2="35" y2="68"
+                                        stroke={isDark ? '#60a5fa' : '#3b82f6'}
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
+                                        transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                    />
+                                    <motion.line
+                                        x1="50" y1="60" x2="50" y2="72"
+                                        stroke={isDark ? '#60a5fa' : '#3b82f6'}
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
+                                        transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                    />
+                                    <motion.line
+                                        x1="65" y1="58" x2="65" y2="68"
+                                        stroke={isDark ? '#60a5fa' : '#3b82f6'}
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
+                                        transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                    />
+                                </>
+                            )}
+                        </svg>
+                    </div>
+                </div>
+
+                <div className="text-center">
+                    <div className={`text-2xl font-semibold ${textColor}`}>
+                        {hasProb ? Math.round(probability) : '--'}
+                        <span className="text-lg ml-1 font-normal">%</span>
+                    </div>
+                    <p className={`text-sm ${subTextColor}`}>{subtitle}</p>
+                </div>
+            </Card>
+        </motion.div>
     );
 }
 
