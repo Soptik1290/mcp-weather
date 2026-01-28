@@ -45,7 +45,7 @@ export function WeatherChart({
 
         // Ensure minimum range to prevent squashed graphs
         const rawRange = computedMax - computedMin;
-        const minRange = Math.max(rawRange * 0.2, 5); // At least 20% padding or 5 units
+        const minRange = 20; // Minimum 20 units range for better visualization
 
         if (rawRange < minRange) {
             const center = (computedMax + computedMin) / 2;

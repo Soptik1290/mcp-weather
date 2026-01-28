@@ -156,9 +156,48 @@ export function WeatherDashboard() {
         }
     };
 
-    // Fetch aurora data on mount for default location
+    // Auto-detect location on mount
     useEffect(() => {
-        fetchAuroraData(weatherData.location.latitude);
+        const detectLocation = async () => {
+            if (typeof navigator !== 'undefined' && navigator.geolocation) {
+                setIsLoading(true);
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const { latitude, longitude } = position.coords;
+                        try {
+                            const data = await getWeatherByCoordinates(latitude, longitude, 7, 'en');
+                            if (data) {
+                                setWeatherData(data);
+                                if (data.ambient_theme?.theme) {
+                                    const themeName = data.ambient_theme.theme as ThemeName;
+                                    if (THEMES[themeName]) {
+                                        setCurrentTheme(THEMES[themeName]);
+                                    }
+                                }
+                                fetchAuroraData(latitude);
+                            }
+                        } catch (err) {
+                            console.error('Failed to fetch weather for location:', err);
+                            // Keep demo data as fallback
+                            fetchAuroraData(weatherData.location.latitude);
+                        }
+                        setIsLoading(false);
+                    },
+                    (err) => {
+                        console.log('Geolocation not available or denied:', err.message);
+                        // Use demo data, fetch aurora for Prague
+                        fetchAuroraData(weatherData.location.latitude);
+                        setIsLoading(false);
+                    },
+                    { timeout: 10000, enableHighAccuracy: false }
+                );
+            } else {
+                // No geolocation support, use demo data
+                fetchAuroraData(weatherData.location.latitude);
+            }
+        };
+
+        detectLocation();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
     // Menu state  
