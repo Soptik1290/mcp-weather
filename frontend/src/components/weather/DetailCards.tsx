@@ -53,21 +53,89 @@ export function DetailCard({
     );
 }
 
-// Wind Speed Card
+
+// Wind Speed Card with Compass
 export function WindCard({ speed, direction, isDark }: { speed?: number; direction?: number; isDark?: boolean }) {
     const { t } = useSettings();
-    const directionLabel = direction !== undefined ? getWindDirection(direction, t) : '';
+    const textColor = isDark ? 'text-white' : 'text-gray-900';
+    const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
+    const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
+
+    // Get wind intensity color (green = calm, red = strong)
+    const getWindColor = (s: number): string => {
+        if (s < 10) return '#22c55e'; // green - calm
+        if (s < 20) return '#84cc16'; // lime - light
+        if (s < 35) return '#eab308'; // yellow - moderate
+        if (s < 50) return '#f97316'; // orange - strong
+        if (s < 75) return '#ef4444'; // red - very strong
+        return '#dc2626'; // dark red - storm
+    };
+
+    const windColor = speed !== undefined ? getWindColor(speed) : '#6b7280';
+    const directionLabel = direction !== undefined ? getWindDirection(direction, t) : '--';
+    const rotation = direction !== undefined ? direction : 0;
 
     return (
-        <DetailCard
-            title={t('wind')}
-            value={speed !== undefined ? Math.round(speed) : '--'}
-            unit="km/h"
-            icon={Wind}
-            subtitle={directionLabel}
-            isDark={isDark}
-            delay={0.1}
-        />
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.1, type: 'spring' }}
+        >
+            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full`}>
+                <div className="flex items-center gap-2 mb-2">
+                    <Wind className={`w-4 h-4 ${subTextColor}`} />
+                    <span className={`text-sm ${subTextColor}`}>{t('wind')}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className={`text-2xl font-semibold ${textColor}`}>
+                            {speed !== undefined ? Math.round(speed) : '--'}
+                            <span className="text-lg ml-1">km/h</span>
+                        </div>
+                        <p className={`text-sm ${subTextColor} mt-1`}>{directionLabel}</p>
+                    </div>
+
+                    {/* Compass SVG */}
+                    <div className="relative w-14 h-14">
+                        <svg viewBox="0 0 100 100" className="w-full h-full">
+                            {/* Compass circle */}
+                            <circle
+                                cx="50"
+                                cy="50"
+                                r="45"
+                                fill="none"
+                                stroke={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
+                                strokeWidth="2"
+                            />
+                            {/* Cardinal directions */}
+                            <text x="50" y="15" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>N</text>
+                            <text x="90" y="54" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>E</text>
+                            <text x="50" y="95" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>S</text>
+                            <text x="10" y="54" textAnchor="middle" className={`text-[10px] ${isDark ? 'fill-white/60' : 'fill-gray-400'}`}>W</text>
+                            {/* Wind direction arrow */}
+                            <g transform={`rotate(${rotation}, 50, 50)`}>
+                                <polygon
+                                    points="50,15 45,40 50,35 55,40"
+                                    fill={windColor}
+                                />
+                                <line
+                                    x1="50"
+                                    y1="35"
+                                    x2="50"
+                                    y2="70"
+                                    stroke={windColor}
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                />
+                            </g>
+                            {/* Center dot */}
+                            <circle cx="50" cy="50" r="4" fill={windColor} />
+                        </svg>
+                    </div>
+                </div>
+            </Card>
+        </motion.div>
     );
 }
 
@@ -89,21 +157,93 @@ export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?:
     );
 }
 
-// UV Index Card
+// UV Index Card with Gauge
 export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDark?: boolean }) {
     const { t } = useSettings();
+    const textColor = isDark ? 'text-white' : 'text-gray-900';
+    const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
+    const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
+
     const hasValue = uvIndex != null && !isNaN(uvIndex);
     const level = hasValue ? getUVLevel(uvIndex, t) : '';
+    const value = hasValue ? Math.min(uvIndex, 11) : 0;
+
+    // Calculate needle angle (0 UV = -90deg, 11 UV = 90deg)
+    const needleAngle = hasValue ? -90 + (value / 11) * 180 : -90;
+
+    // Get color for current UV value
+    const getUVColor = (uv: number): string => {
+        if (uv < 3) return '#22c55e'; // green - low
+        if (uv < 6) return '#eab308'; // yellow - moderate
+        if (uv < 8) return '#f97316'; // orange - high
+        if (uv < 11) return '#ef4444'; // red - very high
+        return '#a855f7'; // purple - extreme
+    };
+
+    const uvColor = hasValue ? getUVColor(uvIndex) : '#6b7280';
 
     return (
-        <DetailCard
-            title={t('uv_index')}
-            value={hasValue ? uvIndex.toFixed(1) : '--'}
-            icon={Sun}
-            subtitle={level}
-            isDark={isDark}
-            delay={0.2}
-        />
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2, type: 'spring' }}
+        >
+            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full`}>
+                <div className="flex items-center gap-2 mb-2">
+                    <Sun className={`w-4 h-4 ${subTextColor}`} />
+                    <span className={`text-sm ${subTextColor}`}>{t('uv_index')}</span>
+                </div>
+
+                <div className="flex items-center justify-between">
+                    <div>
+                        <div className={`text-2xl font-semibold ${textColor}`}>
+                            {hasValue ? uvIndex.toFixed(1) : '--'}
+                        </div>
+                        <p className={`text-sm ${subTextColor} mt-1`}>{level}</p>
+                    </div>
+
+                    {/* UV Gauge SVG */}
+                    <div className="relative w-16 h-10">
+                        <svg viewBox="0 0 100 55" className="w-full h-full">
+                            {/* Background arc segments */}
+                            <defs>
+                                <linearGradient id="uvGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                    <stop offset="0%" stopColor="#22c55e" />
+                                    <stop offset="27%" stopColor="#eab308" />
+                                    <stop offset="54%" stopColor="#f97316" />
+                                    <stop offset="82%" stopColor="#ef4444" />
+                                    <stop offset="100%" stopColor="#a855f7" />
+                                </linearGradient>
+                            </defs>
+                            <path
+                                d="M 10 50 A 40 40 0 0 1 90 50"
+                                fill="none"
+                                stroke="url(#uvGradient)"
+                                strokeWidth="8"
+                                strokeLinecap="round"
+                            />
+                            {/* Needle */}
+                            <g transform={`rotate(${needleAngle}, 50, 50)`}>
+                                <line
+                                    x1="50"
+                                    y1="50"
+                                    x2="50"
+                                    y2="18"
+                                    stroke={uvColor}
+                                    strokeWidth="3"
+                                    strokeLinecap="round"
+                                />
+                            </g>
+                            {/* Center dot */}
+                            <circle cx="50" cy="50" r="4" fill={uvColor} />
+                            {/* Scale labels */}
+                            <text x="8" y="54" className={`text-[8px] ${isDark ? 'fill-white/50' : 'fill-gray-400'}`}>0</text>
+                            <text x="88" y="54" className={`text-[8px] ${isDark ? 'fill-white/50' : 'fill-gray-400'}`}>11</text>
+                        </svg>
+                    </div>
+                </div>
+            </Card>
+        </motion.div>
     );
 }
 
