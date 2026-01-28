@@ -219,6 +219,7 @@ const translations: Record<Language, Record<string, string>> = {
         'temp_high': 'High',
         'temp_low': 'Low',
         'hourly_temperature': 'Hourly temperature',
+        'precipitation': 'Precipitation',
     },
     cs: {
         // Weather cards
@@ -329,6 +330,7 @@ const translations: Record<Language, Record<string, string>> = {
         'temp_high': 'Max',
         'temp_low': 'Min',
         'hourly_temperature': 'Hodinová teplota',
+        'precipitation': 'Srážky',
     },
 };
 
