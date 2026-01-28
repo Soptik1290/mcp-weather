@@ -89,12 +89,8 @@ export function WindCard({ speed, direction, isDark }: { speed?: number; directi
                                 stroke={strokeColor}
                                 strokeWidth="2"
                             />
-                            {/* Arrow with animation */}
-                            <motion.g
-                                animate={{ rotate: rotation }}
-                                transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-                                style={{ originX: '50px', originY: '50px' }}
-                            >
+                            {/* Arrow - using SVG transform */}
+                            <g transform={`rotate(${rotation}, 50, 50)`}>
                                 <polygon
                                     points="50,12 44,50 50,45 56,50"
                                     fill={arrowColor}
@@ -103,7 +99,7 @@ export function WindCard({ speed, direction, isDark }: { speed?: number; directi
                                     points="50,88 44,50 50,55 56,50"
                                     fill={isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)'}
                                 />
-                            </motion.g>
+                            </g>
                             {/* Center dot */}
                             <circle cx="50" cy="50" r="5" fill={arrowColor} />
                         </svg>
@@ -158,17 +154,14 @@ export function HumidityCard({ humidity, isDark }: { humidity?: number; isDark?:
                                 stroke={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(59,130,246,0.3)'}
                                 strokeWidth="2"
                             />
-                            {/* Fill level */}
-                            <motion.rect
+                            {/* Fill level - grows from bottom */}
+                            <rect
                                 x="0"
-                                y={80 - (fillPercent * 0.7)}
+                                y={75 - (fillPercent * 0.7)}
                                 width="60"
-                                height={fillPercent * 0.7}
+                                height={fillPercent * 0.7 + 5}
                                 fill={isDark ? 'rgba(96,165,250,0.6)' : 'rgba(59,130,246,0.4)'}
                                 clipPath="url(#dropletClip)"
-                                initial={{ y: 80 }}
-                                animate={{ y: 80 - (fillPercent * 0.7) }}
-                                transition={{ duration: 1, ease: 'easeOut' }}
                             />
                         </svg>
                     </div>
@@ -199,7 +192,7 @@ export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDa
 
     // Calculate dot position on arc (0-11 scale)
     const angle = -90 + (value / 11) * 180;
-    const radius = 35;
+    const radius = 40; // Match arc radius
     const dotX = 50 + radius * Math.cos((angle * Math.PI) / 180);
     const dotY = 50 + radius * Math.sin((angle * Math.PI) / 180);
 
@@ -214,9 +207,9 @@ export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDa
                     {t('uv_index')}
                 </div>
 
-                {/* Arc Gauge */}
-                <div className="flex justify-center mb-3">
-                    <div className="relative w-16 h-10">
+                {/* Arc Gauge - larger */}
+                <div className="flex justify-center mb-2">
+                    <div className="relative w-20 h-12">
                         <svg viewBox="0 0 100 55" className="w-full h-full">
                             <defs>
                                 <linearGradient id="uvArcGradient" x1="0%" y1="0%" x2="100%" y2="0%">
@@ -229,23 +222,20 @@ export function UVIndexCard({ uvIndex, isDark }: { uvIndex?: number | null; isDa
                             </defs>
                             {/* Arc */}
                             <path
-                                d="M 15 50 A 35 35 0 0 1 85 50"
+                                d="M 10 50 A 40 40 0 0 1 90 50"
                                 fill="none"
                                 stroke="url(#uvArcGradient)"
-                                strokeWidth="6"
+                                strokeWidth="8"
                                 strokeLinecap="round"
                             />
                             {/* Indicator dot */}
-                            <motion.circle
+                            <circle
                                 cx={dotX}
                                 cy={dotY}
                                 r="6"
                                 fill="white"
                                 stroke={isDark ? '#1f2937' : '#e5e7eb'}
                                 strokeWidth="2"
-                                initial={{ cx: 15, cy: 50 }}
-                                animate={{ cx: dotX, cy: dotY }}
-                                transition={{ duration: 0.8, ease: 'easeOut' }}
                             />
                         </svg>
                     </div>
