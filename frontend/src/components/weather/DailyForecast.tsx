@@ -149,7 +149,7 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                 title={selectedDayName}
                 subtitle={selectedFullDate}
                 isDark={isDark}
-                size="lg"
+                size="xl"
             >
                 {selectedDay && (
                     <div className="space-y-5">
@@ -225,7 +225,7 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                                         <p className={`text-sm font-medium ${subTextColor} mb-2`}>{t('hourly_temperature')}</p>
                                         <WeatherChart
                                             data={tempChartData}
-                                            height={140}
+                                            height={180}
                                             color="#f97316"
                                             unit="°"
                                             isDark={isDark}
@@ -240,7 +240,7 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                                         <p className={`text-sm font-medium ${subTextColor} mb-2`}>{t('precipitation_probability')}</p>
                                         <WeatherChart
                                             data={rainChartData}
-                                            height={140}
+                                            height={180}
                                             color="#3b82f6"
                                             unit="%"
                                             isDark={isDark}
