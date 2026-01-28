@@ -40,17 +40,35 @@ export function WeatherChart({
         if (data.length === 0) return { points: [], areaPath: '', linePath: '', yMin: 0, yMax: 0 };
 
         const values = data.map(d => d.value);
-        const yMin = minValue !== undefined ? minValue : Math.min(...values);
-        const yMax = maxValue !== undefined ? maxValue : Math.max(...values);
+        let computedMin = minValue !== undefined ? minValue : Math.min(...values);
+        let computedMax = maxValue !== undefined ? maxValue : Math.max(...values);
+
+        // Ensure minimum range to prevent squashed graphs
+        const rawRange = computedMax - computedMin;
+        const minRange = Math.max(rawRange * 0.2, 5); // At least 20% padding or 5 units
+
+        if (rawRange < minRange) {
+            const center = (computedMax + computedMin) / 2;
+            computedMin = center - minRange / 2;
+            computedMax = center + minRange / 2;
+        } else {
+            // Add 10% padding to top and bottom
+            const padding = rawRange * 0.1;
+            if (minValue === undefined) computedMin -= padding;
+            if (maxValue === undefined) computedMax += padding;
+        }
+
+        const yMin = computedMin;
+        const yMax = computedMax;
         const yRange = yMax - yMin || 1;
 
-        const padding = { top: 20, right: 10, bottom: 30, left: 10 };
+        const chartPadding = { top: 20, right: 10, bottom: 30, left: 10 };
         const chartWidth = 100; // percentage-based
-        const chartHeight = height - padding.top - padding.bottom;
+        const chartHeight = height - chartPadding.top - chartPadding.bottom;
 
         const points = data.map((d, i) => {
-            const x = padding.left + (i / (data.length - 1)) * (chartWidth - padding.left - padding.right);
-            const y = padding.top + (1 - (d.value - yMin) / yRange) * chartHeight;
+            const x = chartPadding.left + (i / (data.length - 1)) * (chartWidth - chartPadding.left - chartPadding.right);
+            const y = chartPadding.top + (1 - (d.value - yMin) / yRange) * chartHeight;
             return { x, y, ...d };
         });
 
@@ -60,8 +78,8 @@ export function WeatherChart({
             .join(' ');
 
         const areaPath = linePath +
-            ` L ${points[points.length - 1].x} ${height - padding.bottom}` +
-            ` L ${points[0].x} ${height - padding.bottom} Z`;
+            ` L ${points[points.length - 1].x} ${height - chartPadding.bottom}` +
+            ` L ${points[0].x} ${height - chartPadding.bottom} Z`;
 
         return { points, areaPath, linePath, yMin, yMax };
     }, [data, height, minValue, maxValue]);
