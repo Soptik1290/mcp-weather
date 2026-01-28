@@ -302,6 +302,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         themeMode: 'auto',
     });
     const [isLoaded, setIsLoaded] = useState(false);
+    const [systemPrefersDark, setSystemPrefersDark] = useState(false);
+
+    // Listen for system dark mode preference changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            setSystemPrefersDark(mediaQuery.matches);
+
+            const handler = (e: MediaQueryListEvent) => setSystemPrefersDark(e.matches);
+            mediaQuery.addEventListener('change', handler);
+            return () => mediaQuery.removeEventListener('change', handler);
+        }
+    }, []);
 
     // Load settings from localStorage on mount, detect browser language if first visit
     useEffect(() => {
@@ -430,11 +443,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                         case 'light':
                             return false;
                         case 'system':
-                            // Check system preference
-                            if (typeof window !== 'undefined') {
-                                return window.matchMedia('(prefers-color-scheme: dark)').matches;
-                            }
-                            return false;
+                            // Use pre-computed system preference (from useEffect)
+                            return systemPrefersDark;
                         case 'auto':
                         default:
                             // Use theme from weather/time
