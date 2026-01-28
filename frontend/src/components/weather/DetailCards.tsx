@@ -137,7 +137,7 @@ export function RainCard({
     );
 }
 
-// Sunrise/Sunset Card
+// Sunrise/Sunset Card (compact with midday)
 export function SunTimesCard({
     sunrise,
     sunset,
@@ -158,29 +158,107 @@ export function SunTimesCard({
         return formatTimeSettings(date);
     };
 
+    // Calculate solar noon (midday) as midpoint between sunrise and sunset
+    const getMidday = () => {
+        if (!sunrise || !sunset) return '--:--';
+        const sunriseDate = new Date(sunrise);
+        const sunsetDate = new Date(sunset);
+        const middayMs = (sunriseDate.getTime() + sunsetDate.getTime()) / 2;
+        return formatTimeSettings(new Date(middayMs));
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.25, type: 'spring' }}
         >
-            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0`}>
-                <div className="flex justify-between">
-                    <div className="flex items-center gap-2">
-                        <Sunrise className={`w-5 h-5 ${subTextColor}`} />
+            <Card className={`p-3 ${bgColor} backdrop-blur-md border-0 h-full`}>
+                <div className="flex justify-between items-center gap-1">
+                    <div className="flex items-center gap-1.5">
+                        <Sunrise className={`w-4 h-4 ${subTextColor}`} />
                         <div>
-                            <p className={`text-xs ${subTextColor}`}>{t('sunrise')}</p>
-                            <p className={`text-lg font-medium ${textColor}`}>{formatTime(sunrise)}</p>
+                            <p className={`text-[10px] ${subTextColor}`}>{t('sunrise')}</p>
+                            <p className={`text-sm font-medium ${textColor}`}>{formatTime(sunrise)}</p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                        <div className="text-right">
-                            <p className={`text-xs ${subTextColor}`}>{t('sunset')}</p>
-                            <p className={`text-lg font-medium ${textColor}`}>{formatTime(sunset)}</p>
+                    <div className="flex items-center gap-1.5">
+                        <Sun className={`w-4 h-4 ${subTextColor}`} />
+                        <div className="text-center">
+                            <p className={`text-[10px] ${subTextColor}`}>{t('midday')}</p>
+                            <p className={`text-sm font-medium ${textColor}`}>{getMidday()}</p>
                         </div>
-                        <Sunset className={`w-5 h-5 ${subTextColor}`} />
                     </div>
+
+                    <div className="flex items-center gap-1.5">
+                        <div className="text-right">
+                            <p className={`text-[10px] ${subTextColor}`}>{t('sunset')}</p>
+                            <p className={`text-sm font-medium ${textColor}`}>{formatTime(sunset)}</p>
+                        </div>
+                        <Sunset className={`w-4 h-4 ${subTextColor}`} />
+                    </div>
+                </div>
+            </Card>
+        </motion.div>
+    );
+}
+
+// Moon Phase Card
+export function MoonPhaseCard({
+    moonPhase,
+    isDark
+}: {
+    moonPhase?: number | string;
+    isDark?: boolean
+}) {
+    const { t } = useSettings();
+    const textColor = isDark ? 'text-white' : 'text-gray-900';
+    const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
+    const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
+
+    // Convert phase to 0-1 range if it's a string or percentage
+    const getPhaseValue = (): number => {
+        if (moonPhase === undefined || moonPhase === null) return 0.5;
+        if (typeof moonPhase === 'string') {
+            // Try to parse string like "Waxing Crescent" or number
+            const num = parseFloat(moonPhase);
+            if (!isNaN(num)) return num > 1 ? num / 100 : num;
+            return 0.5;
+        }
+        return moonPhase > 1 ? moonPhase / 100 : moonPhase;
+    };
+
+    const phase = getPhaseValue();
+
+    // Get moon phase name and emoji
+    const getMoonPhaseInfo = (p: number): { name: string; emoji: string } => {
+        if (p < 0.0625) return { name: t('moon_new'), emoji: '🌑' };
+        if (p < 0.1875) return { name: t('moon_waxing_crescent'), emoji: '🌒' };
+        if (p < 0.3125) return { name: t('moon_first_quarter'), emoji: '🌓' };
+        if (p < 0.4375) return { name: t('moon_waxing_gibbous'), emoji: '🌔' };
+        if (p < 0.5625) return { name: t('moon_full'), emoji: '🌕' };
+        if (p < 0.6875) return { name: t('moon_waning_gibbous'), emoji: '🌖' };
+        if (p < 0.8125) return { name: t('moon_last_quarter'), emoji: '🌗' };
+        if (p < 0.9375) return { name: t('moon_waning_crescent'), emoji: '🌘' };
+        return { name: t('moon_new'), emoji: '🌑' };
+    };
+
+    const phaseInfo = getMoonPhaseInfo(phase);
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3, type: 'spring' }}
+        >
+            <Card className={`p-3 ${bgColor} backdrop-blur-md border-0 h-full`}>
+                <div className="flex items-center justify-between">
+                    <div>
+                        <p className={`text-[10px] ${subTextColor}`}>{t('moon_phase')}</p>
+                        <p className={`text-sm font-medium ${textColor}`}>{phaseInfo.name}</p>
+                    </div>
+                    <span className="text-2xl" suppressHydrationWarning>{phaseInfo.emoji}</span>
                 </div>
             </Card>
         </motion.div>

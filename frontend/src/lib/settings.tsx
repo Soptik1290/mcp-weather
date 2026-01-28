@@ -194,6 +194,18 @@ const translations: Record<Language, Record<string, string>> = {
         'theme_system': 'System',
         'theme_dark': 'Dark',
         'theme_light': 'Light',
+
+        // Sun & Moon
+        'midday': 'Midday',
+        'moon_phase': 'Moon Phase',
+        'moon_new': 'New Moon',
+        'moon_waxing_crescent': 'Waxing Crescent',
+        'moon_first_quarter': 'First Quarter',
+        'moon_waxing_gibbous': 'Waxing Gibbous',
+        'moon_full': 'Full Moon',
+        'moon_waning_gibbous': 'Waning Gibbous',
+        'moon_last_quarter': 'Last Quarter',
+        'moon_waning_crescent': 'Waning Crescent',
     },
     cs: {
         // Weather cards
@@ -279,6 +291,18 @@ const translations: Record<Language, Record<string, string>> = {
         'theme_system': 'Systém',
         'theme_dark': 'Tmavý',
         'theme_light': 'Světlý',
+
+        // Sun & Moon
+        'midday': 'Poledne',
+        'moon_phase': 'Fáze měsíce',
+        'moon_new': 'Nový měsíc',
+        'moon_waxing_crescent': 'Dorůstající srpek',
+        'moon_first_quarter': 'První čtvrt',
+        'moon_waxing_gibbous': 'Dorůstající měsíc',
+        'moon_full': 'Úplněk',
+        'moon_waning_gibbous': 'Couvající měsíc',
+        'moon_last_quarter': 'Poslední čtvrt',
+        'moon_waning_crescent': 'Couvající srpek',
     },
 };
 

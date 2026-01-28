@@ -11,6 +11,7 @@ import {
     UVIndexCard,
     RainCard,
     SunTimesCard,
+    MoonPhaseCard,
     SearchBar,
     HamburgerMenu,
     SideMenu,
@@ -238,12 +239,18 @@ export function WeatherDashboard() {
                             />
                         </div>
 
-                        {/* Sunrise/Sunset */}
-                        <SunTimesCard
-                            sunrise={weatherData.astronomy?.sunrise}
-                            sunset={weatherData.astronomy?.sunset}
-                            isDark={isDark}
-                        />
+                        {/* Sunrise/Sunset & Moon Phase */}
+                        <div className="grid grid-cols-2 gap-3">
+                            <SunTimesCard
+                                sunrise={weatherData.astronomy?.sunrise}
+                                sunset={weatherData.astronomy?.sunset}
+                                isDark={isDark}
+                            />
+                            <MoonPhaseCard
+                                moonPhase={weatherData.astronomy?.moon_phase}
+                                isDark={isDark}
+                            />
+                        </div>
 
                         {/* Aurora Forecast - conditional based on settings */}
                         {shouldShowAurora(auroraData?.visibility_probability ?? 0) && (
