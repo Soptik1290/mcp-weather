@@ -206,6 +206,19 @@ const translations: Record<Language, Record<string, string>> = {
         'moon_waning_gibbous': 'Waning Gibbous',
         'moon_last_quarter': 'Last Quarter',
         'moon_waning_crescent': 'Waning Crescent',
+
+        // Detail modals
+        'current': 'Current',
+        'next_24_hours': 'Next 24 hours',
+        'precipitation_probability': 'Precipitation probability',
+        'uv_protection_tips': 'Protection tips',
+        'uv_low_tip': 'No protection needed',
+        'uv_moderate_tip': 'Wear sunscreen',
+        'uv_high_tip': 'Wear sunglasses and sunscreen',
+        'uv_very_high_tip': 'Avoid sun exposure 10am-4pm',
+        'temp_high': 'High',
+        'temp_low': 'Low',
+        'hourly_temperature': 'Hourly temperature',
     },
     cs: {
         // Weather cards
@@ -303,6 +316,19 @@ const translations: Record<Language, Record<string, string>> = {
         'moon_waning_gibbous': 'Couvající měsíc',
         'moon_last_quarter': 'Poslední čtvrt',
         'moon_waning_crescent': 'Couvající srpek',
+
+        // Detail modals
+        'current': 'Aktuální',
+        'next_24_hours': 'Dalších 24 hodin',
+        'precipitation_probability': 'Pravděpodobnost srážek',
+        'uv_protection_tips': 'Tipy na ochranu',
+        'uv_low_tip': 'Ochrana není potřeba',
+        'uv_moderate_tip': 'Použijte opalovací krém',
+        'uv_high_tip': 'Noste sluneční brýle a opalovací krém',
+        'uv_very_high_tip': 'Vyhněte se slunci mezi 10-16h',
+        'temp_high': 'Max',
+        'temp_low': 'Min',
+        'hourly_temperature': 'Hodinová teplota',
     },
 };
 

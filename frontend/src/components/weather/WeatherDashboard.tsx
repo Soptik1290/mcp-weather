@@ -223,19 +223,23 @@ export function WeatherDashboard() {
                                 speed={weatherData.current?.wind_speed}
                                 direction={weatherData.current?.wind_direction}
                                 isDark={isDark}
+                                hourlyData={weatherData.hourly_forecast}
                             />
                             <HumidityCard
                                 humidity={weatherData.current?.humidity}
                                 isDark={isDark}
+                                hourlyData={weatherData.hourly_forecast}
                             />
                             <UVIndexCard
                                 uvIndex={weatherData.current?.uv_index}
                                 isDark={isDark}
+                                hourlyData={weatherData.hourly_forecast}
                             />
                             <RainCard
                                 probability={weatherData.daily_forecast?.[0]?.precipitation_probability}
                                 amount={weatherData.daily_forecast?.[0]?.precipitation_sum}
                                 isDark={isDark}
+                                hourlyData={weatherData.hourly_forecast}
                             />
                         </div>
 
@@ -265,6 +269,7 @@ export function WeatherDashboard() {
                         {weatherData.daily_forecast && (
                             <DailyForecastCard
                                 forecast={weatherData.daily_forecast}
+                                hourlyForecast={weatherData.hourly_forecast}
                                 isDark={isDark}
                             />
                         )}

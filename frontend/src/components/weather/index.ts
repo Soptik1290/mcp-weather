@@ -7,4 +7,6 @@ export { SideMenu } from './SideMenu';
 export { AmbientBackground } from './AmbientBackground';
 export { AuroraCard } from './AuroraCard';
 export { WeatherDashboard } from './WeatherDashboard';
+export { WeatherDetailModal } from './WeatherDetailModal';
+export { WeatherChart } from './WeatherChart';
 
