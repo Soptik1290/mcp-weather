@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Globe, Thermometer, Info, Github, Settings, Clock, Sparkles } from 'lucide-react';
+import { X, Globe, Thermometer, Info, Github, Settings, Clock, Sparkles, Moon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useSettings } from '@/lib/settings';
@@ -17,7 +17,7 @@ export function SideMenu({
     onClose,
     isDark = false,
 }: SideMenuProps) {
-    const { language, setLanguage, temperatureUnit, setTemperatureUnit, timeFormat, setTimeFormat, auroraDisplay, setAuroraDisplay, t } = useSettings();
+    const { language, setLanguage, temperatureUnit, setTemperatureUnit, timeFormat, setTimeFormat, auroraDisplay, setAuroraDisplay, themeMode, setThemeMode, t } = useSettings();
 
     const bgColor = isDark ? 'bg-gray-900/95' : 'bg-white/95';
     const textColor = isDark ? 'text-white' : 'text-gray-900';
@@ -166,6 +166,45 @@ export function SideMenu({
                                         isDark={isDark}
                                     >
                                         {t('aurora_never')}
+                                    </ToggleButton>
+                                </div>
+                            </SettingSection>
+
+                            {/* Theme Mode */}
+                            <SettingSection
+                                icon={Moon}
+                                title={t('theme_mode')}
+                                subtitle={t('theme_mode_desc')}
+                                isDark={isDark}
+                            >
+                                <div className="grid grid-cols-2 gap-2 mt-3">
+                                    <ToggleButton
+                                        active={themeMode === 'auto'}
+                                        onClick={() => setThemeMode('auto')}
+                                        isDark={isDark}
+                                    >
+                                        {t('theme_auto')}
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        active={themeMode === 'system'}
+                                        onClick={() => setThemeMode('system')}
+                                        isDark={isDark}
+                                    >
+                                        {t('theme_system')}
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        active={themeMode === 'dark'}
+                                        onClick={() => setThemeMode('dark')}
+                                        isDark={isDark}
+                                    >
+                                        {t('theme_dark')}
+                                    </ToggleButton>
+                                    <ToggleButton
+                                        active={themeMode === 'light'}
+                                        onClick={() => setThemeMode('light')}
+                                        isDark={isDark}
+                                    >
+                                        {t('theme_light')}
                                     </ToggleButton>
                                 </div>
                             </SettingSection>

@@ -76,8 +76,8 @@ export function WeatherDashboard() {
         THEMES[(weatherData.ambient_theme?.theme as ThemeName) || 'cloudy']
     );
 
-    const isDark = isDarkTheme(currentTheme.theme);
-    const { shouldShowAurora } = useSettings();
+    const { shouldShowAurora, shouldUseDarkMode } = useSettings();
+    const isDark = shouldUseDarkMode(currentTheme.theme);
 
     // Fetch aurora data
     const fetchAuroraData = async (latitude: number) => {

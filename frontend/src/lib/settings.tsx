@@ -7,12 +7,14 @@ export type Language = 'en' | 'cs';
 export type TemperatureUnit = 'celsius' | 'fahrenheit';
 export type TimeFormat = '24h' | '12h';
 export type AuroraDisplay = 'auto' | 'always' | 'never';
+export type ThemeMode = 'auto' | 'system' | 'dark' | 'light';
 
 interface Settings {
     language: Language;
     temperatureUnit: TemperatureUnit;
     timeFormat: TimeFormat;
     auroraDisplay: AuroraDisplay;
+    themeMode: ThemeMode;
 }
 
 interface SettingsContextType extends Settings {
@@ -20,12 +22,14 @@ interface SettingsContextType extends Settings {
     setTemperatureUnit: (unit: TemperatureUnit) => void;
     setTimeFormat: (format: TimeFormat) => void;
     setAuroraDisplay: (display: AuroraDisplay) => void;
+    setThemeMode: (mode: ThemeMode) => void;
     formatTemperature: (celsius: number) => string;
     formatTime: (date: Date) => string;
     t: (key: string) => string;
     getDayName: (date: Date, short?: boolean) => string;
     getWeatherDescription: (code: number | undefined | null) => string;
     shouldShowAurora: (visibilityProbability: number) => boolean;
+    shouldUseDarkMode: (themeName: string) => boolean;
 }
 
 // Weather code to description mapping
@@ -182,6 +186,14 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_auto': 'Auto (when visible)',
         'aurora_always': 'Always show',
         'aurora_never': 'Never show',
+
+        // Theme Mode
+        'theme_mode': 'Theme',
+        'theme_mode_desc': 'Choose app appearance',
+        'theme_auto': 'Auto (weather)',
+        'theme_system': 'System',
+        'theme_dark': 'Dark',
+        'theme_light': 'Light',
     },
     cs: {
         // Weather cards
@@ -259,6 +271,14 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_auto': 'Auto (když je viditelná)',
         'aurora_always': 'Vždy zobrazit',
         'aurora_never': 'Nikdy nezobrazovat',
+
+        // Theme Mode
+        'theme_mode': 'Vzhled',
+        'theme_mode_desc': 'Zvolte vzhled aplikace',
+        'theme_auto': 'Auto (počasí)',
+        'theme_system': 'Systém',
+        'theme_dark': 'Tmavý',
+        'theme_light': 'Světlý',
     },
 };
 
@@ -279,6 +299,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         temperatureUnit: 'celsius',
         timeFormat: '24h',
         auroraDisplay: 'auto',
+        themeMode: 'auto',
     });
     const [isLoaded, setIsLoaded] = useState(false);
 
@@ -293,6 +314,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                     temperatureUnit: parsed.temperatureUnit || 'celsius',
                     timeFormat: parsed.timeFormat || '24h',
                     auroraDisplay: parsed.auroraDisplay || 'auto',
+                    themeMode: parsed.themeMode || 'auto',
                 });
             } else {
                 // First visit - detect browser language
@@ -302,6 +324,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                     temperatureUnit: 'celsius',
                     timeFormat: '24h',
                     auroraDisplay: 'auto',
+                    themeMode: 'auto',
                 });
             }
         } catch (e) {
@@ -385,6 +408,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                 setTemperatureUnit,
                 setTimeFormat,
                 setAuroraDisplay: (display: AuroraDisplay) => setSettings(prev => ({ ...prev, auroraDisplay: display })),
+                setThemeMode: (mode: ThemeMode) => setSettings(prev => ({ ...prev, themeMode: mode })),
                 formatTemperature,
                 formatTime,
                 t,
@@ -395,6 +419,27 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                     if (settings.auroraDisplay === 'never') return false;
                     // 'auto' - show if there's any chance of visibility
                     return visibilityProbability > 0 || settings.language === 'en'; // Show for demo/testing in EN
+                },
+                shouldUseDarkMode: (themeName: string) => {
+                    // Dark themes from the weather/time system
+                    const darkThemes = ['storm', 'clear_night', 'cloudy_night', 'sunset'];
+
+                    switch (settings.themeMode) {
+                        case 'dark':
+                            return true;
+                        case 'light':
+                            return false;
+                        case 'system':
+                            // Check system preference
+                            if (typeof window !== 'undefined') {
+                                return window.matchMedia('(prefers-color-scheme: dark)').matches;
+                            }
+                            return false;
+                        case 'auto':
+                        default:
+                            // Use theme from weather/time
+                            return darkThemes.includes(themeName);
+                    }
                 },
             }}
         >
