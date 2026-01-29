@@ -12,6 +12,7 @@ dependencies = [
     "pydantic>=2.12.5",
     "python-dotenv>=1.2.1",
     "uvicorn>=0.40.0",
+    "redis>=5.0.1",
 ]
 
 [project.scripts]

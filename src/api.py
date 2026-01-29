@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-from fastapi import FastAPI, HTTPException
+import os
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -135,6 +136,37 @@ except Exception as e:
 
 print(f"Active providers: {[p[0] for p in providers]}")
 
+# Redis Cache
+import redis.asyncio as redis
+import json
+from datetime import timedelta
+
+REDIS_URL = os.getenv("REDIS_URL")
+redis_client = None
+
+if REDIS_URL:
+    try:
+        redis_client = redis.from_url(REDIS_URL, decode_responses=True)
+        print(f"✓ Redis cache enabled: {REDIS_URL}")
+    except Exception as e:
+        print(f"✗ Redis connection failed: {e}")
+
+async def get_cached_weather(key: str):
+    if not redis_client: return None
+    try:
+        data = await redis_client.get(key)
+        return json.loads(data) if data else None
+    except Exception as e:
+        print(f"Redis get error: {e}")
+        return None
+
+async def set_cached_weather(key: str, data: dict, ttl_seconds: int = 1800):
+    if not redis_client: return
+    try:
+        await redis_client.setex(key, timedelta(seconds=ttl_seconds), json.dumps(data))
+    except Exception as e:
+        print(f"Redis set error: {e}")
+
 # Aggregator
 aggregator = WeatherAggregator()
 
@@ -162,20 +194,42 @@ async def root():
     return {"status": "ok", "service": "Weather MCP API"}
 
 
+@app.post("/redis-check") # Debug endpoint
+async def check_redis():
+    return {"enabled": bool(redis_client)}
+
 @app.post("/search")
-async def search_location(request: SearchRequest):
+async def search_location(request: SearchRequest, response: Response):
     """Search for locations by name."""
     try:
+        # Cache: 24h (Static data)
+        cache_key = f"geo:search:{request.query.lower()}"
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+        
         locations = await open_meteo.search_location(request.query)
-        return [loc.model_dump() for loc in locations]
+        data = [loc.model_dump() for loc in locations]
+        
+        await set_cached_weather(cache_key, data, ttl_seconds=86400) # 24h
+        response.headers["X-Cache-Status"] = "MISS"
+        return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/weather/current")
-async def get_current_weather(request: WeatherRequest):
+async def get_current_weather(request: WeatherRequest, response: Response):
     """Get current weather with AI summary."""
     try:
+        # Cache: 30m (Dynamic data)
+        cache_key = f"weather:current:{request.location_name.lower()}:{request.language}"
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
         # Search for location
         locations = await open_meteo.search_location(request.location_name)
         if not locations:
@@ -196,7 +250,7 @@ async def get_current_weather(request: WeatherRequest):
             current_hour
         )
         
-        return {
+        response_data = {
             "location": aggregated.location.model_dump(),
             "current": aggregated.current.model_dump() if aggregated.current else None,
             "astronomy": aggregated.astronomy.model_dump() if aggregated.astronomy else None,
@@ -205,6 +259,10 @@ async def get_current_weather(request: WeatherRequest):
             "ambient_theme": theme,
             "sources": aggregated.sources_used
         }
+        
+        await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
+        response.headers["X-Cache-Status"] = "MISS"
+        return response_data
     except HTTPException:
         raise
     except Exception as e:
@@ -212,9 +270,18 @@ async def get_current_weather(request: WeatherRequest):
 
 
 @app.post("/weather/forecast")
-async def get_weather_forecast(request: WeatherRequest):
+async def get_weather_forecast(request: WeatherRequest, response: Response):
     """Get weather forecast with AI analysis from multiple sources."""
     try:
+        # Cache: 30m (Dynamic + AI cost)
+        cache_key = f"weather:forecast:{request.location_name.lower()}:{request.days}:{request.language}"
+        
+        # Try cache
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
         # Search for location using Open-Meteo (always available)
         locations = await open_meteo.search_location(request.location_name)
         if not locations:
@@ -248,7 +315,7 @@ async def get_weather_forecast(request: WeatherRequest):
             current_hour
         )
         
-        return {
+        response_data = {
             "location": aggregated.location.model_dump(),
             "current": aggregated.current.model_dump() if aggregated.current else None,
             "daily_forecast": [day.model_dump() for day in aggregated.daily_forecast],
@@ -260,6 +327,12 @@ async def get_weather_forecast(request: WeatherRequest):
             "sources": aggregated.sources_used,
             "provider_count": len(weather_data_list)
         }
+        
+        # Save to cache
+        await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
+        
+        response.headers["X-Cache-Status"] = "MISS"
+        return response_data
     except HTTPException:
         raise
     except Exception as e:
@@ -267,9 +340,18 @@ async def get_weather_forecast(request: WeatherRequest):
 
 
 @app.post("/weather/coordinates")
-async def get_weather_by_coordinates(request: CoordinatesRequest):
+async def get_weather_by_coordinates(request: CoordinatesRequest, response: Response):
     """Get weather by coordinates (for geolocation)."""
     try:
+        # Cache: 30m for weather, but reverse geo could be cached longer.
+        # Since this returns weather, keep 30m.
+        cache_key = f"weather:coords:{request.latitude}:{request.longitude}:{request.language}"
+        
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
         # Reverse geocode to get city name
         city_name, country = await reverse_geocode(request.latitude, request.longitude)
         
@@ -294,7 +376,7 @@ async def get_weather_by_coordinates(request: CoordinatesRequest):
             current_hour
         )
         
-        return {
+        response_data = {
             "location": aggregated.location.model_dump(),
             "current": aggregated.current.model_dump() if aggregated.current else None,
             "daily_forecast": [day.model_dump() for day in aggregated.daily_forecast],
@@ -305,6 +387,10 @@ async def get_weather_by_coordinates(request: CoordinatesRequest):
             "ambient_theme": theme,
             "sources": aggregated.sources_used
         }
+        
+        await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
+        response.headers["X-Cache-Status"] = "MISS"
+        return response_data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -315,20 +401,37 @@ class AuroraRequest(BaseModel):
 
 
 @app.post("/aurora")
-async def get_aurora(request: AuroraRequest):
+async def get_aurora(request: AuroraRequest, response: Response):
     """Get aurora forecast from NOAA SWPC."""
     try:
+        # Cache: 1h (NOAA updates hourly)
+        cache_key = f"aurora:{request.latitude}:{request.language}"
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
         from src.aurora import get_aurora_data
         data = await get_aurora_data(request.latitude, request.language)
+        
+        await set_cached_weather(cache_key, data, ttl_seconds=3600) # 1h
+        response.headers["X-Cache-Status"] = "MISS"
         return data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/theme")
-async def get_ambient_theme(request: WeatherRequest):
+async def get_ambient_theme(request: WeatherRequest, response: Response):
     """Get ambient theme for current weather."""
     try:
+        # Cache: 30m (Linked to weather)
+        cache_key = f"theme:{request.location_name.lower()}"
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
         locations = await open_meteo.search_location(request.location_name)
         if not locations:
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
@@ -344,6 +447,8 @@ async def get_ambient_theme(request: WeatherRequest):
             current_hour
         )
         
+        await set_cached_weather(cache_key, theme, ttl_seconds=1800) # 30m
+        response.headers["X-Cache-Status"] = "MISS"
         return theme
     except HTTPException:
         raise

@@ -60,6 +60,18 @@ uv run mcp-weather
 
 # OR via python module
 uv run python -m src.server
+
+#### Option C: Run with Docker (Recommended)
+
+Full stack (Backend + Frontend + Redis) in one command:
+
+```bash
+docker-compose up --build
+```
+
+- Frontend: http://localhost:3000
+- API: http://localhost:8000
+- Redis: localhost:6379
 ```
 
 ### 5. Configure Claude Desktop
