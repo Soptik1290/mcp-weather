@@ -9,6 +9,7 @@ Works as both a **REST API** for web apps and an **MCP Server** for AI assistant
 - 🤖 **AI-powered deduction** - GPT-5-mini analyzes differences and deduces most accurate values
 - 🔌 **Dual Mode** - Runs as REST API (FastAPI) or MCP Server (FastMCP)
 - 🎨 **Ambient theming** - Dynamic gradients based on weather/time (sunny, rainy, storm, night...)
+- 🧠 **Advanced Data Processing** - Uses **EWMA** (Exponential Smoothing) for forecast curves and **Kalman Filter** for sensor fusion
 - 📊 **Confidence scores** - Based on source agreement (0-1)
 - 📅 **Forecasts** - Daily (up to 16 days) + Hourly (24 hours)
 - 🌅 **Astronomy** - Sunrise/sunset, moon phases

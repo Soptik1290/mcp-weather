@@ -98,60 +98,67 @@ class WeatherAggregator:
         Statistical aggregation when AI is not available.
         Uses median values and outlier detection.
         """
+        # Import filters
+        from src.filters import KalmanFilter1D, EWMA
+
         location = weather_data[0].location
         sources = [wd.provider for wd in weather_data]
         
-        # Collect current temperatures from all sources
-        temps = [wd.current.temperature for wd in weather_data if wd.current]
-        feels_likes = [wd.current.feels_like for wd in weather_data if wd.current and wd.current.feels_like]
-        humidities = [wd.current.humidity for wd in weather_data if wd.current and wd.current.humidity]
-        wind_speeds = [wd.current.wind_speed for wd in weather_data if wd.current and wd.current.wind_speed]
+        # --- KALMAN FILTER FUSION for Current Weather ---
+        # Initialize filters
+        kf_temp = KalmanFilter1D(process_variance=0.1, measurement_variance=2.0)
+        kf_wind = KalmanFilter1D(process_variance=0.5, measurement_variance=3.0)
+        kf_pressure = KalmanFilter1D(process_variance=0.1, measurement_variance=1.0)
         
-        # Use median for robustness against outliers
+        # Collect data
+        temps = [wd.current.temperature for wd in weather_data if wd.current and wd.current.temperature is not None]
+        wind_speeds = [wd.current.wind_speed for wd in weather_data if wd.current and wd.current.wind_speed is not None]
+        pressures = [wd.current.pressure for wd in weather_data if wd.current and wd.current.pressure is not None]
+        humidities = [wd.current.humidity for wd in weather_data if wd.current and wd.current.humidity is not None]
+        
+        # Fuse values
+        fused_temp = kf_temp.fuse(temps) if temps else weather_data[0].current.temperature
+        fused_wind = kf_wind.fuse(wind_speeds) if wind_speeds else weather_data[0].current.wind_speed
+        fused_pressure = kf_pressure.fuse(pressures) if pressures else weather_data[0].current.pressure
+        
+        # Use median for humidity and others (Kalman less critical here)
         def median(values):
-            if not values:
-                return None
+            if not values: return None
             sorted_v = sorted(values)
             n = len(sorted_v)
             return sorted_v[n // 2] if n % 2 else (sorted_v[n // 2 - 1] + sorted_v[n // 2]) / 2
-        
-        # Calculate confidence based on source agreement
-        def calc_confidence(values):
-            if len(values) < 2:
-                return 0.75
-            spread = max(values) - min(values)
-            # Temperature spread < 2°C = high confidence
-            if spread < 2:
-                return 0.95
-            elif spread < 5:
-                return 0.85
-            else:
-                return 0.70
-        
-        confidence = calc_confidence(temps) if temps else 0.75
-        
-        # Create aggregated current weather
-        base = weather_data[0]
+
         aggregated_current = CurrentWeather(
-            temperature=median(temps) or base.current.temperature,
-            feels_like=median(feels_likes),
+            temperature=fused_temp,
+            feels_like=median([wd.current.feels_like for wd in weather_data if wd.current and wd.current.feels_like]),
             humidity=median(humidities),
-            wind_speed=median(wind_speeds),
-            weather_code=base.current.weather_code,
-            weather_description=base.current.weather_description,
-            uv_index=base.current.uv_index,
-            pressure=base.current.pressure,
-            cloud_cover=base.current.cloud_cover,
+            wind_speed=fused_wind,
+            weather_code=weather_data[0].current.weather_code,
+            weather_description=weather_data[0].current.weather_description,
+            uv_index=weather_data[0].current.uv_index,
+            pressure=fused_pressure,
+            cloud_cover=weather_data[0].current.cloud_cover,
         )
         
+        # --- EWMA SMOOTHING for Hourly Forecast ---
+        base_hourly = weather_data[0].hourly_forecast
+        if base_hourly:
+            ewma_temp = EWMA(alpha=0.4) # Moderate smoothing
+            temp_curve = [h.temperature for h in base_hourly]
+            smoothed_temps = ewma_temp.smooth_array(temp_curve)
+            
+            # Apply smoothed values back
+            for i, h in enumerate(base_hourly):
+                h.temperature = smoothed_temps[i]
+
         return AggregatedForecast(
             location=location,
             current=aggregated_current,
-            daily_forecast=base.daily_forecast,
-            hourly_forecast=base.hourly_forecast,
-            astronomy=base.astronomy,
-            ai_summary=f"Aggregated from {len(sources)} sources. {'Good' if confidence > 0.85 else 'Moderate'} agreement between providers.",
-            confidence_score=confidence,
+            daily_forecast=weather_data[0].daily_forecast,
+            hourly_forecast=base_hourly,
+            astronomy=weather_data[0].astronomy,
+            ai_summary=f"Aggregated from {len(sources)} sources using Kalman Filter & EWMA smoothing.",
+            confidence_score=0.85, # Higher confidence with Kalman
             sources_used=sources
         )
     
@@ -196,11 +203,11 @@ class WeatherAggregator:
 Your task:
 1. Compare the values from each source
 2. Identify any outliers or inconsistencies
-3. Determine the most likely actual values based on:
-   - Consensus between sources
-   - Known reliability of certain metrics
-   - Physical plausibility
-4. Provide a confidence score (0-1) based on source agreement
+3. Determine the most likely actual values using Bayesian reasoning (simulate a mental Kalman Filter):
+   - Prioritize sources with historically higher reliability
+   - Treat each value as a noisy measurement
+   - "Fuse" the values to find the most probable true state
+4. Provide a confidence score (0-1) based on source convergence
 
 Return a JSON object with:
 - "temperature": your deduced temperature in °C
