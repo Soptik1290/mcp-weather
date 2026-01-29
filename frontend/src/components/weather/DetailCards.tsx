@@ -439,7 +439,7 @@ export function RainCard({
         // Refine with data: if code says Rain but we have significant Snow amount -> Mixed
         if (type === 'rain' && hasSnow && snowAmount > 0.5) type = 'mixed';
         // If code says Snow but we have lots of liquid -> Mixed
-        if (type === 'snow' && amount && amount > (snowAmount * 2)) type = 'mixed';
+        if (type === 'snow' && amount && snowAmount != null && amount > (snowAmount * 2)) type = 'mixed';
     }
 
     // Labels and Icons

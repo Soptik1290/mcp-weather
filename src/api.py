@@ -174,6 +174,7 @@ aggregator = WeatherAggregator()
 # Request/Response models
 class SearchRequest(BaseModel):
     query: str
+    language: str = "en"
 
 
 class WeatherRequest(BaseModel):
@@ -203,13 +204,13 @@ async def search_location(request: SearchRequest, response: Response):
     """Search for locations by name."""
     try:
         # Cache: 24h (Static data)
-        cache_key = f"geo:search:{request.query.lower()}"
+        cache_key = f"geo:search:{request.query.lower()}:{request.language}"
         cached = await get_cached_weather(cache_key)
         if cached:
             response.headers["X-Cache-Status"] = "HIT"
             return cached
         
-        locations = await open_meteo.search_location(request.query)
+        locations = await open_meteo.search_location(request.query, request.language)
         data = [loc.model_dump() for loc in locations]
         
         await set_cached_weather(cache_key, data, ttl_seconds=86400) # 24h

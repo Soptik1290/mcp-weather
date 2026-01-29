@@ -26,7 +26,7 @@ class WeatherProvider(ABC):
         pass
     
     @abstractmethod
-    async def search_location(self, query: str) -> list[Location]:
+    async def search_location(self, query: str, language: str = "en") -> list[Location]:
         """
         Search for locations by name.
         

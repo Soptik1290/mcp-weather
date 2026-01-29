@@ -78,14 +78,14 @@ class OpenMeteoProvider(WeatherProvider):
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=30.0)
     
-    async def search_location(self, query: str) -> list[Location]:
+    async def search_location(self, query: str, language: str = "en") -> list[Location]:
         """Search for locations by name using Open-Meteo geocoding."""
         response = await self.client.get(
             f"{self.GEOCODING_URL}/search",
             params={
                 "name": query,
                 "count": 10,
-                "language": "en",
+                "language": language,
                 "format": "json"
             }
         )
