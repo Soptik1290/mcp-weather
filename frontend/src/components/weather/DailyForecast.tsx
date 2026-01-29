@@ -271,7 +271,7 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                             )}
 
                             {/* Precipitation Amount */}
-                            {selectedDay.precipitation_sum !== undefined && selectedDay.precipitation_sum > 0 && (
+                            {selectedDay.precipitation_sum !== undefined && (
                                 <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'} flex items-center gap-3`}>
                                     <div className={`p-2 rounded-lg ${isDark ? 'bg-cyan-500/20' : 'bg-cyan-100'}`}>
                                         <Droplets className="w-5 h-5 text-cyan-500" />

@@ -199,8 +199,8 @@ class OpenMeteoProvider(WeatherProvider):
                 start_idx = i
                 break
         
-        # Get 24 hours starting from current hour
-        times = all_times[start_idx:start_idx + 24]
+        # Get all available hours starting from current hour
+        times = all_times[start_idx:]
         for i, time in enumerate(times):
             original_idx = start_idx + i
             weather_code = hourly_data.get("weather_code", [])[original_idx] if original_idx < len(hourly_data.get("weather_code", [])) else None
