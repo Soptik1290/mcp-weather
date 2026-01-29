@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card } from '@/components/ui/card';
-import { Wind, Droplets, Sun, Sunrise, Sunset, CloudRain, type LucideIcon } from 'lucide-react';
+import { Wind, Droplets, Sun, Sunrise, Sunset, CloudRain, CloudSnow, CloudRainWind, type LucideIcon } from 'lucide-react';
 import { useSettings } from '@/lib/settings';
 import { WeatherDetailModal } from './WeatherDetailModal';
 import { WeatherChart } from './WeatherChart';
@@ -388,15 +388,19 @@ export function UVIndexCard({
     );
 }
 
-// Rain Card - Cloud with Animated Droplets (Clickable)
+// Rain/Snow Card - Smart component
 export function RainCard({
     probability,
-    amount,
+    amount, // Total precipitation (liquid equivalent) in mm
+    snowAmount, // Snowfall in cm
+    weatherCode,
     isDark,
     hourlyData
 }: {
     probability?: number | null;
     amount?: number | null;
+    snowAmount?: number | null;
+    weatherCode?: number;
     isDark?: boolean;
     hourlyData?: HourlyForecast[];
 }) {
@@ -408,10 +412,58 @@ export function RainCard({
 
     const hasProb = probability != null && !isNaN(probability);
     const hasAmount = amount != null && !isNaN(amount);
-    const subtitle = hasAmount ? `${amount.toFixed(1)} mm` : '';
+    const hasSnow = snowAmount != null && snowAmount > 0;
+
+    // Determine precipitation type
+    let type = 'rain'; // default
+    if (hasSnow) {
+        // Simple heuristic: if snow is present, check if it accounts for most precipitation
+        // 1cm snow approx 1mm water. 
+        // If total precip (mm) is significantly higher than snow (cm), it's likely mixed.
+        if (amount && amount > (snowAmount * 1.5)) {
+            type = 'mixed';
+        } else {
+            type = 'snow';
+        }
+    }
+
+    // Force type based on weather code if available (overrides heuristic)
+    if (weatherCode !== undefined) {
+        // Snow codes
+        if ([71, 73, 75, 77, 85, 86].includes(weatherCode)) type = 'snow';
+        // Freezing rain (can count as mixed/ice)
+        else if ([66, 67, 56, 57].includes(weatherCode)) type = 'mixed';
+        // Rain codes
+        else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(weatherCode)) type = 'rain';
+
+        // Refine with data: if code says Rain but we have significant Snow amount -> Mixed
+        if (type === 'rain' && hasSnow && snowAmount > 0.5) type = 'mixed';
+        // If code says Snow but we have lots of liquid -> Mixed
+        if (type === 'snow' && amount && amount > (snowAmount * 2)) type = 'mixed';
+    }
+
+    // Labels and Icons
+    let title = t('rain');
+    let subtitle = hasAmount ? `${amount?.toFixed(1)} mm` : '';
+    let Icon = CloudRain;
+    let dropColor = isDark ? '#60a5fa' : '#3b82f6'; // Blue
+
+    if (type === 'snow') {
+        title = t('snow') || 'Sníh'; // Fallback if translation missing
+        subtitle = (snowAmount != null && snowAmount > 0) ? `${snowAmount.toFixed(1)} cm` : (hasAmount ? `${amount?.toFixed(1)} mm` : '');
+        Icon = CloudSnow;
+        dropColor = isDark ? '#e5e7eb' : '#9ca3af'; // White/Grey
+    } else if (type === 'mixed') {
+        title = t('mixed_precip') || 'Déšť se sněhem';
+        subtitle = `${amount?.toFixed(1)} mm / ${snowAmount?.toFixed(1)} cm`;
+        Icon = CloudRainWind; // or CloudSleet if available
+        dropColor = isDark ? '#a5b4fc' : '#818cf8'; // Indigo
+    }
+
     const showDrops = hasProb && probability > 20;
 
     // Prepare chart data
+    // TODO: If mixed, maybe show two lines? For now stick to precip prob.
     const chartData = hourlyData?.slice(0, 24).map((hour, i) => ({
         label: new Date(hour.time).getHours().toString().padStart(2, '0'),
         value: hour.precipitation_probability || 0,
@@ -429,48 +481,72 @@ export function RainCard({
             >
                 <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 h-full transition-transform hover:scale-[1.02]`}>
                     <div className={`text-xs uppercase tracking-wide ${subTextColor} mb-3 text-center`}>
-                        {t('rain')}
+                        {title}
                     </div>
 
-                    {/* Cloud with drops */}
+                    {/* Icon Container */}
                     <div className="flex justify-center mb-3">
                         <div className="relative w-16 h-12">
-                            <svg viewBox="0 0 100 75" className="w-full h-full">
-                                {/* Cloud */}
-                                <path
-                                    d="M25 45 C10 45, 10 30, 25 28 C25 15, 45 10, 55 20 C75 15, 90 25, 85 40 C95 45, 90 55, 75 55 L25 55 C10 55, 10 45, 25 45 Z"
-                                    fill={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(59,130,246,0.3)'}
-                                />
-                                {/* Rain drops - animated */}
-                                {showDrops && (
-                                    <>
-                                        <motion.line
-                                            x1="35" y1="58" x2="35" y2="68"
-                                            stroke={isDark ? '#60a5fa' : '#3b82f6'}
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
-                                            transition={{ duration: 1, repeat: Infinity, delay: 0 }}
-                                        />
-                                        <motion.line
-                                            x1="50" y1="60" x2="50" y2="72"
-                                            stroke={isDark ? '#60a5fa' : '#3b82f6'}
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
-                                            transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
-                                        />
-                                        <motion.line
-                                            x1="65" y1="58" x2="65" y2="68"
-                                            stroke={isDark ? '#60a5fa' : '#3b82f6'}
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
-                                            transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
-                                        />
-                                    </>
-                                )}
-                            </svg>
+                            {/* Render dynamic icon/svg based on type */}
+                            {type === 'snow' ? (
+                                <svg viewBox="0 0 100 75" className="w-full h-full">
+                                    <path
+                                        d="M25 45 C10 45, 10 30, 25 28 C25 15, 45 10, 55 20 C75 15, 90 25, 85 40 C95 45, 90 55, 75 55 L25 55 C10 55, 10 45, 25 45 Z"
+                                        fill={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(229,231,235,0.5)'}
+                                    />
+                                    {showDrops && (
+                                        <>
+                                            <motion.circle cx="35" cy="65" r="3" fill={dropColor}
+                                                animate={{ y: [0, 8, 0], opacity: [0.6, 1, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, delay: 0 }}
+                                            />
+                                            <motion.circle cx="50" cy="65" r="3" fill={dropColor}
+                                                animate={{ y: [0, 8, 0], opacity: [0.6, 1, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, delay: 0.7 }}
+                                            />
+                                            <motion.circle cx="65" cy="65" r="3" fill={dropColor}
+                                                animate={{ y: [0, 8, 0], opacity: [0.6, 1, 0] }}
+                                                transition={{ duration: 2, repeat: Infinity, delay: 1.4 }}
+                                            />
+                                        </>
+                                    )}
+                                </svg>
+                            ) : (
+                                <svg viewBox="0 0 100 75" className="w-full h-full">
+                                    <path
+                                        d="M25 45 C10 45, 10 30, 25 28 C25 15, 45 10, 55 20 C75 15, 90 25, 85 40 C95 45, 90 55, 75 55 L25 55 C10 55, 10 45, 25 45 Z"
+                                        fill={isDark ? 'rgba(255,255,255,0.3)' : 'rgba(59,130,246,0.3)'}
+                                    />
+                                    {showDrops && (
+                                        <>
+                                            <motion.line
+                                                x1="35" y1="58" x2="35" y2="68"
+                                                stroke={dropColor}
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
+                                                transition={{ duration: 1, repeat: Infinity, delay: 0 }}
+                                            />
+                                            <motion.line
+                                                x1="50" y1="60" x2="50" y2="72"
+                                                stroke={dropColor}
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
+                                                transition={{ duration: 1, repeat: Infinity, delay: 0.3 }}
+                                            />
+                                            <motion.line
+                                                x1="65" y1="58" x2="65" y2="68"
+                                                stroke={dropColor}
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                animate={{ y: [0, 5, 0], opacity: [0.6, 1, 0.6] }}
+                                                transition={{ duration: 1, repeat: Infinity, delay: 0.6 }}
+                                            />
+                                        </>
+                                    )}
+                                </svg>
+                            )}
                         </div>
                     </div>
 
@@ -487,7 +563,7 @@ export function RainCard({
             <WeatherDetailModal
                 open={isOpen}
                 onOpenChange={setIsOpen}
-                title={t('rain')}
+                title={title}
                 subtitle={`${t('current')}: ${hasProb ? Math.round(probability) : '--'}% ${subtitle ? `• ${subtitle}` : ''}`}
                 isDark={isDark}
             >
@@ -497,7 +573,7 @@ export function RainCard({
                         <WeatherChart
                             data={chartData}
                             height={150}
-                            color="#3b82f6"
+                            color={type === 'snow' ? '#9ca3af' : '#3b82f6'}
                             unit="%"
                             isDark={isDark}
                             showArea={true}

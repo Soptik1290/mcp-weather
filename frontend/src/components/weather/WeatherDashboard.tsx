@@ -277,6 +277,8 @@ export function WeatherDashboard() {
                             <RainCard
                                 probability={weatherData.daily_forecast?.[0]?.precipitation_probability}
                                 amount={weatherData.daily_forecast?.[0]?.precipitation_sum}
+                                snowAmount={weatherData.daily_forecast?.[0]?.snowfall_sum}
+                                weatherCode={weatherData.daily_forecast?.[0]?.weather_code}
                                 isDark={isDark}
                                 hourlyData={weatherData.hourly_forecast}
                             />

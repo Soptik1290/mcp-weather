@@ -139,7 +139,8 @@ class OpenMeteoProvider(WeatherProvider):
                     "wind_speed_10m_max",
                     "uv_index_max",
                     "sunrise",
-                    "sunset"
+                    "sunset",
+                    "snowfall_sum"
                 ],
                 "timezone": location.timezone or "auto",
                 "forecast_days": min(days, 16)
@@ -179,7 +180,8 @@ class OpenMeteoProvider(WeatherProvider):
                 wind_speed_max=daily_data.get("wind_speed_10m_max", [])[i] if i < len(daily_data.get("wind_speed_10m_max", [])) else None,
                 uv_index_max=daily_data.get("uv_index_max", [])[i] if i < len(daily_data.get("uv_index_max", [])) else None,
                 sunrise=daily_data.get("sunrise", [])[i] if i < len(daily_data.get("sunrise", [])) else None,
-                sunset=daily_data.get("sunset", [])[i] if i < len(daily_data.get("sunset", [])) else None
+                sunset=daily_data.get("sunset", [])[i] if i < len(daily_data.get("sunset", [])) else None,
+                snowfall_sum=daily_data.get("snowfall_sum", [])[i] if i < len(daily_data.get("snowfall_sum", [])) else None
             ))
         
         # Parse hourly forecast (next 24 hours from current time)

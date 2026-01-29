@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { useSettings } from '@/lib/settings';
 import { WeatherDetailModal } from './WeatherDetailModal';
 import { WeatherChart } from './WeatherChart';
-import { Wind, Droplets, CloudRain, Sun, Sunrise, Sunset, Thermometer, ChevronRight } from 'lucide-react';
+import { Wind, Droplets, CloudRain, CloudSnow, Sun, Sunrise, Sunset, Thermometer, ChevronRight } from 'lucide-react';
 
 interface ForecastCardProps {
     forecast: DailyForecast[];
@@ -284,6 +284,23 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                                     </div>
                                 </div>
                             )}
+
+                            {/* Snowfall Amount */}
+                            {selectedDay.snowfall_sum !== undefined && selectedDay.snowfall_sum > 0 && (
+                                <div className={`p-4 rounded-xl ${isDark ? 'bg-white/5' : 'bg-gray-50'} flex items-center gap-3`}>
+                                    <div className={`p-2 rounded-lg ${isDark ? 'bg-white/20' : 'bg-gray-100'}`}>
+                                        <CloudSnow className={`w-5 h-5 ${isDark ? 'text-white' : 'text-gray-600'}`} />
+                                    </div>
+                                    <div>
+                                        <p className={`text-xs ${subTextColor}`}>{t('snow') || 'Sníh'}</p>
+                                        <p className={`text-lg font-semibold ${textColor}`}>
+                                            {selectedDay.snowfall_sum.toFixed(1)} cm
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+
 
                             {/* Wind Speed */}
                             {selectedDay.wind_speed_max !== undefined && (

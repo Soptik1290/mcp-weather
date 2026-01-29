@@ -36,6 +36,7 @@ export interface DailyForecast {
     uv_index_max?: number;
     sunrise?: string;
     sunset?: string;
+    snowfall_sum?: number;
 }
 
 export interface HourlyForecast {

@@ -40,6 +40,7 @@ class DailyForecast(BaseModel):
     weather_description: Optional[str] = None
     precipitation_probability: Optional[float] = None
     precipitation_sum: Optional[float] = None
+    snowfall_sum: Optional[float] = None
     wind_speed_max: Optional[float] = None
     uv_index_max: Optional[float] = None
     sunrise: Optional[str] = None
