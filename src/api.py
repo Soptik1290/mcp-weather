@@ -9,9 +9,9 @@ load_dotenv()
 
 import os
 import os
-from fastapi import FastAPI, HTTPException, Response
+from fastapi import FastAPI, HTTPException, Response, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 import json
 import httpx
@@ -78,6 +78,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Security Headers
+@app.middleware("http")
+async def add_security_headers(request: Request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Content-Security-Policy"] = "default-src 'none'"
+    return response
 
 # Initialize providers
 providers = []
@@ -167,27 +176,59 @@ async def set_cached_weather(key: str, data: dict, ttl_seconds: int = 1800):
     except Exception as e:
         print(f"Redis set error: {e}")
 
+class RateLimiter:
+    def __init__(self, requests_per_minute: int):
+        self.requests_per_minute = requests_per_minute
+
+    async def __call__(self, request: Request):
+        if not redis_client:
+            return # Fail open if Redis is not connected
+            
+        client_ip = request.client.host
+        # Use path in key to allow different limits per endpoint
+        key = f"ratelimit:{request.url.path}:{client_ip}"
+        
+        try:
+            # Increment and get value
+            current = await redis_client.incr(key)
+            
+            # If new key, set expiry (60s)
+            if current == 1:
+                await redis_client.expire(key, 60)
+            
+            if current > self.requests_per_minute:
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail="Too many requests. Please try again later."
+                )
+        except HTTPException:
+            raise
+        except Exception as e:
+            print(f"Rate limit error: {e}")
+            # Fail open on redis errors to not block legitimate users during outages
+            pass
+
 # Aggregator
 aggregator = WeatherAggregator()
 
 
 # Request/Response models
 class SearchRequest(BaseModel):
-    query: str
-    language: str = "en"
+    query: str = Field(..., min_length=2, max_length=100, description="City name to search")
+    language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
 
 
 class WeatherRequest(BaseModel):
-    location_name: str
-    days: int = 7
-    language: str = "en"
+    location_name: str = Field(..., min_length=2, max_length=100)
+    days: int = Field(7, ge=1, le=16)
+    language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
 
 
 class CoordinatesRequest(BaseModel):
-    latitude: float
-    longitude: float
-    days: int = 7
-    language: str = "en"
+    latitude: float = Field(..., ge=-90, le=90)
+    longitude: float = Field(..., ge=-180, le=180)
+    days: int = Field(7, ge=1, le=16)
+    language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
 
 
 @app.get("/")
@@ -199,7 +240,9 @@ async def root():
 async def check_redis():
     return {"enabled": bool(redis_client)}
 
-@app.post("/search")
+from fastapi import Depends
+
+@app.post("/search", dependencies=[Depends(RateLimiter(requests_per_minute=30))])
 async def search_location(request: SearchRequest, response: Response):
     """Search for locations by name."""
     try:
@@ -220,7 +263,7 @@ async def search_location(request: SearchRequest, response: Response):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/weather/current")
+@app.post("/weather/current", dependencies=[Depends(RateLimiter(requests_per_minute=10))])
 async def get_current_weather(request: WeatherRequest, response: Response):
     """Get current weather with AI summary."""
     try:
@@ -270,7 +313,7 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/weather/forecast")
+@app.post("/weather/forecast", dependencies=[Depends(RateLimiter(requests_per_minute=10))])
 async def get_weather_forecast(request: WeatherRequest, response: Response):
     """Get weather forecast with AI analysis from multiple sources."""
     try:
@@ -340,7 +383,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/weather/coordinates")
+@app.post("/weather/coordinates", dependencies=[Depends(RateLimiter(requests_per_minute=20))])
 async def get_weather_by_coordinates(request: CoordinatesRequest, response: Response):
     """Get weather by coordinates (for geolocation)."""
     try:
@@ -401,7 +444,7 @@ class AuroraRequest(BaseModel):
     language: str = "en"
 
 
-@app.post("/aurora")
+@app.post("/aurora", dependencies=[Depends(RateLimiter(requests_per_minute=20))])
 async def get_aurora(request: AuroraRequest, response: Response):
     """Get aurora forecast from NOAA SWPC."""
     try:
@@ -422,7 +465,7 @@ async def get_aurora(request: AuroraRequest, response: Response):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/theme")
+@app.post("/theme", dependencies=[Depends(RateLimiter(requests_per_minute=30))])
 async def get_ambient_theme(request: WeatherRequest, response: Response):
     """Get ambient theme for current weather."""
     try:

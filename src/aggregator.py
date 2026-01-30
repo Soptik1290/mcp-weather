@@ -23,6 +23,28 @@ class WeatherAggregator:
     4. Assign confidence based on source agreement
     """
     
+    def _sanitize_prompt_input(self, text: str) -> str:
+        """
+        Sanitize input text to prevent prompt injection.
+        Removes potentially dangerous sequences and limits length.
+        """
+        if not text:
+            return ""
+            
+        # 1. Truncate to reasonable length (e.g. 200 chars for location)
+        sanitized = text[:200]
+        
+        # 2. Remove sequences that might confuse the model
+        # "System:", "User:" might simulate conversation turns
+        blacklist = ["System:", "User:", "Assistant:", "'''", '"""']
+        for term in blacklist:
+            sanitized = sanitized.replace(term, "")
+            
+        # 3. Strip excessive whitespace
+        sanitized = " ".join(sanitized.split())
+        
+        return sanitized
+    
     def __init__(self, api_key: Optional[str] = None):
         """
         Initialize the aggregator.
@@ -177,6 +199,9 @@ class WeatherAggregator:
         location = weather_data[0].location
         sources = [wd.provider for wd in weather_data]
         
+        # Sanitize input to prevent injection
+        safe_location_name = self._sanitize_prompt_input(location.name)
+        
         # Build comparison context
         context_parts = []
         for wd in weather_data:
@@ -218,7 +243,7 @@ Return a JSON object with:
 - "confidence": 0-1 score
 - "reasoning": brief explanation of your deduction"""
 
-        user_prompt = f"""Location: {location.name}
+        user_prompt = f"""Location: {safe_location_name}
 
 Data from {len(sources)} weather sources:
 {context}
