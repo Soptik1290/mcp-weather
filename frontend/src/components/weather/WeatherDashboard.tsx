@@ -239,6 +239,7 @@ export function WeatherDashboard() {
                             <CurrentWeatherCard
                                 current={weatherData.current}
                                 locationName={weatherData.location.name}
+                                originalLocationName={weatherData.location.original_name}
                                 astronomy={weatherData.astronomy}
                                 aiSummary={weatherData.ai_summary}
                                 isDark={isDark}

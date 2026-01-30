@@ -85,10 +85,18 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
         })
         : '';
 
+    const getDayNameShort = (date: Date) => {
+        return date.toLocaleDateString('cs-CZ', { weekday: 'short' }).replace('.', '');
+    };
+
+    const getDayNameLong = (date: Date) => {
+        return date.toLocaleDateString('cs-CZ', { weekday: 'long' });
+    };
+
     return (
         <>
-            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0`}>
-                <h3 className={`text-sm font-medium ${subTextColor} mb-3`}>
+            <Card className={`p-4 ${bgColor} backdrop-blur-md border-0 gap-2`}>
+                <h3 className={`text-sm font-medium ${subTextColor} mb-1 pl-1`}>
                     {t('daily_forecast')}
                 </h3>
 
@@ -96,7 +104,11 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                     {forecast.slice(0, 7).map((day, index) => {
                         const WeatherIcon = getWeatherIcon(day.weather_code);
                         const date = new Date(day.date);
-                        const dayName = index === 0 ? t('today') : getDayName(date);
+                        // Responsive day name logic
+                        const isToday = index === 0;
+                        const dayNameShort = isToday ? t('today') : getDayNameShort(date);
+                        const dayNameLong = isToday ? t('today') : getDayNameLong(date);
+
                         const weatherDesc = getWeatherDescription(day.weather_code);
 
                         return (
@@ -109,31 +121,32 @@ export function DailyForecastCard({ forecast, hourlyForecast, isDark = false }: 
                                 className={`
                                     group flex items-center justify-between py-3 px-3 -mx-3
                                     cursor-pointer rounded-xl
-                                    transition-all duration-200 ease-out
+                                    transition-all duration-300 ease-out
                                     hover:bg-gradient-to-r 
                                     ${isDark
                                         ? 'hover:from-white/10 hover:to-white/5 hover:shadow-lg hover:shadow-white/5'
-                                        : 'hover:from-blue-50 hover:to-transparent hover:shadow-md hover:shadow-blue-100/50'
+                                        : 'hover:from-blue-50/80 hover:to-transparent hover:shadow-md hover:shadow-blue-100/50'
                                     }
-                                    hover:scale-[1.02] hover:-translate-y-0.5
+                                    hover:scale-[1.01] hover:-translate-y-0.5
                                     active:scale-[0.99]
                                     ${index < forecast.length - 1 ? 'border-b border-white/5' : ''}
                                 `}
                             >
-                                <span className={`w-14 text-sm font-medium ${textColor} group-hover:font-semibold transition-all`}>
-                                    {dayName}
+                                <span className={`w-14 sm:w-24 text-sm font-medium ${textColor} group-hover:font-semibold transition-all capitalize`}>
+                                    <span className="md:hidden">{dayNameShort}</span>
+                                    <span className="hidden md:inline">{dayNameLong}</span>
                                 </span>
 
                                 <div className="flex items-center gap-2 flex-1 justify-center">
-                                    <WeatherIcon className={`w-5 h-5 ${subTextColor} group-hover:scale-110 transition-transform`} />
-                                    <span className={`text-xs ${subTextColor}`}>
+                                    <WeatherIcon className={`w-6 h-6 ${subTextColor} group-hover:scale-110 transition-transform`} />
+                                    <span className={`text-xs ${subTextColor} hidden sm:inline-block`}>
                                         {weatherDesc.split(' ').slice(0, 2).join(' ')}
                                     </span>
                                 </div>
 
-                                <div className={`flex items-center gap-2 text-sm ${textColor}`}>
-                                    <span className="font-semibold">{formatTemp(day.temperature_max)}</span>
-                                    <span className={subTextColor}>{formatTemp(day.temperature_min)}</span>
+                                <div className={`flex items-center gap-3 text-sm ${textColor}`}>
+                                    <span className="font-semibold w-8 text-right">{formatTemp(day.temperature_max)}</span>
+                                    <span className={`${subTextColor} w-8 text-right`}>{formatTemp(day.temperature_min)}</span>
                                     <ChevronRight className={`w-4 h-4 ${subTextColor} opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all`} />
                                 </div>
                             </motion.div>

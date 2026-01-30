@@ -296,7 +296,8 @@ export function UVIndexCard({
     const value = hasValue ? Math.min(uvIndex, 11) : 0;
 
     // Calculate dot position on arc (0-11 scale)
-    const angle = -90 + (value / 11) * 180;
+    // 180 (Left) -> 270 (Top) -> 360 (Right)
+    const angle = 180 + (value / 11) * 180;
     const radius = 40;
     const dotX = 50 + radius * Math.cos((angle * Math.PI) / 180);
     const dotY = 50 + radius * Math.sin((angle * Math.PI) / 180);

@@ -10,6 +10,7 @@ from datetime import datetime
 class Location(BaseModel):
     """Location information."""
     name: str
+    original_name: Optional[str] = None
     latitude: float
     longitude: float
     country: Optional[str] = None

@@ -9,6 +9,7 @@ import { useSettings } from '@/lib/settings';
 interface CurrentWeatherProps {
     current: CurrentWeatherType;
     locationName: string;
+    originalLocationName?: string;
     astronomy?: Astronomy | null;
     aiSummary?: string;
     isDark?: boolean;
@@ -17,6 +18,7 @@ interface CurrentWeatherProps {
 export function CurrentWeatherCard({
     current,
     locationName,
+    originalLocationName,
     astronomy,
     aiSummary,
     isDark = false,
@@ -38,14 +40,20 @@ export function CurrentWeatherCard({
         >
             {/* Location */}
             <div>
-                <motion.h1
-                    className={`text-4xl font-bold ${textColor}`}
+                <motion.div
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                 >
-                    {locationName}
-                </motion.h1>
+                    <h1 className={`text-4xl font-bold ${textColor}`}>
+                        {locationName}
+                    </h1>
+                    {originalLocationName && originalLocationName !== locationName && (
+                        <p className={`text-lg ${subTextColor} font-medium`}>
+                            {originalLocationName}
+                        </p>
+                    )}
+                </motion.div>
 
                 {/* Current conditions */}
                 <p className={`text-lg ${subTextColor} mt-1`}>

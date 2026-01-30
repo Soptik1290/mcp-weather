@@ -80,22 +80,41 @@ class OpenMeteoProvider(WeatherProvider):
     
     async def search_location(self, query: str, language: str = "en") -> list[Location]:
         """Search for locations by name using Open-Meteo geocoding."""
-        response = await self.client.get(
+        # Fetch localized names
+        response_loc = await self.client.get(
             f"{self.GEOCODING_URL}/search",
-            params={
-                "name": query,
-                "count": 10,
-                "language": language,
-                "format": "json"
-            }
+            params={"name": query, "count": 10, "language": language, "format": "json"}
         )
-        response.raise_for_status()
-        data = response.json()
-        
+        response_loc.raise_for_status()
+        data_loc = response_loc.json().get("results", [])
+
+        # Fetch English names (as "original") if language is different
+        data_en = []
+        if language != "en":
+            try:
+                response_en = await self.client.get(
+                    f"{self.GEOCODING_URL}/search",
+                    params={"name": query, "count": 10, "language": "en", "format": "json"}
+                )
+                response_en.raise_for_status()
+                data_en = response_en.json().get("results", [])
+            except Exception:
+                pass # Ignore if secondary fetch fails
+
         locations = []
-        for result in data.get("results", []):
+        for i, result in enumerate(data_loc):
+            # Try to find matching English result (by ID or approximate coords)
+            # Simple heuristic: assuming same order or ID match
+            original_name = None
+            if data_en:
+                # Try to find by ID first
+                match = next((item for item in data_en if item.get("id") == result.get("id")), None)
+                if match and match.get("name") != result.get("name"):
+                    original_name = match.get("name")
+            
             locations.append(Location(
                 name=result.get("name", ""),
+                original_name=original_name,
                 latitude=result["latitude"],
                 longitude=result["longitude"],
                 country=result.get("country"),
@@ -128,7 +147,8 @@ class OpenMeteoProvider(WeatherProvider):
                     "weather_code",
                     "precipitation_probability",
                     "wind_speed_10m",
-                    "relative_humidity_2m"
+                    "relative_humidity_2m",
+                    "uv_index"
                 ],
                 "daily": [
                     "weather_code",
@@ -151,6 +171,25 @@ class OpenMeteoProvider(WeatherProvider):
         
         # Parse current weather
         current_data = data.get("current", {})
+        
+        # Parse hourly to get UV index for current weather (not available in current endpoint)
+        hourly_data = data.get("hourly", {})
+        all_times = hourly_data.get("time", [])
+        
+        # Find current hour index
+        from datetime import datetime
+        now = datetime.now()
+        current_hour_str = now.strftime("%Y-%m-%dT%H:00")
+        
+        current_idx = 0
+        for i, time_str in enumerate(all_times):
+            if time_str >= current_hour_str:
+                current_idx = i
+                break
+                
+        # Get UV index for current hour
+        current_uv = hourly_data.get("uv_index", [])[current_idx] if current_idx < len(hourly_data.get("uv_index", [])) else None
+        
         current = CurrentWeather(
             temperature=current_data.get("temperature_2m", 0),
             feels_like=current_data.get("apparent_temperature"),
@@ -160,7 +199,8 @@ class OpenMeteoProvider(WeatherProvider):
             weather_code=current_data.get("weather_code"),
             weather_description=WMO_CODES.get(current_data.get("weather_code", 0), "Unknown"),
             pressure=current_data.get("pressure_msl"),
-            cloud_cover=current_data.get("cloud_cover")
+            cloud_cover=current_data.get("cloud_cover"),
+            uv_index=current_uv
         )
         
         # Parse daily forecast
@@ -185,26 +225,12 @@ class OpenMeteoProvider(WeatherProvider):
             ))
         
         # Parse hourly forecast (next 24 hours from current time)
-        from datetime import datetime
-        hourly_data = data.get("hourly", {})
         hourly_forecast = []
-        all_times = hourly_data.get("time", [])
-        
-        # Get current hour to filter out past hours
-        now = datetime.now()
-        current_hour_str = now.strftime("%Y-%m-%dT%H:00")
-        
-        # Find the index of the current hour or the next available hour
-        start_idx = 0
-        for i, time_str in enumerate(all_times):
-            if time_str >= current_hour_str:
-                start_idx = i
-                break
         
         # Get all available hours starting from current hour
-        times = all_times[start_idx:]
+        times = all_times[current_idx:]
         for i, time in enumerate(times):
-            original_idx = start_idx + i
+            original_idx = current_idx + i
             weather_code = hourly_data.get("weather_code", [])[original_idx] if original_idx < len(hourly_data.get("weather_code", [])) else None
             hourly_forecast.append(HourlyForecast(
                 time=time,
