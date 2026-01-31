@@ -32,7 +32,7 @@ export function WeatherDashboard() {
     const [error, setError] = useState<string | null>(null);
     const [currentTheme, setCurrentTheme] = useState<AmbientTheme>(THEMES['cloudy']);
 
-    const { shouldShowAurora, shouldUseDarkMode } = useSettings();
+    const { shouldShowAurora, shouldUseDarkMode, language } = useSettings();
     const isDark = shouldUseDarkMode(currentTheme.theme);
 
     // Load from localStorage on mount
@@ -62,7 +62,7 @@ export function WeatherDashboard() {
     // Fetch aurora data
     const fetchAuroraData = async (latitude: number) => {
         try {
-            const data = await getAuroraData(latitude);
+            const data = await getAuroraData(latitude, language);
             if (data) {
                 setAuroraData(data);
             }
@@ -76,7 +76,7 @@ export function WeatherDashboard() {
         setError(null);
         try {
             // Try to fetch real data from API
-            const data = await getWeatherForecast(query, 7, 'en');
+            const data = await getWeatherForecast(query, 7, language);
 
             if (data) {
                 setWeatherData(data);
@@ -105,7 +105,7 @@ export function WeatherDashboard() {
         setIsLoading(true);
         setError(null);
         try {
-            const data = await getWeatherByCoordinates(lat, lon, 7, 'en');
+            const data = await getWeatherByCoordinates(lat, lon, 7, language);
 
             if (data) {
                 setWeatherData(data);
@@ -142,7 +142,7 @@ export function WeatherDashboard() {
                     async (position) => {
                         const { latitude, longitude } = position.coords;
                         try {
-                            const data = await getWeatherByCoordinates(latitude, longitude, 7, 'en');
+                            const data = await getWeatherByCoordinates(latitude, longitude, 7, language);
                             if (data) {
                                 setWeatherData(data);
                                 if (data.ambient_theme?.theme) {
@@ -173,7 +173,7 @@ export function WeatherDashboard() {
         // Short delay to allow local storage load to complete first
         const timer = setTimeout(detectLocation, 100);
         return () => clearTimeout(timer);
-    }, [weatherData]);
+    }, [weatherData, language]);
 
     // Menu state  
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -247,6 +247,7 @@ export function WeatherDashboard() {
                                 current={weatherData.current}
                                 locationName={weatherData.location.name}
                                 originalLocationName={weatherData.location.original_name}
+                                country={weatherData.location.country}
                                 astronomy={weatherData.astronomy}
                                 aiSummary={weatherData.ai_summary}
                                 isDark={isDark}

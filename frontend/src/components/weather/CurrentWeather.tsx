@@ -12,6 +12,7 @@ interface CurrentWeatherProps {
     originalLocationName?: string;
     astronomy?: Astronomy | null;
     aiSummary?: string;
+    country?: string | null;
     isDark?: boolean;
 }
 
@@ -21,6 +22,7 @@ export function CurrentWeatherCard({
     originalLocationName,
     astronomy,
     aiSummary,
+    country,
     isDark = false,
 }: CurrentWeatherProps) {
     const { formatTemperature, t, getWeatherDescription } = useSettings();
@@ -45,47 +47,54 @@ export function CurrentWeatherCard({
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.2 }}
                 >
-                    <h1 className={`text-4xl font-bold ${textColor}`}>
+                    <h1 className={`text-6xl font-bold ${textColor} tracking-tight`}>
                         {locationName}
                     </h1>
+                    {country && (
+                        <p className={`text-xl ${subTextColor} mt-1 font-medium`}>
+                            {country}
+                        </p>
+                    )}
                     {originalLocationName && originalLocationName !== locationName && (
-                        <p className={`text-lg ${subTextColor} font-medium`}>
+                        <p className={`text-sm ${subTextColor} mt-1`}>
                             {originalLocationName}
                         </p>
                     )}
                 </motion.div>
 
                 {/* Current conditions */}
-                <p className={`text-lg ${subTextColor} mt-1`}>
+                <p className={`text-lg ${subTextColor} mt-4`}>
                     {weatherDesc}
                 </p>
             </div>
 
-            {/* Temperature */}
-            <div className="flex items-center gap-6 my-8">
-                <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', delay: 0.3 }}
-                >
-                    <WeatherIcon className={`w-24 h-24 ${textColor}`} strokeWidth={1.5} />
-                </motion.div>
-
-                <div>
+            {/* Temperature - Centered */}
+            <div className="flex-1 flex flex-col justify-center">
+                <div className="flex items-center gap-6 my-8">
                     <motion.div
-                        className={`text-8xl font-light ${textColor}`}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.4 }}
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ type: 'spring', delay: 0.3 }}
                     >
-                        {formatTemperature(current.temperature)}
+                        <WeatherIcon className={`w-24 h-24 ${textColor}`} strokeWidth={1.5} />
                     </motion.div>
 
-                    {current.feels_like !== undefined && (
-                        <p className={`text-lg ${subTextColor}`}>
-                            {t('feels_like')} {formatTemperature(current.feels_like)}
-                        </p>
-                    )}
+                    <div>
+                        <motion.div
+                            className={`text-8xl font-light ${textColor}`}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.4 }}
+                        >
+                            {formatTemperature(current.temperature)}
+                        </motion.div>
+
+                        {current.feels_like !== undefined && (
+                            <p className={`text-lg ${subTextColor}`}>
+                                {t('feels_like')} {formatTemperature(current.feels_like)}
+                            </p>
+                        )}
+                    </div>
                 </div>
             </div>
 
