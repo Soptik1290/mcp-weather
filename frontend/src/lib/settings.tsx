@@ -220,6 +220,17 @@ const translations: Record<Language, Record<string, string>> = {
         'uv_very_high_tip': 'Avoid sun exposure 10am-4pm',
         'temp_high': 'High',
         'temp_low': 'Low',
+        // Wind Directions
+        'dir_N': 'N',
+        'dir_NE': 'NE',
+        'dir_E': 'E',
+        'dir_SE': 'SE',
+        'dir_S': 'S',
+        'dir_SW': 'SW',
+        'dir_W': 'W',
+        'dir_NW': 'NW',
+
+        // Hourly
         'hourly_temperature': 'Hourly temperature',
         'precipitation': 'Precipitation',
     },
@@ -236,6 +247,16 @@ const translations: Record<Language, Record<string, string>> = {
         'feels_like': 'Pocitově',
         'now': 'Teď',
         'expected': 'Očekáváno',
+
+        // Wind Directions
+        'dir_N': 'S',
+        'dir_NE': 'SV',
+        'dir_E': 'V',
+        'dir_SE': 'JV',
+        'dir_S': 'J',
+        'dir_SW': 'JZ',
+        'dir_W': 'Z',
+        'dir_NW': 'SZ',
 
         // Humidity levels
         'dry': 'Sucho',
@@ -487,7 +508,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
                     if (settings.auroraDisplay === 'always') return true;
                     if (settings.auroraDisplay === 'never') return false;
                     // 'auto' - show if there's any chance of visibility
-                    return visibilityProbability > 0 || settings.language === 'en'; // Show for demo/testing in EN
+                    return visibilityProbability > 0;
                 },
                 shouldUseDarkMode: (themeName: string) => {
                     // Dark themes from the weather/time system

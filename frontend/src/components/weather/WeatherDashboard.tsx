@@ -23,62 +23,41 @@ import { THEMES, isDarkTheme, type AmbientTheme, type ThemeName } from '@/lib/th
 import { getWeatherForecast, getAuroraData, getWeatherByCoordinates } from '@/lib/api';
 import { useSettings } from '@/lib/settings';
 
-// Demo data for initial display (fallback when API unavailable)
-const DEMO_DATA: WeatherResponse = {
-    location: {
-        name: 'Prague',
-        latitude: 50.08804,
-        longitude: 14.42076,
-        country: 'Czechia',
-        timezone: 'Europe/Prague',
-    },
-    current: {
-        temperature: -1,
-        feels_like: -5,
-        humidity: 85,
-        wind_speed: 15,
-        wind_direction: 270,
-        weather_code: 3,
-        weather_description: 'Overcast',
-        uv_index: 1,
-        pressure: 1015,
-        cloud_cover: 90,
-    },
-    daily_forecast: [
-        { date: '2026-01-24', temperature_max: 2, temperature_min: -3, weather_code: 3, weather_description: 'Overcast' },
-        { date: '2026-01-25', temperature_max: 4, temperature_min: -1, weather_code: 61, weather_description: 'Slight rain' },
-        { date: '2026-01-26', temperature_max: 3, temperature_min: 0, weather_code: 2, weather_description: 'Partly cloudy' },
-        { date: '2026-01-27', temperature_max: 5, temperature_min: 1, weather_code: 1, weather_description: 'Mainly clear' },
-        { date: '2026-01-28', temperature_max: 6, temperature_min: 2, weather_code: 0, weather_description: 'Clear sky' },
-        { date: '2026-01-29', temperature_max: 4, temperature_min: -1, weather_code: 71, weather_description: 'Slight snow' },
-        { date: '2026-01-30', temperature_max: 1, temperature_min: -4, weather_code: 73, weather_description: 'Moderate snow' },
-    ],
-    hourly_forecast: Array.from({ length: 24 }, (_, i) => ({
-        time: `2026-01-24T${String(i).padStart(2, '0')}:00:00`,
-        temperature: Math.round(-1 + Math.sin(i / 4) * 3),
-        weather_code: i < 8 ? 3 : i < 16 ? 2 : 1,
-        precipitation_probability: Math.max(0, 30 - i * 2),
-    })),
-    astronomy: {
-        sunrise: '2026-01-24T07:30:00',
-        sunset: '2026-01-24T16:45:00',
-    },
-    ai_summary: "It's a cold, overcast day in Prague. Bundle up warmly as temperatures hover around freezing. Light rain expected tomorrow, with possible snow by the weekend.",
-    confidence: 0.92,
-    ambient_theme: { theme: 'cloudy', gradient: ['#8e9eab', '#c5d5e4', '#eef2f3'], effect: null },
-};
+const STORAGE_KEY = 'weather-dashboard-data';
 
 export function WeatherDashboard() {
-    const [weatherData, setWeatherData] = useState<WeatherResponse>(DEMO_DATA);
+    const [weatherData, setWeatherData] = useState<WeatherResponse | null>(null);
     const [auroraData, setAuroraData] = useState<any>(null);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [currentTheme, setCurrentTheme] = useState<AmbientTheme>(
-        THEMES[(weatherData.ambient_theme?.theme as ThemeName) || 'cloudy']
-    );
+    const [currentTheme, setCurrentTheme] = useState<AmbientTheme>(THEMES['cloudy']);
 
     const { shouldShowAurora, shouldUseDarkMode } = useSettings();
     const isDark = shouldUseDarkMode(currentTheme.theme);
+
+    // Load from localStorage on mount
+    useEffect(() => {
+        try {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            if (stored) {
+                const parsed = JSON.parse(stored);
+                setWeatherData(parsed);
+                if (parsed.ambient_theme?.theme) {
+                    const themeName = parsed.ambient_theme.theme as ThemeName;
+                    if (THEMES[themeName]) setCurrentTheme(THEMES[themeName]);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load cached weather:', e);
+        }
+    }, []);
+
+    // Save to localStorage when data changes
+    useEffect(() => {
+        if (weatherData) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(weatherData));
+        }
+    }, [weatherData]);
 
     // Fetch aurora data
     const fetchAuroraData = async (latitude: number) => {
@@ -111,20 +90,12 @@ export function WeatherDashboard() {
                 // Fetch aurora data for this location
                 fetchAuroraData(data.location.latitude);
             } else {
-                // API not available, use demo with location name
-                setError('API not available - showing demo data');
-                setWeatherData({
-                    ...DEMO_DATA,
-                    location: { ...DEMO_DATA.location, name: query },
-                });
+                // API not available
+                setError('API not available');
             }
         } catch (err) {
             console.error('Search error:', err);
             setError('Failed to fetch weather data');
-            setWeatherData({
-                ...DEMO_DATA,
-                location: { ...DEMO_DATA.location, name: query },
-            });
         } finally {
             setIsLoading(false);
         }
@@ -156,9 +127,15 @@ export function WeatherDashboard() {
         }
     };
 
-    // Auto-detect location on mount
+    // Auto-detect location on mount if no cached data
     useEffect(() => {
         const detectLocation = async () => {
+            // Only auto-detect if we don't have weather data yet
+            if (weatherData) {
+                setIsLoading(false);
+                return;
+            }
+
             if (typeof navigator !== 'undefined' && navigator.geolocation) {
                 setIsLoading(true);
                 navigator.geolocation.getCurrentPosition(
@@ -178,30 +155,60 @@ export function WeatherDashboard() {
                             }
                         } catch (err) {
                             console.error('Failed to fetch weather for location:', err);
-                            // Keep demo data as fallback
-                            fetchAuroraData(weatherData.location.latitude);
+                            setError('Failed to fetch weather');
                         }
                         setIsLoading(false);
                     },
                     (err) => {
                         console.log('Geolocation not available or denied:', err.message);
-                        // Use demo data, fetch aurora for Prague
-                        fetchAuroraData(weatherData.location.latitude);
                         setIsLoading(false);
                     },
                     { timeout: 10000, enableHighAccuracy: false }
                 );
             } else {
-                // No geolocation support, use demo data
-                fetchAuroraData(weatherData.location.latitude);
+                setIsLoading(false);
             }
         };
 
-        detectLocation();
-    }, []); // eslint-disable-line react-hooks/exhaustive-deps
+        // Short delay to allow local storage load to complete first
+        const timer = setTimeout(detectLocation, 100);
+        return () => clearTimeout(timer);
+    }, [weatherData]);
 
     // Menu state  
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+
+    // Loading State
+    if (isLoading && !weatherData) {
+        return (
+            <AmbientBackground theme={THEMES['cloudy']}>
+                <div className="min-h-screen flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-white"></div>
+                    <p className="ml-4 text-white text-lg">Loading weather...</p>
+                </div>
+            </AmbientBackground>
+        );
+    }
+
+    // Empty State (Search)
+    if (!weatherData) {
+        return (
+            <AmbientBackground theme={THEMES['cloudy']}>
+                <div className="min-h-screen p-6 flex flex-col items-center justify-center">
+                    <div className="max-w-md w-full space-y-8 text-center">
+                        <h1 className="text-4xl font-bold text-white mb-2">Weather AI</h1>
+                        <p className="text-white/70 mb-8">Enter a city or enable location to see the forecast.</p>
+                        <SearchBar
+                            onSearch={handleSearch}
+                            onLocationDetected={handleLocationDetected}
+                            isLoading={isLoading}
+                            isDark={false}
+                        />
+                    </div>
+                </div>
+            </AmbientBackground>
+        );
+    }
 
     return (
         <AmbientBackground theme={currentTheme}>

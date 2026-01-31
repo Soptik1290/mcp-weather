@@ -15,6 +15,8 @@ Works as both a **REST API** for web apps and an **MCP Server** for AI assistant
 - 🌅 **Astronomy** - Sunrise/sunset, moon phases
 - 🌍 **Multi-language** - EN, CZ
 - 📍 **Geolocation** - Automatic location detection with reverse geocoding (shows city name, not coordinates)
+- 🚀 **Smart Caching** - Redis-backed caching for geocoding (24h), weather data (30m), and aurora (1h)
+- 🛡️ **Security** - Rate limiting, security headers, and input sanitization
 - 🌌 **Aurora forecast** - Real-time aurora borealis visibility prediction from NOAA data
 
 ## 🚀 Quick Start

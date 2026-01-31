@@ -722,7 +722,7 @@ export function MoonPhaseCard({
 function getWindDirection(degrees: number, t: (key: string) => string): string {
     const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
     const index = Math.round(degrees / 45) % 8;
-    return directions[index];
+    return t(`dir_${directions[index]}`);
 }
 
 function getHumidityLevel(humidity: number, t: (key: string) => string): string {

@@ -7,115 +7,27 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+
 import asyncio
 from datetime import datetime
 from mcp.server.fastmcp import FastMCP
-from src.providers.open_meteo import OpenMeteoProvider
-from src.providers.openweathermap import OpenWeatherMapProvider
-from src.providers.weatherapi import WeatherAPIProvider
-from src.providers.met_norway import METNorwayProvider
-from src.providers.bright_sky import BrightSkyProvider
-from src.providers.visualcrossing import VisualCrossingProvider
+from src.services import initialize_providers, reverse_geocode
 from src.aggregator import WeatherAggregator
 from src.models import Location
 import json
-import httpx
-
-# Initialize HTTP client for reverse geocoding
-http_client = httpx.AsyncClient(timeout=10.0)
-
-
-async def reverse_geocode(latitude: float, longitude: float) -> tuple[str, str | None]:
-    """
-    Reverse geocode coordinates to get city name using Nominatim API.
-    Returns (city_name, country) tuple.
-    """
-    try:
-        response = await http_client.get(
-            "https://nominatim.openstreetmap.org/reverse",
-            params={
-                "lat": latitude,
-                "lon": longitude,
-                "format": "json",
-                "zoom": 10,  # City level
-                "addressdetails": 1
-            },
-            headers={
-                "User-Agent": "MCP-Weather-App/1.0"
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        
-        address = data.get("address", {})
-        # Try to get city name from various fields
-        city = (
-            address.get("city") or
-            address.get("town") or
-            address.get("village") or
-            address.get("municipality") or
-            address.get("county") or
-            data.get("name", f"Location ({latitude:.2f}, {longitude:.2f})")
-        )
-        country = address.get("country")
-        
-        return city, country
-    except Exception as e:
-        print(f"[WARN] Reverse geocoding failed: {e}")
-        return f"Location ({latitude:.2f}, {longitude:.2f})", None
-
 
 # Initialize FastMCP server
 mcp = FastMCP("weather-aggregator")
 
 # Initialize components
 aggregator = WeatherAggregator()
-providers = []
 
-# 1. OpenMeteo (Free, no key required)
-try:
-    providers.append(OpenMeteoProvider())
-    print("[OK] OpenMeteo provider initialized")
-except Exception as e:
-    print(f"[ERR] Failed to initialize OpenMeteo: {e}")
+# Initialize providers using shared service
+# providers list contains tuples: [("open_meteo", instance), ...]
+providers_list = initialize_providers()
 
-# 2. OpenWeatherMap
-try:
-    if os.getenv("OPENWEATHERMAP_API_KEY"):
-        providers.append(OpenWeatherMapProvider())
-        print("[OK] OpenWeatherMap provider initialized")
-except Exception as e:
-    print(f"[WARN] OpenWeatherMap not available: {e}")
-
-# 3. WeatherAPI
-try:
-    if os.getenv("WEATHERAPI_KEY"):
-        providers.append(WeatherAPIProvider())
-        print("[OK] WeatherAPI provider initialized")
-except Exception as e:
-    print(f"[WARN] WeatherAPI not available: {e}")
-
-# 4. Visual Crossing
-try:
-    if os.getenv("VISUALCROSSING_KEY"):
-        providers.append(VisualCrossingProvider())
-        print("[OK] Visual Crossing provider initialized")
-except Exception as e:
-    print(f"[WARN] Visual Crossing not available: {e}")
-
-# 5. MET Norway (Free, no key required)
-try:
-    providers.append(METNorwayProvider())
-    print("[OK] MET Norway (Yr.no) provider initialized")
-except Exception as e:
-    print(f"[WARN] MET Norway not available: {e}")
-
-# 6. Bright Sky / DWD (Free, no key required)
-try:
-    providers.append(BrightSkyProvider())
-    print("[OK] Bright Sky (DWD) provider initialized")
-except Exception as e:
-    print(f"[WARN] Bright Sky not available: {e}")
+# Extract just the provider instances for iteration
+providers = [p[1] for p in providers_list]
 
 if not providers:
     print("[ERR] No weather providers available!")

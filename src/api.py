@@ -16,50 +16,10 @@ from typing import Optional
 import json
 import httpx
 
-# HTTP client for reverse geocoding
-_http_client = httpx.AsyncClient(timeout=10.0)
 
+# HTTP client for reverse geocoding is now in src.services
 
-async def reverse_geocode(latitude: float, longitude: float) -> tuple[str, str | None]:
-    """
-    Reverse geocode coordinates to get city name using Nominatim API.
-    Returns (city_name, country) tuple.
-    """
-    try:
-        response = await _http_client.get(
-            "https://nominatim.openstreetmap.org/reverse",
-            params={
-                "lat": latitude,
-                "lon": longitude,
-                "format": "json",
-                "zoom": 10,  # City level
-                "addressdetails": 1
-            },
-            headers={
-                "User-Agent": "MCP-Weather-App/1.0"
-            }
-        )
-        response.raise_for_status()
-        data = response.json()
-        
-        address = data.get("address", {})
-        # Try to get city name from various fields
-        city = (
-            address.get("city") or
-            address.get("town") or
-            address.get("village") or
-            address.get("municipality") or
-            address.get("county") or
-            data.get("name", f"Location ({latitude:.2f}, {longitude:.2f})")
-        )
-        country = address.get("country")
-        
-        return city, country
-    except Exception as e:
-        print(f"[WARN] Reverse geocoding failed: {e}")
-        return f"Location ({latitude:.2f}, {longitude:.2f})", None
-
-from src.providers.open_meteo import OpenMeteoProvider
+from src.services import initialize_providers, reverse_geocode, get_open_meteo_provider
 from src.aggregator import WeatherAggregator
 from src.models import Location, WeatherData
 
@@ -89,59 +49,8 @@ async def add_security_headers(request: Request, call_next):
     return response
 
 # Initialize providers
-providers = []
-
-# Always available - no API key needed
-open_meteo = OpenMeteoProvider()
-providers.append(("open_meteo", open_meteo))
-
-# OpenWeatherMap - optional
-if os.getenv("OPENWEATHERMAP_API_KEY"):
-    try:
-        from src.providers.openweathermap import OpenWeatherMapProvider
-        owm = OpenWeatherMapProvider()
-        providers.append(("openweathermap", owm))
-        print("✓ OpenWeatherMap provider enabled")
-    except Exception as e:
-        print(f"✗ OpenWeatherMap failed: {e}")
-
-# WeatherAPI.com - optional
-if os.getenv("WEATHERAPI_KEY"):
-    try:
-        from src.providers.weatherapi import WeatherAPIProvider
-        wapi = WeatherAPIProvider()
-        providers.append(("weatherapi", wapi))
-        print("✓ WeatherAPI.com provider enabled")
-    except Exception as e:
-        print(f"✗ WeatherAPI failed: {e}")
-
-# Visual Crossing - optional
-if os.getenv("VISUALCROSSING_KEY"):
-    try:
-        from src.providers.visualcrossing import VisualCrossingProvider
-        vc = VisualCrossingProvider()
-        providers.append(("visualcrossing", vc))
-        print("✓ Visual Crossing provider enabled")
-    except Exception as e:
-        print(f"✗ Visual Crossing failed: {e}")
-
-# MET Norway (Yr.no) - always available, no API key needed
-try:
-    from src.providers.met_norway import METNorwayProvider
-    met_norway = METNorwayProvider()
-    providers.append(("met_norway", met_norway))
-    print("✓ MET Norway (Yr.no) provider enabled")
-except Exception as e:
-    print(f"✗ MET Norway failed: {e}")
-
-# Bright Sky (DWD) - always available, no API key needed
-try:
-    from src.providers.bright_sky import BrightSkyProvider
-    bright_sky = BrightSkyProvider()
-    providers.append(("bright_sky", bright_sky))
-    print("✓ Bright Sky (DWD) provider enabled")
-except Exception as e:
-    print(f"✗ Bright Sky failed: {e}")
+providers = initialize_providers()
+open_meteo = get_open_meteo_provider(providers)
 
 print(f"Active providers: {[p[0] for p in providers]}")
 
