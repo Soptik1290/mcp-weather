@@ -8,7 +8,7 @@ Works as both a **REST API** for web apps and an **MCP Server** for AI assistant
 - 🌤️ **Multi-source aggregation** - Open-Meteo, OpenWeatherMap, WeatherAPI, Visual Crossing, MET Norway (Yr.no), DWD (Bright Sky)
 - 🤖 **AI-powered deduction** - GPT-5-mini analyzes differences and deduces most accurate values
 - 🔌 **Dual Mode** - Runs as REST API (FastAPI) or MCP Server (FastMCP)
-- 🎨 **Ambient theming** - Dynamic gradients based on weather/time (sunny, rainy, storm, night...)
+- 🎨 **Ambient theming** - Dynamic gradients based on weather/time (sunny, rainy, storm, night, **fog, sandstorm, blizzard, aurora**...)
 - 🧠 **Advanced Data Processing** - Uses **EWMA** (Exponential Smoothing) for forecast curves and **Kalman Filter** for sensor fusion
 - 📊 **Confidence scores** - Based on source agreement (0-1)
 - 📅 **Forecasts** - Daily (up to 16 days) + Hourly (24 hours)
@@ -111,6 +111,7 @@ Add the following configuration (adjust path to your project):
 - `get_weather_forecast(location_name, days)` - Full forecast + AI deduction
 - `get_weather_by_coordinates(lat, lon)` - Weather for exact location
 - `get_ambient_theme(location_name)` - Get UI theme colors for current weather
+- `get_aurora_forecast(location_name)` - Aurora Borealis forecast & visibility
 
 #### Option B: Run as REST API (for Frontend)
 
@@ -169,7 +170,7 @@ curl -X POST http://localhost:8000/weather/forecast \
 | Backend | Python 3.14+, `uv` |
 | API Framework | FastAPI (REST) |
 | MCP Framework | FastMCP (MCP Server) |
-| Frontend | Next.js 16.1.1, Tailwind v4, shadcn/ui |
+| Frontend | Next.js 16.1.4, Tailwind v4, shadcn/ui |
 | AI | OpenAI GPT-5-mini |
 | Weather | Open-Meteo (free), OpenWeatherMap, WeatherAPI, Visual Crossing |
 
