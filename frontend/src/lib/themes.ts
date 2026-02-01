@@ -11,7 +11,17 @@ export type ThemeName =
     | 'sunrise'
     | 'sunset'
     | 'clear_night'
-    | 'cloudy_night';
+    | 'cloudy_night'
+    | 'fog'
+    | 'fog_night'
+    | 'extreme_heat'
+    | 'extreme_cold'
+    | 'wind'
+    | 'hail'
+    | 'snow_night'
+    | 'rain_night'
+    | 'sandstorm'
+    | 'blizzard';
 
 export interface AmbientTheme {
     theme: ThemeName;
@@ -64,6 +74,56 @@ export const THEMES: Record<ThemeName, AmbientTheme> = {
     cloudy_night: {
         theme: 'cloudy_night',
         gradient: ['#2c3e50', '#34495e', '#1a1a2e'],
+        effect: null,
+    },
+    fog: {
+        theme: 'fog',
+        gradient: ['#B0BEC5', '#CFD8DC', '#ECEFF1'],
+        effect: null,
+    },
+    fog_night: {
+        theme: 'fog_night',
+        gradient: ['#0f2027', '#203a43', '#2c5364'],
+        effect: null,
+    },
+    extreme_heat: {
+        theme: 'extreme_heat',
+        gradient: ['#ff4e50', '#f9d423', '#ff9a9e'],
+        effect: null,
+    },
+    extreme_cold: {
+        theme: 'extreme_cold',
+        gradient: ['#00c6ff', '#0072ff', '#a1c4fd'],
+        effect: null,
+    },
+    wind: {
+        theme: 'wind',
+        gradient: ['#4CA1AF', '#C4E0E5', '#2C3E50'],
+        effect: null,
+    },
+    hail: {
+        theme: 'hail',
+        gradient: ['#606c88', '#3f4c6b', '#BDBBBE'],
+        effect: null,
+    },
+    snow_night: {
+        theme: 'snow_night',
+        gradient: ['#1e3c72', '#2a5298', '#2c5364'],
+        effect: null,
+    },
+    rain_night: {
+        theme: 'rain_night',
+        gradient: ['#000046', '#1CB5E0', '#000851'],
+        effect: null,
+    },
+    sandstorm: {
+        theme: 'sandstorm',
+        gradient: ['#c9aa88', '#e4d5b7', '#d6cebf'],
+        effect: null,
+    },
+    blizzard: {
+        theme: 'blizzard',
+        gradient: ['#cfd9df', '#e2ebf0', '#fdfbfb'],
         effect: null,
     },
 };

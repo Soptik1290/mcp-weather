@@ -316,33 +316,118 @@ Analyze these sources and deduce the most accurate current weather."""
         weather_code = current_weather.weather_code or 0
         cloud_cover = current_weather.cloud_cover or 0
         
-        # Storm conditions (codes 95-99) - highest priority
+        # Hail conditions (codes 96, 99)
+        if weather_code in [96, 99]:
+            return {
+                "theme": "hail",
+                "gradient": ["#606c88", "#3f4c6b", "#BDBBBE"],
+                "effect": None
+            }
+
+        # Sandstorm (codes 30-35 OR description check)
+        # Note: WMO codes 30-35 are dust/sand, but might not be standard in all providers.
+        # Checking description is safer for "sand" or "dust".
+        description = getattr(current_weather, 'weather_description', '') or ''
+        if weather_code in [30, 31, 32, 33, 34, 35] or 'sand' in description.lower() or 'dust' in description.lower():
+             return {
+                "theme": "sandstorm",
+                "gradient": ["#c9aa88", "#e4d5b7", "#d6cebf"],
+                "effect": None
+            }
+
+        # Blizzard (Snow + High Wind > 50km/h)
+        # Snow codes: 71, 73, 75, 77, 85, 86
+        wind_speed = current_weather.wind_speed or 0
+        if weather_code in [71, 73, 75, 77, 85, 86] and wind_speed >= 50:
+             return {
+                "theme": "blizzard",
+                "gradient": ["#cfd9df", "#e2ebf0", "#fdfbfb"],
+                "effect": None
+            }
+
+        # Storm conditions (codes 95-99)
         if weather_code >= 95:
             return {
                 "theme": "storm",
                 "gradient": ["#1a0a2e", "#16213e", "#0f0f0f"],
                 "effect": "lightning"
             }
-        
-        # Rain conditions (codes 51-67, 80-82)
-        if 51 <= weather_code <= 67 or 80 <= weather_code <= 82:
-            return {
-                "theme": "rain",
-                "gradient": ["#4a6fa5", "#6b8cae", "#8fa8c2"],
+            
+        # Extreme Heat (>32°C) - prioritize over sunny, but maybe not over rain? (Rain usually cools it down anyway)
+        # Check current temperature
+        temp = current_weather.temperature
+        if temp is not None and temp >= 32:
+             return {
+                "theme": "extreme_heat",
+                "gradient": ["#ff4e50", "#f9d423", "#ff9a9e"],
                 "effect": None
             }
+            
+        # Extreme Cold (<-15°C)
+        if temp is not None and temp <= -15:
+             return {
+                "theme": "extreme_cold",
+                "gradient": ["#00c6ff", "#0072ff", "#a1c4fd"],
+                "effect": None
+            }
+            
+        # Wind (>40 km/h)
+        wind = current_weather.wind_speed
+        if wind is not None and wind >= 40:
+             return {
+                "theme": "wind",
+                "gradient": ["#4CA1AF", "#C4E0E5", "#2C3E50"],
+                "effect": None
+            }
+            
+        # Fog conditions (codes 45, 48)
+        if weather_code in [45, 48]:
+            if is_night:
+                return {
+                    "theme": "fog_night",
+                    "gradient": ["#0f2027", "#203a43", "#2c5364"],
+                    "effect": None
+                }
+            else:
+                return {
+                    "theme": "fog",
+                    "gradient": ["#B0BEC5", "#CFD8DC", "#ECEFF1"],
+                    "effect": None
+                }
+
+        # Rain conditions (codes 51-67, 80-82)
+        if 51 <= weather_code <= 67 or 80 <= weather_code <= 82:
+            if is_night:
+                return {
+                    "theme": "rain_night",
+                    "gradient": ["#000046", "#1CB5E0", "#000851"],
+                    "effect": None
+                }
+            else:
+                return {
+                    "theme": "rain",
+                    "gradient": ["#4a6fa5", "#6b8cae", "#8fa8c2"],
+                    "effect": None
+                }
         
         # Snow conditions (codes 71-77, 85-86)
         if 71 <= weather_code <= 77 or 85 <= weather_code <= 86:
-            return {
-                "theme": "snow",
-                "gradient": ["#e8f4f8", "#d4e8ed", "#b8d4e3"],
-                "effect": None
-            }
+            if is_night:
+                return {
+                    "theme": "snow_night",
+                    "gradient": ["#1e3c72", "#2a5298", "#2c5364"],
+                    "effect": None
+                }
+            else:
+                return {
+                    "theme": "snow",
+                    "gradient": ["#e8f4f8", "#d4e8ed", "#b8d4e3"],
+                    "effect": None
+                }
         
-        # Cloudy/overcast conditions (codes 2-3, 45-48) - prioritize over time-based themes
+        # Cloudy/overcast conditions (codes 2-3)
         # Also use cloudy if cloud cover is high
-        if weather_code in [2, 3, 45, 48] or cloud_cover >= 70:
+        if weather_code in [2, 3] or cloud_cover >= 70:
             if is_night:
                 return {
                     "theme": "cloudy_night",
