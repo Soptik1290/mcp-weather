@@ -273,6 +273,43 @@ async def get_ambient_theme(location_name: str) -> str:
     return json.dumps(theme, indent=2)
 
 
+@mcp.tool()
+async def get_aurora_forecast(location_name: str) -> str:
+    """
+    Get Aurora Borealis (Northern Lights) forecast and visibility probability.
+    
+    Args:
+        location_name: Name of the city/location (e.g. "Tromso", "Prague")
+        
+    Returns:
+        JSON with current Kp index, visibility probability, and 3-day forecast
+    """
+    if not providers:
+        return json.dumps({"error": "No providers available for location search"})
+
+    # 1. Get coordinates for location
+    locations = await providers[0].search_location(location_name)
+    if not locations:
+        return json.dumps({"error": f"Location '{location_name}' not found"})
+    
+    location = locations[0]
+    
+    # 2. Get aurora data
+    from src.aurora import get_aurora_data
+    
+    data = await get_aurora_data(latitude=location.latitude)
+    
+    # Add location info to result
+    data["location"] = {
+        "name": location.name,
+        "latitude": location.latitude,
+        "country": location.country
+    }
+    
+    return json.dumps(data, indent=2)
+
+
+
 def main():
     """Run the MCP server."""
     mcp.run()
