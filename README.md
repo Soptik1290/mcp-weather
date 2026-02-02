@@ -202,4 +202,11 @@ mcp-weather/
 
 ## License
 
-MIT
+Copyright (c) 2026 Tomáš Stark
+
+All rights reserved.
+
+This code is provided for viewing purposes only.
+You may not copy, modify, distribute, or use this code,
+in whole or in part, without explicit written permission
+from the author.
