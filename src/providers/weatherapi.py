@@ -178,7 +178,10 @@ class WeatherAPIProvider(WeatherProvider):
             astronomy = Astronomy(
                 sunrise=astro_data.get("sunrise"),
                 sunset=astro_data.get("sunset"),
+                moonrise=astro_data.get("moonrise"),
+                moonset=astro_data.get("moonset"),
                 moon_phase_name=astro_data.get("moon_phase"),
+                moon_illumination=astro_data.get("moon_illumination"),
             )
             
             return WeatherData(

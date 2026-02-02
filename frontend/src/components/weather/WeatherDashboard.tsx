@@ -298,10 +298,16 @@ export function WeatherDashboard() {
                             <SunTimesCard
                                 sunrise={weatherData.astronomy?.sunrise}
                                 sunset={weatherData.astronomy?.sunset}
+                                daylightDuration={weatherData.astronomy?.daylight_duration}
                                 isDark={isDark}
                             />
                             <MoonPhaseCard
                                 moonPhase={weatherData.astronomy?.moon_phase}
+                                moonrise={weatherData.astronomy?.moonrise}
+                                moonset={weatherData.astronomy?.moonset}
+                                illumination={weatherData.astronomy?.moon_illumination}
+                                moonDistance={weatherData.astronomy?.moon_distance}
+                                nextFullMoon={weatherData.astronomy?.next_full_moon}
                                 isDark={isDark}
                             />
                         </div>

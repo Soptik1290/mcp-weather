@@ -63,8 +63,14 @@ class Astronomy(BaseModel):
     """Astronomical data."""
     sunrise: Optional[str] = None
     sunset: Optional[str] = None
+    moonrise: Optional[str] = None
+    moonset: Optional[str] = None
     moon_phase: Optional[float] = Field(None, description="Moon phase 0-1 (0=new, 0.5=full)")
     moon_phase_name: Optional[str] = None
+    moon_illumination: Optional[int] = Field(None, description="Percentage 0-100")
+    daylight_duration: Optional[float] = Field(None, description="Seconds of daylight")
+    moon_distance: Optional[int] = Field(None, description="Distance in km")
+    next_full_moon: Optional[str] = Field(None, description="ISO datetime of next full moon")
 
 
 class WeatherData(BaseModel):

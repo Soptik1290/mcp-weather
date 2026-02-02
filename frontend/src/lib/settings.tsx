@@ -141,6 +141,8 @@ const translations: Record<Language, Record<string, string>> = {
         'hourly_forecast': 'Hourly Forecast',
         'daily_forecast': '7-Day Forecast',
         'today': 'Today',
+        'day': 'day',
+        'days': 'days',
 
         // Search
         'search_city': 'Search city...',
@@ -208,6 +210,19 @@ const translations: Record<Language, Record<string, string>> = {
         'moon_waning_gibbous': 'Waning Gibbous',
         'moon_last_quarter': 'Last Quarter',
         'moon_waning_crescent': 'Waning Crescent',
+        'moon_details': 'Moon Details',
+        'moonrise': 'Moonrise',
+        'moonset': 'Moonset',
+        'illumination': 'Illumination',
+        'next_full_moon': 'Next Full Moon',
+        'distance': 'Distance',
+        'sun_details': 'Sun Details',
+        'sun_details_subtitle': 'Sun Position & Daylight',
+        'dawn': 'Dawn',
+        'dusk': 'Dusk',
+        'total_daylight': 'Total Daylight',
+        'remaining_daylight': 'Remaining Daylight',
+        'sun_set_already': 'Sun has set',
 
         // Detail modals
         'current': 'Current',
@@ -275,6 +290,8 @@ const translations: Record<Language, Record<string, string>> = {
         'hourly_forecast': 'Hodinová předpověď',
         'daily_forecast': '7denní předpověď',
         'today': 'Dnes',
+        'day': 'den',
+        'days': 'dní',
 
         // Search
         'search_city': 'Hledat město...',
@@ -342,6 +359,19 @@ const translations: Record<Language, Record<string, string>> = {
         'moon_waning_gibbous': 'Couvající měsíc',
         'moon_last_quarter': 'Poslední čtvrt',
         'moon_waning_crescent': 'Couvající srpek',
+        'moon_details': 'Detail Měsíce',
+        'moonrise': 'Východ měsíce',
+        'moonset': 'Západ měsíce',
+        'illumination': 'Osvětlení',
+        'next_full_moon': 'Další úplněk',
+        'distance': 'Vzdálenost',
+        'sun_details': 'Detail Slunce',
+        'sun_details_subtitle': 'Poloha slunce a denní světlo',
+        'dawn': 'Úsvit',
+        'dusk': 'Soumrak',
+        'total_daylight': 'Délka dne',
+        'remaining_daylight': 'Zbývající denní světlo',
+        'sun_set_already': 'Slunce již zapadlo',
 
         // Detail modals
         'current': 'Aktuální',

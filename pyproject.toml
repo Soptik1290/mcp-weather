@@ -13,6 +13,7 @@ dependencies = [
     "python-dotenv>=1.2.1",
     "uvicorn>=0.40.0",
     "redis>=5.0.1",
+    "ephem>=4.1.5",
 ]
 
 [project.scripts]

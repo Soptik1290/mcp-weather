@@ -249,7 +249,7 @@ class OpenMeteoProvider(WeatherProvider):
                 sunrise=daily_forecast[0].sunrise,
                 sunset=daily_forecast[0].sunset
             )
-        
+
         return WeatherData(
             provider=self.name,
             location=location,

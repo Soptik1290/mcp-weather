@@ -89,6 +89,48 @@ class WeatherAggregator:
         if not weather_data:
             raise ValueError("No weather data to aggregate")
         
+        # Ensure detailed astronomy data is present (backfill with calculation if needed)
+        # We modify the first weather source as it's often the base for non-aggregated fields
+        if weather_data[0].location:
+            base_astro = weather_data[0].astronomy or Astronomy()
+            
+            # Check for missing critical fields
+            needs_calc = not (
+                base_astro.moonrise and 
+                base_astro.moonset and 
+                base_astro.moon_phase is not None and
+                base_astro.moon_illumination is not None and
+                base_astro.daylight_duration
+            )
+            
+            if needs_calc:
+                try:
+                    from src.astro_calc import get_astronomy_data
+                    calc_data = get_astronomy_data(
+                        weather_data[0].location.latitude,
+                        weather_data[0].location.longitude
+                    )
+                    
+                    # Backfill missing fields
+                    if not base_astro.moonrise:
+                        base_astro.moonrise = calc_data.get("moonrise")
+                    if not base_astro.moonset:
+                        base_astro.moonset = calc_data.get("moonset")
+                    if base_astro.moon_phase is None:
+                        base_astro.moon_phase = calc_data.get("moon_phase")
+                    if base_astro.moon_illumination is None:
+                        base_astro.moon_illumination = calc_data.get("moon_illumination")
+                    if not base_astro.daylight_duration:
+                        base_astro.daylight_duration = calc_data.get("daylight_duration")
+                    if not base_astro.moon_distance:
+                        base_astro.moon_distance = calc_data.get("moon_distance")
+                    if not base_astro.next_full_moon:
+                        base_astro.next_full_moon = calc_data.get("next_full_moon")
+                        
+                    weather_data[0].astronomy = base_astro
+                except Exception as e:
+                    print(f"[WARN] Astronomy calculation failed: {e}")
+        
         location = weather_data[0].location
         sources = [wd.provider for wd in weather_data]
         

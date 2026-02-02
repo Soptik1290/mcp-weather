@@ -53,8 +53,14 @@ export interface HourlyForecast {
 export interface Astronomy {
     sunrise?: string;
     sunset?: string;
+    moonrise?: string;
+    moonset?: string;
     moon_phase?: number;
     moon_phase_name?: string;
+    moon_illumination?: number;
+    daylight_duration?: number;
+    moon_distance?: number;
+    next_full_moon?: string;
 }
 
 export interface AmbientTheme {

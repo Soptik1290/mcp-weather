@@ -8,6 +8,7 @@ import { useSettings } from '@/lib/settings';
 import { WeatherDetailModal } from './WeatherDetailModal';
 import { WeatherChart } from './WeatherChart';
 import type { HourlyForecast } from '@/lib/types';
+import { SunDetail, MoonDetail } from './SunMoonDetails';
 
 interface DetailCardProps {
     title: string;
@@ -594,13 +595,16 @@ export function RainCard({
 export function SunTimesCard({
     sunrise,
     sunset,
+    daylightDuration,
     isDark
 }: {
     sunrise?: string;
     sunset?: string;
+    daylightDuration?: number;
     isDark?: boolean
 }) {
     const { t, formatTime: formatTimeSettings } = useSettings();
+    const [isOpen, setIsOpen] = useState(false);
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
@@ -621,51 +625,81 @@ export function SunTimesCard({
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.25, type: 'spring' }}
-        >
-            <Card className={`p-3 ${bgColor} backdrop-blur-md border-0 h-full`}>
-                <div className="flex justify-between items-center gap-1">
-                    <div className="flex items-center gap-1.5">
-                        <Sunrise className={`w-4 h-4 ${subTextColor}`} />
-                        <div>
-                            <p className={`text-[10px] ${subTextColor}`}>{t('sunrise')}</p>
-                            <p className={`text-sm font-medium ${textColor}`}>{formatTime(sunrise)}</p>
+        <>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.25, type: 'spring' }}
+                onClick={() => setIsOpen(true)}
+                className="cursor-pointer"
+            >
+                <Card className={`p-3 ${bgColor} backdrop-blur-md border-0 h-full transition-transform hover:scale-[1.02]`}>
+                    <div className="flex justify-between items-center gap-1">
+                        <div className="flex items-center gap-1.5">
+                            <Sunrise className={`w-4 h-4 ${subTextColor}`} />
+                            <div>
+                                <p className={`text-[10px] ${subTextColor}`}>{t('sunrise')}</p>
+                                <p className={`text-sm font-medium ${textColor}`}>{formatTime(sunrise)}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="flex items-center gap-1.5">
-                        <Sun className={`w-4 h-4 ${subTextColor}`} />
-                        <div className="text-center">
-                            <p className={`text-[10px] ${subTextColor}`}>{t('midday')}</p>
-                            <p className={`text-sm font-medium ${textColor}`}>{getMidday()}</p>
+                        <div className="flex items-center gap-1.5">
+                            <Sun className={`w-4 h-4 ${subTextColor}`} />
+                            <div className="text-center">
+                                <p className={`text-[10px] ${subTextColor}`}>{t('midday')}</p>
+                                <p className={`text-sm font-medium ${textColor}`}>{getMidday()}</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="flex items-center gap-1.5">
-                        <div className="text-right">
-                            <p className={`text-[10px] ${subTextColor}`}>{t('sunset')}</p>
-                            <p className={`text-sm font-medium ${textColor}`}>{formatTime(sunset)}</p>
+                        <div className="flex items-center gap-1.5">
+                            <div className="text-right">
+                                <p className={`text-[10px] ${subTextColor}`}>{t('sunset')}</p>
+                                <p className={`text-sm font-medium ${textColor}`}>{formatTime(sunset)}</p>
+                            </div>
+                            <Sunset className={`w-4 h-4 ${subTextColor}`} />
                         </div>
-                        <Sunset className={`w-4 h-4 ${subTextColor}`} />
                     </div>
-                </div>
-            </Card>
-        </motion.div>
+                </Card>
+            </motion.div>
+
+            <WeatherDetailModal
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                title={t('sun_details') || 'Slunce'}
+                subtitle={t('sun_details_subtitle') || 'Poloha slunce a denní světlo'}
+                isDark={isDark}
+            >
+                <SunDetail
+                    sunrise={sunrise}
+                    sunset={sunset}
+                    daylightDuration={daylightDuration}
+                    isDark={isDark}
+                />
+            </WeatherDetailModal>
+        </>
     );
 }
 
 // Moon Phase Card
 export function MoonPhaseCard({
     moonPhase,
+    moonrise,
+    moonset,
+    illumination,
+    moonDistance,
+    nextFullMoon,
     isDark
 }: {
     moonPhase?: number | string;
+    moonrise?: string;
+    moonset?: string;
+    illumination?: number;
+    moonDistance?: number;
+    nextFullMoon?: string;
     isDark?: boolean
 }) {
     const { t } = useSettings();
+    const [isOpen, setIsOpen] = useState(false);
     const textColor = isDark ? 'text-white' : 'text-gray-900';
     const subTextColor = isDark ? 'text-white/70' : 'text-gray-500';
     const bgColor = isDark ? 'bg-white/10' : 'bg-white/60';
@@ -700,21 +734,44 @@ export function MoonPhaseCard({
     const phaseInfo = getMoonPhaseInfo(phase);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3, type: 'spring' }}
-        >
-            <Card className={`p-3 ${bgColor} backdrop-blur-md border-0 h-full`}>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <p className={`text-[10px] ${subTextColor}`}>{t('moon_phase')}</p>
-                        <p className={`text-sm font-medium ${textColor}`}>{phaseInfo.name}</p>
+        <>
+            <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3, type: 'spring' }}
+                onClick={() => setIsOpen(true)}
+                className="cursor-pointer"
+            >
+                <Card className={`p-3 ${bgColor} backdrop-blur-md border-0 h-full transition-transform hover:scale-[1.02]`}>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className={`text-[10px] ${subTextColor}`}>{t('moon_phase')}</p>
+                            <p className={`text-sm font-medium ${textColor}`}>{phaseInfo.name}</p>
+                        </div>
+                        <span className="text-2xl" suppressHydrationWarning>{phaseInfo.emoji}</span>
                     </div>
-                    <span className="text-2xl" suppressHydrationWarning>{phaseInfo.emoji}</span>
-                </div>
-            </Card>
-        </motion.div>
+                </Card>
+            </motion.div>
+
+            <WeatherDetailModal
+                open={isOpen}
+                onOpenChange={setIsOpen}
+                title={t('moon_details') || 'Měsíc'}
+                subtitle={`${phaseInfo.name}`}
+                isDark={isDark}
+            >
+                <MoonDetail
+                    phase={phase}
+                    phaseName={phaseInfo.name}
+                    moonrise={moonrise}
+                    moonset={moonset}
+                    illumination={illumination}
+                    moonDistance={moonDistance}
+                    nextFullMoon={nextFullMoon}
+                    isDark={isDark}
+                />
+            </WeatherDetailModal>
+        </>
     );
 }
 
