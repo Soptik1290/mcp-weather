@@ -1,4 +1,4 @@
-package com.weatherly
+package com.weatherly.ai
 
 import android.app.Application
 import com.facebook.react.PackageList

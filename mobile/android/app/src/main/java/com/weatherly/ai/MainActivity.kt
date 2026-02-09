@@ -1,4 +1,4 @@
-package com.weatherly
+package com.weatherly.ai
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
