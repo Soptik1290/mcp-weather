@@ -7,13 +7,16 @@ import {
     RefreshControl,
     ActivityIndicator,
     StatusBar,
+    TouchableOpacity,
+    Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { Cloud, Droplets, Wind, Eye, Gauge } from 'lucide-react-native';
+import { Cloud, Droplets, Wind, Eye, Gauge, Search } from 'lucide-react-native';
 
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
+import { SearchScreen } from './SearchScreen';
 import type { WeatherData, AmbientTheme } from '../types';
 
 // Weather icon mapping (simplified - you can expand this)
@@ -40,6 +43,7 @@ export function HomeScreen() {
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [showSearch, setShowSearch] = useState(false);
 
     const { currentLocation } = useLocationStore();
     const { settings } = useSettingsStore();
@@ -137,14 +141,22 @@ export function HomeScreen() {
                     >
                         {/* Location Header */}
                         <View style={styles.header}>
-                            <Text style={[styles.locationName, { color: textColor }]}>
-                                {weather?.location.name}
-                            </Text>
-                            {weather?.location.country && (
-                                <Text style={[styles.country, { color: subTextColor }]}>
-                                    {weather.location.country}
+                            <View style={styles.headerLeft}>
+                                <Text style={[styles.locationName, { color: textColor }]}>
+                                    {weather?.location.name}
                                 </Text>
-                            )}
+                                {weather?.location.country && (
+                                    <Text style={[styles.country, { color: subTextColor }]}>
+                                        {weather.location.country}
+                                    </Text>
+                                )}
+                            </View>
+                            <TouchableOpacity
+                                style={[styles.searchButton, { backgroundColor: cardBg }]}
+                                onPress={() => setShowSearch(true)}
+                            >
+                                <Search size={22} color={textColor} />
+                            </TouchableOpacity>
                         </View>
 
                         {/* Current Weather */}
@@ -194,22 +206,24 @@ export function HomeScreen() {
                                         </Text>
                                     </View>
                                 )}
-                                {current.visibility !== undefined && (
+                                {current.visibility !== undefined && current.visibility !== null && (
                                     <View style={styles.statItem}>
                                         <Eye size={20} color={textColor} />
                                         <Text style={[styles.statValue, { color: textColor }]}>
-                                            {current.visibility} km
+                                            {current.visibility >= 1000
+                                                ? `${Math.round(current.visibility / 1000)} km`
+                                                : `${Math.round(current.visibility)} m`}
                                         </Text>
                                         <Text style={[styles.statLabel, { color: subTextColor }]}>
                                             Viditelnost
                                         </Text>
                                     </View>
                                 )}
-                                {current.pressure !== undefined && (
+                                {current.pressure !== undefined && current.pressure !== null && (
                                     <View style={styles.statItem}>
                                         <Gauge size={20} color={textColor} />
                                         <Text style={[styles.statValue, { color: textColor }]}>
-                                            {current.pressure} hPa
+                                            {Math.round(current.pressure)} hPa
                                         </Text>
                                         <Text style={[styles.statLabel, { color: subTextColor }]}>
                                             Tlak
@@ -268,6 +282,15 @@ export function HomeScreen() {
                     </ScrollView>
                 </SafeAreaView>
             </LinearGradient>
+
+            {/* Search Modal */}
+            <Modal
+                visible={showSearch}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <SearchScreen onClose={() => setShowSearch(false)} />
+            </Modal>
         </>
     );
 }
@@ -307,7 +330,17 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
         marginBottom: 20,
+    },
+    headerLeft: {
+        flex: 1,
+    },
+    searchButton: {
+        padding: 12,
+        borderRadius: 12,
     },
     locationName: {
         fontSize: 36,
