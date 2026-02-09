@@ -8,10 +8,11 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     StatusBar,
+    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { Search, MapPin, ArrowLeft, Navigation } from 'lucide-react-native';
+import { Search, MapPin, X, Navigation, ChevronRight } from 'lucide-react-native';
 
 import { weatherService } from '../services';
 import { useLocationStore } from '../stores';
@@ -27,9 +28,15 @@ interface SearchResult {
 
 interface SearchScreenProps {
     onClose: () => void;
+    themeGradient?: string[];
+    isDark?: boolean;
 }
 
-export function SearchScreen({ onClose }: SearchScreenProps) {
+export function SearchScreen({
+    onClose,
+    themeGradient = ['#4A90D9', '#67B8DE', '#8BC7E8'],
+    isDark = false
+}: SearchScreenProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult[]>([]);
     const [loading, setLoading] = useState(false);
@@ -37,6 +44,11 @@ export function SearchScreen({ onClose }: SearchScreenProps) {
 
     const { setCurrentLocation } = useLocationStore();
     const { getCurrentPosition, loading: geoLoading } = useGeolocation();
+
+    const textColor = isDark ? '#fff' : '#1a1a1a';
+    const subTextColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
+    const cardBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
+    const inputBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
 
     // Debounced search
     const searchTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -83,7 +95,6 @@ export function SearchScreen({ onClose }: SearchScreenProps) {
     const handleUseCurrentLocation = async () => {
         const position = await getCurrentPosition();
         if (position) {
-            // Get location name from coordinates via API
             try {
                 const weatherData = await weatherService.getWeatherByCoordinates(
                     position.latitude,
@@ -104,87 +115,143 @@ export function SearchScreen({ onClose }: SearchScreenProps) {
         }
     };
 
+    const renderResultItem = ({ item }: { item: SearchResult }) => (
+        <TouchableOpacity
+            style={[styles.resultCard, { backgroundColor: cardBg }]}
+            onPress={() => handleSelectLocation(item)}
+            activeOpacity={0.7}
+        >
+            <View style={styles.resultIconContainer}>
+                <MapPin size={22} color={textColor} strokeWidth={1.5} />
+            </View>
+            <View style={styles.resultContent}>
+                <Text style={[styles.resultName, { color: textColor }]}>
+                    {item.name}
+                </Text>
+                <Text style={[styles.resultSubtitle, { color: subTextColor }]}>
+                    {[item.admin1, item.country].filter(Boolean).join(', ')}
+                </Text>
+            </View>
+            <ChevronRight size={20} color={subTextColor} />
+        </TouchableOpacity>
+    );
+
     return (
         <>
-            <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+            <StatusBar
+                barStyle={isDark ? 'light-content' : 'dark-content'}
+                backgroundColor="transparent"
+                translucent
+            />
             <LinearGradient
-                colors={['#1a1a2e', '#16213e', '#0f0f0f']}
+                colors={themeGradient}
                 style={styles.gradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
             >
                 <SafeAreaView style={styles.container}>
                     {/* Header */}
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={onClose} style={styles.backButton}>
-                            <ArrowLeft size={24} color="#fff" />
+                        <Text style={[styles.title, { color: textColor }]}>
+                            Vyhledat místo
+                        </Text>
+                        <TouchableOpacity
+                            onPress={onClose}
+                            style={[styles.closeButton, { backgroundColor: cardBg }]}
+                        >
+                            <X size={22} color={textColor} strokeWidth={2} />
                         </TouchableOpacity>
-                        <Text style={styles.title}>Vyhledat lokaci</Text>
                     </View>
 
                     {/* Search Input */}
-                    <View style={styles.searchContainer}>
-                        <Search size={20} color="rgba(255,255,255,0.5)" />
+                    <View style={[styles.searchContainer, { backgroundColor: inputBg }]}>
+                        <Search size={20} color={subTextColor} />
                         <TextInput
-                            style={styles.searchInput}
-                            placeholder="Zadejte město..."
-                            placeholderTextColor="rgba(255,255,255,0.5)"
+                            style={[styles.searchInput, { color: textColor }]}
+                            placeholder="Město, kraj, země..."
+                            placeholderTextColor={subTextColor}
                             value={query}
                             onChangeText={handleSearch}
                             autoFocus
+                            autoCapitalize="words"
+                            autoCorrect={false}
                         />
+                        {query.length > 0 && (
+                            <TouchableOpacity onPress={() => handleSearch('')}>
+                                <X size={18} color={subTextColor} />
+                            </TouchableOpacity>
+                        )}
                     </View>
 
                     {/* Current Location Button */}
                     <TouchableOpacity
-                        style={styles.currentLocationButton}
+                        style={[styles.geoButton, { backgroundColor: cardBg }]}
                         onPress={handleUseCurrentLocation}
                         disabled={geoLoading}
+                        activeOpacity={0.7}
                     >
-                        {geoLoading ? (
-                            <ActivityIndicator size="small" color="#4A90D9" />
-                        ) : (
-                            <Navigation size={20} color="#4A90D9" />
-                        )}
-                        <Text style={styles.currentLocationText}>
-                            {geoLoading ? 'Získávám polohu...' : 'Použít mou polohu'}
-                        </Text>
+                        <View style={styles.geoIconContainer}>
+                            {geoLoading ? (
+                                <ActivityIndicator size="small" color={textColor} />
+                            ) : (
+                                <Navigation size={20} color={textColor} />
+                            )}
+                        </View>
+                        <View style={styles.geoContent}>
+                            <Text style={[styles.geoTitle, { color: textColor }]}>
+                                {geoLoading ? 'Hledám polohu...' : 'Použít aktuální polohu'}
+                            </Text>
+                            <Text style={[styles.geoSubtitle, { color: subTextColor }]}>
+                                Automaticky detekovat město
+                            </Text>
+                        </View>
+                        <ChevronRight size={20} color={subTextColor} />
                     </TouchableOpacity>
+
+                    {/* Divider */}
+                    {results.length > 0 && (
+                        <View style={styles.divider}>
+                            <Text style={[styles.dividerText, { color: subTextColor }]}>
+                                Výsledky vyhledávání
+                            </Text>
+                        </View>
+                    )}
 
                     {/* Error */}
                     {error && (
-                        <Text style={styles.errorText}>{error}</Text>
+                        <View style={[styles.errorContainer, { backgroundColor: 'rgba(255,100,100,0.15)' }]}>
+                            <Text style={styles.errorText}>{error}</Text>
+                        </View>
                     )}
 
                     {/* Loading */}
                     {loading && (
                         <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color="#fff" />
+                            <ActivityIndicator size="large" color={textColor} />
+                            <Text style={[styles.loadingText, { color: subTextColor }]}>
+                                Vyhledávám...
+                            </Text>
                         </View>
                     )}
 
                     {/* Results */}
                     <FlatList
                         data={results}
-                        keyExtractor={(item, index) => `${item.name}-${item.latitude}-${index}`}
-                        renderItem={({ item }) => (
-                            <TouchableOpacity
-                                style={styles.resultItem}
-                                onPress={() => handleSelectLocation(item)}
-                            >
-                                <MapPin size={20} color="rgba(255,255,255,0.6)" />
-                                <View style={styles.resultTextContainer}>
-                                    <Text style={styles.resultName}>{item.name}</Text>
-                                    <Text style={styles.resultCountry}>
-                                        {[item.admin1, item.country].filter(Boolean).join(', ')}
-                                    </Text>
-                                </View>
-                            </TouchableOpacity>
-                        )}
+                        keyExtractor={(item, index) => `${item.latitude}-${item.longitude}-${index}`}
+                        renderItem={renderResultItem}
                         contentContainerStyle={styles.listContent}
+                        showsVerticalScrollIndicator={false}
                         ListEmptyComponent={
                             query.length >= 2 && !loading ? (
-                                <Text style={styles.emptyText}>
-                                    Žádné výsledky pro "{query}"
-                                </Text>
+                                <View style={styles.emptyContainer}>
+                                    <MapPin size={48} color={subTextColor} strokeWidth={1} />
+                                    <Text style={[styles.emptyText, { color: subTextColor }]}>
+                                        Žádné výsledky pro "{query}"
+                                    </Text>
+                                    <Text style={[styles.emptyHint, { color: subTextColor }]}>
+                                        Zkuste jiný název města
+                                    </Text>
+                                </View>
                             ) : null
                         }
                     />
@@ -203,90 +270,135 @@ const styles = StyleSheet.create({
     },
     header: {
         flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    backButton: {
-        padding: 8,
-        marginRight: 8,
+        paddingHorizontal: 20,
+        paddingVertical: 16,
     },
     title: {
-        fontSize: 20,
-        fontWeight: '600',
-        color: '#fff',
+        fontSize: 28,
+        fontWeight: '700',
+        letterSpacing: -0.5,
+    },
+    closeButton: {
+        padding: 10,
+        borderRadius: 12,
     },
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.1)',
-        borderRadius: 12,
-        marginHorizontal: 16,
+        borderRadius: 16,
+        marginHorizontal: 20,
         paddingHorizontal: 16,
-        paddingVertical: 12,
+        paddingVertical: 14,
+        gap: 12,
     },
     searchInput: {
         flex: 1,
-        marginLeft: 12,
-        fontSize: 16,
-        color: '#fff',
+        fontSize: 17,
+        fontWeight: '400',
     },
-    currentLocationButton: {
+    geoButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(74, 144, 217, 0.2)',
-        borderRadius: 12,
-        marginHorizontal: 16,
-        marginTop: 12,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
+        borderRadius: 16,
+        marginHorizontal: 20,
+        marginTop: 16,
+        padding: 16,
+        gap: 12,
     },
-    currentLocationText: {
-        marginLeft: 12,
+    geoIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(74,144,217,0.2)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    geoContent: {
+        flex: 1,
+    },
+    geoTitle: {
         fontSize: 16,
-        color: '#4A90D9',
-        fontWeight: '500',
+        fontWeight: '600',
+    },
+    geoSubtitle: {
+        fontSize: 13,
+        marginTop: 2,
+    },
+    divider: {
+        paddingHorizontal: 20,
+        paddingTop: 24,
+        paddingBottom: 12,
+    },
+    dividerText: {
+        fontSize: 13,
+        fontWeight: '600',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+    },
+    errorContainer: {
+        marginHorizontal: 20,
+        marginTop: 16,
+        padding: 16,
+        borderRadius: 12,
     },
     errorText: {
         color: '#ff6b6b',
         textAlign: 'center',
-        marginTop: 16,
-        paddingHorizontal: 16,
+        fontSize: 14,
     },
     loadingContainer: {
-        paddingVertical: 32,
+        paddingVertical: 40,
         alignItems: 'center',
+        gap: 12,
+    },
+    loadingText: {
+        fontSize: 15,
     },
     listContent: {
-        paddingHorizontal: 16,
-        paddingTop: 16,
+        paddingHorizontal: 20,
+        paddingBottom: 20,
     },
-    resultItem: {
+    resultCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.05)',
-        borderRadius: 12,
+        borderRadius: 16,
         padding: 16,
-        marginBottom: 8,
+        marginBottom: 10,
+        gap: 12,
     },
-    resultTextContainer: {
-        marginLeft: 12,
+    resultIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(0,0,0,0.06)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    resultContent: {
         flex: 1,
     },
     resultName: {
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#fff',
+        fontSize: 17,
+        fontWeight: '600',
     },
-    resultCountry: {
+    resultSubtitle: {
         fontSize: 14,
-        color: 'rgba(255,255,255,0.6)',
         marginTop: 2,
     },
+    emptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 48,
+        gap: 12,
+    },
     emptyText: {
+        fontSize: 16,
+        fontWeight: '500',
         textAlign: 'center',
-        color: 'rgba(255,255,255,0.5)',
-        paddingVertical: 32,
+    },
+    emptyHint: {
+        fontSize: 14,
     },
 });
 

@@ -12,11 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { Cloud, Droplets, Wind, Eye, Gauge, Search } from 'lucide-react-native';
+import { Search } from 'lucide-react-native';
 
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
+import { HourlyForecast, DailyForecast, WeatherDetails } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
 // Weather icon mapping (simplified - you can expand this)
@@ -181,93 +182,57 @@ export function HomeScreen() {
                             </View>
                         )}
 
-                        {/* Quick Stats */}
+                        {/* Hourly Forecast */}
+                        {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
+                            <HourlyForecast
+                                data={weather.hourly_forecast}
+                                textColor={textColor}
+                                subTextColor={subTextColor}
+                                cardBg={cardBg}
+                                formatTemperature={formatTemperature}
+                            />
+                        )}
+
+                        {/* Weather Details */}
                         {current && (
-                            <View style={[styles.statsGrid, { backgroundColor: cardBg }]}>
-                                {current.humidity !== undefined && (
-                                    <View style={styles.statItem}>
-                                        <Droplets size={20} color={textColor} />
-                                        <Text style={[styles.statValue, { color: textColor }]}>
-                                            {current.humidity}%
-                                        </Text>
-                                        <Text style={[styles.statLabel, { color: subTextColor }]}>
-                                            Vlhkost
-                                        </Text>
-                                    </View>
-                                )}
-                                {current.wind_speed !== undefined && (
-                                    <View style={styles.statItem}>
-                                        <Wind size={20} color={textColor} />
-                                        <Text style={[styles.statValue, { color: textColor }]}>
-                                            {Math.round(current.wind_speed)} km/h
-                                        </Text>
-                                        <Text style={[styles.statLabel, { color: subTextColor }]}>
-                                            Vítr
-                                        </Text>
-                                    </View>
-                                )}
-                                {current.visibility !== undefined && current.visibility !== null && (
-                                    <View style={styles.statItem}>
-                                        <Eye size={20} color={textColor} />
-                                        <Text style={[styles.statValue, { color: textColor }]}>
-                                            {current.visibility >= 1000
-                                                ? `${Math.round(current.visibility / 1000)} km`
-                                                : `${Math.round(current.visibility)} m`}
-                                        </Text>
-                                        <Text style={[styles.statLabel, { color: subTextColor }]}>
-                                            Viditelnost
-                                        </Text>
-                                    </View>
-                                )}
-                                {current.pressure !== undefined && current.pressure !== null && (
-                                    <View style={styles.statItem}>
-                                        <Gauge size={20} color={textColor} />
-                                        <Text style={[styles.statValue, { color: textColor }]}>
-                                            {Math.round(current.pressure)} hPa
-                                        </Text>
-                                        <Text style={[styles.statLabel, { color: subTextColor }]}>
-                                            Tlak
-                                        </Text>
-                                    </View>
-                                )}
-                            </View>
+                            <WeatherDetails
+                                humidity={current.humidity}
+                                windSpeed={current.wind_speed}
+                                visibility={current.visibility}
+                                pressure={current.pressure}
+                                feelsLike={current.feels_like}
+                                sunrise={weather?.astronomy?.sunrise}
+                                sunset={weather?.astronomy?.sunset}
+                                textColor={textColor}
+                                subTextColor={subTextColor}
+                                cardBg={cardBg}
+                                formatTemperature={formatTemperature}
+                            />
                         )}
 
                         {/* AI Summary */}
                         {weather?.ai_summary && (
                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                 <Text style={styles.aiIcon}>🤖</Text>
-                                <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                    {weather.ai_summary}
-                                </Text>
+                                <View style={styles.aiContent}>
+                                    <Text style={[styles.aiTitle, { color: textColor }]}>
+                                        AI shrnutí
+                                    </Text>
+                                    <Text style={[styles.aiSummary, { color: subTextColor }]}>
+                                        {weather.ai_summary}
+                                    </Text>
+                                </View>
                             </View>
                         )}
 
                         {/* Daily Forecast */}
                         {weather?.daily_forecast && weather.daily_forecast.length > 0 && (
-                            <View style={[styles.forecastCard, { backgroundColor: cardBg }]}>
-                                <Text style={[styles.sectionTitle, { color: textColor }]}>
-                                    Týdenní předpověď
-                                </Text>
-                                {weather.daily_forecast.slice(0, 7).map((day, index) => (
-                                    <View key={day.date} style={styles.forecastRow}>
-                                        <Text style={[styles.forecastDay, { color: textColor }]}>
-                                            {index === 0 ? 'Dnes' : new Date(day.date).toLocaleDateString('cs', { weekday: 'short' })}
-                                        </Text>
-                                        <Text style={styles.forecastEmoji}>
-                                            {getWeatherEmoji(day.weather_code)}
-                                        </Text>
-                                        <Text style={[styles.forecastTemp, { color: textColor }]}>
-                                            {Math.round(day.temperature_max)}° / {Math.round(day.temperature_min)}°
-                                        </Text>
-                                        {day.precipitation_probability !== undefined && (
-                                            <Text style={[styles.forecastRain, { color: subTextColor }]}>
-                                                💧 {day.precipitation_probability}%
-                                            </Text>
-                                        )}
-                                    </View>
-                                ))}
-                            </View>
+                            <DailyForecast
+                                data={weather.daily_forecast}
+                                textColor={textColor}
+                                subTextColor={subTextColor}
+                                cardBg={cardBg}
+                            />
                         )}
 
                         {/* Confidence Score */}
@@ -275,7 +240,7 @@ export function HomeScreen() {
                             <View style={styles.confidenceContainer}>
                                 <Text style={[styles.confidenceText, { color: subTextColor }]}>
                                     Spolehlivost: {Math.round(weather.confidence_score * 100)}%
-                                    ({weather.sources_used.length} zdrojů)
+                                    ({weather.sources_used?.length || 0} zdrojů)
                                 </Text>
                             </View>
                         )}
@@ -289,7 +254,11 @@ export function HomeScreen() {
                 animationType="slide"
                 presentationStyle="fullScreen"
             >
-                <SearchScreen onClose={() => setShowSearch(false)} />
+                <SearchScreen
+                    onClose={() => setShowSearch(false)}
+                    themeGradient={theme.gradient}
+                    isDark={theme.is_dark}
+                />
             </Modal>
         </>
     );
@@ -402,13 +371,21 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
     },
     aiIcon: {
-        fontSize: 20,
-        marginRight: 12,
+        fontSize: 24,
+        marginRight: 14,
+    },
+    aiContent: {
+        flex: 1,
+    },
+    aiTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        marginBottom: 4,
     },
     aiSummary: {
         flex: 1,
         fontSize: 14,
-        lineHeight: 20,
+        lineHeight: 21,
     },
     forecastCard: {
         borderRadius: 16,
