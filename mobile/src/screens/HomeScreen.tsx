@@ -17,7 +17,7 @@ import { Search } from 'lucide-react-native';
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
 // Weather icon mapping (simplified - you can expand this)
@@ -45,6 +45,7 @@ export function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSearch, setShowSearch] = useState(false);
+    const [selectedDay, setSelectedDay] = useState<any>(null);
 
     const { currentLocation } = useLocationStore();
     const { settings } = useSettingsStore();
@@ -251,6 +252,7 @@ export function HomeScreen() {
                                 textColor={textColor}
                                 subTextColor={subTextColor}
                                 cardBg={cardBg}
+                                onDayPress={(day) => setSelectedDay(day)}
                             />
                         )}
 
@@ -279,6 +281,15 @@ export function HomeScreen() {
                     isDark={theme.is_dark}
                 />
             </Modal>
+
+            {/* Day Detail Modal */}
+            <DayDetailModal
+                visible={!!selectedDay}
+                onClose={() => setSelectedDay(null)}
+                day={selectedDay}
+                themeGradient={theme.gradient}
+                isDark={theme.is_dark}
+            />
         </>
     );
 }

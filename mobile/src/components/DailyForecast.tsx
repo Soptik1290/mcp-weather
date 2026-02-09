@@ -3,7 +3,9 @@ import {
     View,
     Text,
     StyleSheet,
+    TouchableOpacity,
 } from 'react-native';
+import { ChevronRight } from 'lucide-react-native';
 
 interface DailyData {
     date: string;
@@ -12,6 +14,10 @@ interface DailyData {
     weather_code?: number;
     precipitation_probability?: number;
     precipitation_sum?: number;
+    wind_speed_max?: number;
+    sunrise?: string;
+    sunset?: string;
+    uv_index_max?: number;
 }
 
 interface DailyForecastProps {
@@ -19,6 +25,7 @@ interface DailyForecastProps {
     textColor: string;
     subTextColor: string;
     cardBg: string;
+    onDayPress?: (day: DailyData) => void;
 }
 
 const getWeatherEmoji = (code?: number): string => {
@@ -50,7 +57,8 @@ export function DailyForecast({
     data,
     textColor,
     subTextColor,
-    cardBg
+    cardBg,
+    onDayPress
 }: DailyForecastProps) {
     if (!data || data.length === 0) return null;
 
@@ -74,13 +82,17 @@ export function DailyForecast({
                 const maxPos = ((day.temperature_max - globalMin) / tempRange) * 100;
                 const barWidth = maxPos - minPos;
 
+                const RowComponent = onDayPress ? TouchableOpacity : View;
+
                 return (
-                    <View
+                    <RowComponent
                         key={day.date}
                         style={[
                             styles.dayRow,
                             index < dailyData.length - 1 && styles.dayRowBorder
                         ]}
+                        onPress={onDayPress ? () => onDayPress(day) : undefined}
+                        activeOpacity={0.7}
                     >
                         {/* Day name */}
                         <Text style={[styles.dayName, { color: textColor }]}>
@@ -121,7 +133,16 @@ export function DailyForecast({
                                 {Math.round(day.temperature_max)}°
                             </Text>
                         </View>
-                    </View>
+
+                        {/* Chevron indicator */}
+                        {onDayPress && (
+                            <ChevronRight
+                                size={18}
+                                color={subTextColor}
+                                style={styles.chevron}
+                            />
+                        )}
+                    </RowComponent>
                 );
             })}
         </View>
@@ -149,33 +170,33 @@ const styles = StyleSheet.create({
         borderBottomColor: 'rgba(128,128,128,0.2)',
     },
     dayName: {
-        width: 55,
+        width: 50,
         fontSize: 15,
         fontWeight: '500',
     },
     dayEmoji: {
-        fontSize: 26,
-        width: 40,
+        fontSize: 24,
+        width: 36,
         textAlign: 'center',
     },
     rainContainer: {
-        width: 50,
+        width: 48,
         alignItems: 'center',
     },
     rainText: {
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: '500',
     },
     tempBarContainer: {
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        gap: 8,
+        gap: 6,
     },
     tempMin: {
         fontSize: 14,
         fontWeight: '500',
-        width: 30,
+        width: 28,
         textAlign: 'right',
     },
     barWrapper: {
@@ -194,7 +215,10 @@ const styles = StyleSheet.create({
     tempMax: {
         fontSize: 14,
         fontWeight: '600',
-        width: 30,
+        width: 28,
+    },
+    chevron: {
+        marginLeft: 4,
     },
 });
 
