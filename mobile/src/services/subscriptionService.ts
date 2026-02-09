@@ -36,6 +36,14 @@ class SubscriptionService {
                 ? REVENUECAT_API_KEY_IOS
                 : REVENUECAT_API_KEY_ANDROID;
 
+            // Skip initialization if using placeholder API keys
+            if (apiKey.includes('your_') || apiKey.length < 10) {
+                console.warn('RevenueCat: Skipping initialization - API key not configured');
+                console.warn('RevenueCat: Set your API keys in subscriptionService.ts');
+                this.initialized = true; // Mark as initialized to prevent repeated attempts
+                return;
+            }
+
             Purchases.configure({ apiKey });
             this.initialized = true;
 
@@ -48,6 +56,8 @@ class SubscriptionService {
             console.log('RevenueCat initialized successfully');
         } catch (error) {
             console.error('RevenueCat initialization failed:', error);
+            // Don't throw - app should work without subscriptions
+            this.initialized = true;
         }
     }
 
