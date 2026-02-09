@@ -10,7 +10,18 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { X } from 'lucide-react-native';
+import Svg, { Path, Defs, LinearGradient as SvgGradient, Stop, Circle, Text as SvgText } from 'react-native-svg';
+import {
+    X,
+    Thermometer,
+    ThermometerSnowflake,
+    Droplets,
+    CloudRain,
+    Wind,
+    Sun,
+    Sunrise,
+    Sunset,
+} from 'lucide-react-native';
 
 interface DayDetailModalProps {
     visible: boolean;
@@ -85,6 +96,115 @@ const formatTime = (timeString?: string): string => {
     }
 };
 
+// Temperature Range Chart Component
+function TemperatureRangeChart({
+    min,
+    max,
+    textColor,
+    cardBg
+}: {
+    min: number;
+    max: number;
+    textColor: string;
+    cardBg: string;
+}) {
+    const width = Dimensions.get('window').width - 80;
+    const height = 80;
+    const padding = 20;
+
+    // Scale temps to chart
+    const range = max - min || 1;
+    const minX = padding;
+    const maxX = width - padding;
+
+    return (
+        <View style={[styles.chartCard, { backgroundColor: cardBg }]}>
+            <Text style={[styles.sectionTitle, { color: textColor }]}>
+                Teplotní rozsah
+            </Text>
+            <Svg width={width} height={height}>
+                <Defs>
+                    <SvgGradient id="tempGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <Stop offset="0%" stopColor="#67B8DE" />
+                        <Stop offset="100%" stopColor="#FF6B6B" />
+                    </SvgGradient>
+                </Defs>
+
+                {/* Background track */}
+                <Path
+                    d={`M ${minX} ${height / 2} L ${maxX} ${height / 2}`}
+                    stroke="rgba(128,128,128,0.2)"
+                    strokeWidth={8}
+                    strokeLinecap="round"
+                />
+
+                {/* Colored range bar */}
+                <Path
+                    d={`M ${minX} ${height / 2} L ${maxX} ${height / 2}`}
+                    stroke="url(#tempGrad)"
+                    strokeWidth={8}
+                    strokeLinecap="round"
+                />
+
+                {/* Min point */}
+                <Circle cx={minX} cy={height / 2} r={12} fill="#67B8DE" />
+                <SvgText
+                    x={minX}
+                    y={height / 2 + 4}
+                    fontSize={11}
+                    fontWeight="bold"
+                    fill="#fff"
+                    textAnchor="middle"
+                >
+                    {Math.round(min)}°
+                </SvgText>
+
+                {/* Max point */}
+                <Circle cx={maxX} cy={height / 2} r={12} fill="#FF6B6B" />
+                <SvgText
+                    x={maxX}
+                    y={height / 2 + 4}
+                    fontSize={11}
+                    fontWeight="bold"
+                    fill="#fff"
+                    textAnchor="middle"
+                >
+                    {Math.round(max)}°
+                </SvgText>
+
+                {/* Labels */}
+                <SvgText
+                    x={minX}
+                    y={height - 5}
+                    fontSize={12}
+                    fill={textColor}
+                    textAnchor="middle"
+                    opacity={0.7}
+                >
+                    Min
+                </SvgText>
+                <SvgText
+                    x={maxX}
+                    y={height - 5}
+                    fontSize={12}
+                    fill={textColor}
+                    textAnchor="middle"
+                    opacity={0.7}
+                >
+                    Max
+                </SvgText>
+            </Svg>
+        </View>
+    );
+}
+
+type DetailItem = {
+    label: string;
+    value: string;
+    Icon: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>;
+    color: string;
+};
+
 export function DayDetailModal({
     visible,
     onClose,
@@ -98,40 +218,56 @@ export function DayDetailModal({
     const subTextColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
     const cardBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
 
-    const details = [
-        { label: 'Max teplota', value: `${Math.round(day.temperature_max)}°C`, icon: '🌡️' },
-        { label: 'Min teplota', value: `${Math.round(day.temperature_min)}°C`, icon: '❄️' },
-        day.precipitation_probability !== undefined && {
+    const details: DetailItem[] = [
+        {
+            label: 'Max teplota',
+            value: `${Math.round(day.temperature_max)}°C`,
+            Icon: Thermometer,
+            color: '#FF6B6B'
+        },
+        {
+            label: 'Min teplota',
+            value: `${Math.round(day.temperature_min)}°C`,
+            Icon: ThermometerSnowflake,
+            color: '#67B8DE'
+        },
+        ...(day.precipitation_probability !== undefined ? [{
             label: 'Šance srážek',
             value: `${day.precipitation_probability}%`,
-            icon: '💧'
-        },
-        day.precipitation_sum !== undefined && day.precipitation_sum > 0 && {
+            Icon: Droplets,
+            color: '#4A90D9'
+        }] : []),
+        ...(day.precipitation_sum !== undefined && day.precipitation_sum > 0 ? [{
             label: 'Srážky',
             value: `${day.precipitation_sum} mm`,
-            icon: '🌧️'
-        },
-        day.wind_speed_max !== undefined && {
+            Icon: CloudRain,
+            color: '#5DA5E8'
+        }] : []),
+        ...(day.wind_speed_max !== undefined ? [{
             label: 'Max vítr',
             value: `${Math.round(day.wind_speed_max)} km/h`,
-            icon: '💨'
-        },
-        day.uv_index_max !== undefined && {
+            Icon: Wind,
+            color: '#9CA3AF'
+        }] : []),
+        ...(day.uv_index_max !== undefined ? [{
             label: 'UV Index',
             value: `${day.uv_index_max}`,
-            icon: '☀️'
-        },
-        day.sunrise && {
+            Icon: Sun,
+            color: '#FBBF24'
+        }] : []),
+        ...(day.sunrise ? [{
             label: 'Východ slunce',
             value: formatTime(day.sunrise),
-            icon: '🌅'
-        },
-        day.sunset && {
+            Icon: Sunrise,
+            color: '#FB923C'
+        }] : []),
+        ...(day.sunset ? [{
             label: 'Západ slunce',
             value: formatTime(day.sunset),
-            icon: '🌇'
-        },
-    ].filter(Boolean) as { label: string; value: string; icon: string }[];
+            Icon: Sunset,
+            color: '#F472B6'
+        }] : []),
+    ];
 
     return (
         <Modal
@@ -189,7 +325,15 @@ export function DayDetailModal({
                             </View>
                         </View>
 
-                        {/* Details Grid */}
+                        {/* Temperature Range Chart */}
+                        <TemperatureRangeChart
+                            min={day.temperature_min}
+                            max={day.temperature_max}
+                            textColor={textColor}
+                            cardBg={cardBg}
+                        />
+
+                        {/* Details Grid - 2 columns */}
                         <View style={[styles.detailsCard, { backgroundColor: cardBg }]}>
                             <Text style={[styles.sectionTitle, { color: textColor }]}>
                                 Podrobnosti
@@ -197,7 +341,9 @@ export function DayDetailModal({
                             <View style={styles.detailsGrid}>
                                 {details.map((detail, index) => (
                                     <View key={index} style={styles.detailItem}>
-                                        <Text style={styles.detailIcon}>{detail.icon}</Text>
+                                        <View style={[styles.iconContainer, { backgroundColor: `${detail.color}20` }]}>
+                                            <detail.Icon size={24} color={detail.color} strokeWidth={2} />
+                                        </View>
                                         <Text style={[styles.detailValue, { color: textColor }]}>
                                             {detail.value}
                                         </Text>
@@ -247,60 +393,70 @@ const styles = StyleSheet.create({
     },
     mainInfo: {
         alignItems: 'center',
-        marginBottom: 30,
+        marginBottom: 24,
     },
     emoji: {
-        fontSize: 80,
-        marginBottom: 16,
+        fontSize: 72,
+        marginBottom: 12,
     },
     date: {
-        fontSize: 24,
+        fontSize: 22,
         fontWeight: '600',
         textTransform: 'capitalize',
-        marginBottom: 8,
+        marginBottom: 6,
     },
     description: {
-        fontSize: 18,
-        marginBottom: 16,
+        fontSize: 16,
+        marginBottom: 12,
     },
     tempRange: {
         flexDirection: 'row',
         alignItems: 'baseline',
     },
     tempMax: {
-        fontSize: 48,
+        fontSize: 44,
         fontWeight: '300',
     },
     tempSeparator: {
-        fontSize: 32,
-        marginHorizontal: 8,
+        fontSize: 28,
+        marginHorizontal: 6,
     },
     tempMin: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: '300',
+    },
+    chartCard: {
+        borderRadius: 20,
+        padding: 16,
+        marginBottom: 16,
     },
     detailsCard: {
         borderRadius: 20,
-        padding: 20,
+        padding: 16,
     },
     sectionTitle: {
-        fontSize: 17,
+        fontSize: 16,
         fontWeight: '600',
         marginBottom: 16,
     },
     detailsGrid: {
         flexDirection: 'row',
         flexWrap: 'wrap',
-        gap: 8,
+        justifyContent: 'space-between',
     },
     detailItem: {
-        width: (width - 80) / 3,
+        width: (width - 72) / 2,
         alignItems: 'center',
         paddingVertical: 16,
-    },
-    detailIcon: {
-        fontSize: 28,
         marginBottom: 8,
+    },
+    iconContainer: {
+        width: 48,
+        height: 48,
+        borderRadius: 24,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 10,
     },
     detailValue: {
         fontSize: 18,
