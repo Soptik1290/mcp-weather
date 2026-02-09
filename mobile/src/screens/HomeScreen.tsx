@@ -17,7 +17,7 @@ import { Search } from 'lucide-react-native';
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
 // Weather icon mapping (simplified - you can expand this)
@@ -190,6 +190,15 @@ export function HomeScreen() {
                                 subTextColor={subTextColor}
                                 cardBg={cardBg}
                                 formatTemperature={formatTemperature}
+                            />
+                        )}
+
+                        {/* Temperature Chart */}
+                        {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
+                            <TemperatureChart
+                                data={weather.hourly_forecast}
+                                textColor={textColor}
+                                cardBg={cardBg}
                             />
                         )}
 
