@@ -200,6 +200,7 @@ export function HomeScreen() {
                                 textColor={textColor}
                                 subTextColor={subTextColor}
                                 cardBg={cardBg}
+                                isDark={theme.is_dark}
                                 formatTemperature={formatTemperature}
                             />
                         )}
@@ -252,6 +253,7 @@ export function HomeScreen() {
                                 textColor={textColor}
                                 subTextColor={subTextColor}
                                 cardBg={cardBg}
+                                isDark={theme.is_dark}
                                 onDayPress={(day) => setSelectedDay(day)}
                             />
                         )}

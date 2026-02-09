@@ -5,6 +5,8 @@ import {
     StyleSheet,
     ScrollView,
 } from 'react-native';
+import { Droplets } from 'lucide-react-native';
+import { getWeatherIcon, getWeatherIconColor } from '../utils';
 
 interface HourlyData {
     time: string;
@@ -18,21 +20,9 @@ interface HourlyForecastProps {
     textColor: string;
     subTextColor: string;
     cardBg: string;
+    isDark?: boolean;
     formatTemperature: (temp: number) => string;
 }
-
-const getWeatherEmoji = (code?: number): string => {
-    if (!code) return '🌡️';
-    if (code === 0) return '☀️';
-    if (code <= 3) return '⛅';
-    if (code <= 48) return '🌫️';
-    if (code <= 67) return '🌧️';
-    if (code <= 77) return '🌨️';
-    if (code <= 82) return '🌧️';
-    if (code <= 86) return '❄️';
-    if (code >= 95) return '⛈️';
-    return '🌡️';
-};
 
 const formatHour = (timeString: string): string => {
     try {
@@ -54,11 +44,22 @@ const formatHour = (timeString: string): string => {
     }
 };
 
+const isNightTime = (timeString: string): boolean => {
+    try {
+        const date = new Date(timeString);
+        const hour = date.getHours();
+        return hour < 6 || hour >= 20;
+    } catch {
+        return false;
+    }
+};
+
 export function HourlyForecast({
     data,
     textColor,
     subTextColor,
     cardBg,
+    isDark = false,
     formatTemperature
 }: HourlyForecastProps) {
     if (!data || data.length === 0) return null;
@@ -76,24 +77,33 @@ export function HourlyForecast({
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
             >
-                {hourlyData.map((hour, index) => (
-                    <View key={`${hour.time}-${index}`} style={styles.hourItem}>
-                        <Text style={[styles.hourTime, { color: subTextColor }]}>
-                            {formatHour(hour.time)}
-                        </Text>
-                        <Text style={styles.hourEmoji}>
-                            {getWeatherEmoji(hour.weather_code)}
-                        </Text>
-                        <Text style={[styles.hourTemp, { color: textColor }]}>
-                            {formatTemperature(hour.temperature)}
-                        </Text>
-                        {hour.precipitation_probability !== undefined && hour.precipitation_probability > 0 && (
-                            <Text style={[styles.hourRain, { color: '#4A90D9' }]}>
-                                💧{hour.precipitation_probability}%
+                {hourlyData.map((hour, index) => {
+                    const isNight = isNightTime(hour.time);
+                    const WeatherIcon = getWeatherIcon(hour.weather_code, isNight);
+                    const iconColor = getWeatherIconColor(hour.weather_code, isDark);
+
+                    return (
+                        <View key={`${hour.time}-${index}`} style={styles.hourItem}>
+                            <Text style={[styles.hourTime, { color: subTextColor }]}>
+                                {formatHour(hour.time)}
                             </Text>
-                        )}
-                    </View>
-                ))}
+                            <View style={styles.iconContainer}>
+                                <WeatherIcon size={28} color={iconColor} strokeWidth={1.5} />
+                            </View>
+                            <Text style={[styles.hourTemp, { color: textColor }]}>
+                                {formatTemperature(hour.temperature)}
+                            </Text>
+                            {hour.precipitation_probability !== undefined && hour.precipitation_probability > 0 && (
+                                <View style={styles.rainRow}>
+                                    <Droplets size={10} color="#4A90D9" strokeWidth={2} />
+                                    <Text style={[styles.hourRain, { color: '#4A90D9' }]}>
+                                        {hour.precipitation_probability}%
+                                    </Text>
+                                </View>
+                            )}
+                        </View>
+                    );
+                })}
             </ScrollView>
         </View>
     );
@@ -124,17 +134,24 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         marginBottom: 8,
     },
-    hourEmoji: {
-        fontSize: 28,
+    iconContainer: {
+        height: 32,
+        justifyContent: 'center',
+        alignItems: 'center',
         marginBottom: 8,
     },
     hourTemp: {
         fontSize: 15,
         fontWeight: '600',
     },
+    rainRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 3,
+        marginTop: 4,
+    },
     hourRain: {
         fontSize: 11,
-        marginTop: 4,
         fontWeight: '500',
     },
 });

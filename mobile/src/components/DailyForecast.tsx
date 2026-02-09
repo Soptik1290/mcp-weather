@@ -5,7 +5,8 @@ import {
     StyleSheet,
     TouchableOpacity,
 } from 'react-native';
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Droplets } from 'lucide-react-native';
+import { getWeatherIcon, getWeatherIconColor } from '../utils';
 
 interface DailyData {
     date: string;
@@ -25,21 +26,9 @@ interface DailyForecastProps {
     textColor: string;
     subTextColor: string;
     cardBg: string;
+    isDark?: boolean;
     onDayPress?: (day: DailyData) => void;
 }
-
-const getWeatherEmoji = (code?: number): string => {
-    if (!code) return '🌡️';
-    if (code === 0) return '☀️';
-    if (code <= 3) return '⛅';
-    if (code <= 48) return '🌫️';
-    if (code <= 67) return '🌧️';
-    if (code <= 77) return '🌨️';
-    if (code <= 82) return '🌧️';
-    if (code <= 86) return '❄️';
-    if (code >= 95) return '⛈️';
-    return '🌡️';
-};
 
 const formatDay = (dateString: string, index: number): string => {
     if (index === 0) return 'Dnes';
@@ -58,6 +47,7 @@ export function DailyForecast({
     textColor,
     subTextColor,
     cardBg,
+    isDark = false,
     onDayPress
 }: DailyForecastProps) {
     if (!data || data.length === 0) return null;
@@ -83,6 +73,8 @@ export function DailyForecast({
                 const barWidth = maxPos - minPos;
 
                 const RowComponent = onDayPress ? TouchableOpacity : View;
+                const WeatherIcon = getWeatherIcon(day.weather_code, false);
+                const iconColor = getWeatherIconColor(day.weather_code, isDark);
 
                 return (
                     <RowComponent
@@ -100,16 +92,19 @@ export function DailyForecast({
                         </Text>
 
                         {/* Weather icon */}
-                        <Text style={styles.dayEmoji}>
-                            {getWeatherEmoji(day.weather_code)}
-                        </Text>
+                        <View style={styles.iconContainer}>
+                            <WeatherIcon size={24} color={iconColor} strokeWidth={1.5} />
+                        </View>
 
                         {/* Rain probability */}
                         <View style={styles.rainContainer}>
                             {day.precipitation_probability !== undefined && day.precipitation_probability > 0 && (
-                                <Text style={[styles.rainText, { color: '#4A90D9' }]}>
-                                    💧{day.precipitation_probability}%
-                                </Text>
+                                <View style={styles.rainRow}>
+                                    <Droplets size={10} color="#4A90D9" strokeWidth={2} />
+                                    <Text style={[styles.rainText, { color: '#4A90D9' }]}>
+                                        {day.precipitation_probability}%
+                                    </Text>
+                                </View>
                             )}
                         </View>
 
@@ -174,14 +169,20 @@ const styles = StyleSheet.create({
         fontSize: 15,
         fontWeight: '500',
     },
-    dayEmoji: {
-        fontSize: 24,
+    iconContainer: {
         width: 36,
-        textAlign: 'center',
+        height: 28,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     rainContainer: {
         width: 48,
         alignItems: 'center',
+    },
+    rainRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 2,
     },
     rainText: {
         fontSize: 11,
