@@ -53,7 +53,7 @@ export function TemperatureChart({
     data,
     textColor,
     cardBg,
-    height = 180
+    height = 140
 }: TemperatureChartProps) {
     if (!data || data.length < 2) return null;
 

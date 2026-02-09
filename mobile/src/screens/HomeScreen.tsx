@@ -96,10 +96,24 @@ export function HomeScreen() {
 
     if (loading) {
         return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" color="#fff" />
-                <Text style={styles.loadingText}>Načítám počasí...</Text>
-            </View>
+            <>
+                <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+                <LinearGradient
+                    colors={['#4A90D9', '#67B8DE', '#8BC7E8']}
+                    style={styles.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                >
+                    <View style={styles.loadingContainer}>
+                        <Text style={styles.loadingEmoji}>🌤️</Text>
+                        <ActivityIndicator size="large" color="#fff" style={styles.loadingSpinner} />
+                        <Text style={styles.loadingText}>Načítám počasí...</Text>
+                        <Text style={styles.loadingSubtext}>
+                            {currentLocation?.name || 'Praha'}
+                        </Text>
+                    </View>
+                </LinearGradient>
+            </>
         );
     }
 
@@ -293,7 +307,21 @@ const styles = StyleSheet.create({
     loadingText: {
         color: '#fff',
         marginTop: 10,
-        fontSize: 16,
+        fontSize: 18,
+        fontWeight: '300',
+        letterSpacing: 0.5,
+    },
+    loadingEmoji: {
+        fontSize: 64,
+        marginBottom: 20,
+    },
+    loadingSpinner: {
+        marginBottom: 16,
+    },
+    loadingSubtext: {
+        color: 'rgba(255,255,255,0.7)',
+        fontSize: 14,
+        marginTop: 4,
     },
     errorContainer: {
         flex: 1,
