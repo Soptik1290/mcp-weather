@@ -17,7 +17,7 @@ import { Search } from 'lucide-react-native';
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
 // Weather icon mapping (simplified - you can expand this)
@@ -95,6 +95,7 @@ export function HomeScreen() {
     };
 
     if (loading) {
+        const cardBg = 'rgba(255,255,255,0.1)';
         return (
             <>
                 <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -104,14 +105,9 @@ export function HomeScreen() {
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
                 >
-                    <View style={styles.loadingContainer}>
-                        <Text style={styles.loadingEmoji}>🌤️</Text>
-                        <ActivityIndicator size="large" color="#fff" style={styles.loadingSpinner} />
-                        <Text style={styles.loadingText}>Načítám počasí...</Text>
-                        <Text style={styles.loadingSubtext}>
-                            {currentLocation?.name || 'Praha'}
-                        </Text>
-                    </View>
+                    <SafeAreaView style={styles.container}>
+                        <WeatherSkeleton cardBg={cardBg} />
+                    </SafeAreaView>
                 </LinearGradient>
             </>
         );
