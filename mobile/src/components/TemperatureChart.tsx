@@ -53,18 +53,19 @@ export function TemperatureChart({
     data,
     textColor,
     cardBg,
-    height = 140
+    height = 160
 }: TemperatureChartProps) {
     if (!data || data.length < 2) return null;
 
     // Take 12 hours for the chart (easier to read)
     const chartData = data.slice(0, 12);
     const screenWidth = Dimensions.get('window').width;
-    const chartWidth = screenWidth - 40; // padding
+    // Account for card padding (16px each side) + screen padding (20px each side)
+    const chartWidth = screenWidth - 72;
     const chartHeight = height;
-    const paddingTop = 35;
-    const paddingBottom = 50;
-    const paddingHorizontal = 10;
+    const paddingTop = 30;
+    const paddingBottom = 45;
+    const paddingHorizontal = 15;
 
     // Find min/max temps
     const temps = chartData.map(d => d.temperature);
