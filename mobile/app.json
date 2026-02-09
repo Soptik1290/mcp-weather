@@ -1,0 +1,9 @@
+{
+  "name": "Weatherly",
+  "displayName": "Weatherly",
+  "version": "1.0.0",
+  "bundleId": {
+    "ios": "com.weatherly.ai",
+    "android": "com.weatherly.ai"
+  }
+}
