@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { Search } from 'lucide-react-native';
+import { getWeatherIcon, getWeatherIconColor } from '../utils';
 
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
@@ -20,19 +21,6 @@ import { SearchScreen } from './SearchScreen';
 import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
-// Weather icon mapping (simplified - you can expand this)
-const getWeatherEmoji = (code?: number): string => {
-    if (!code) return '🌡️';
-    if (code === 0) return '☀️';
-    if (code <= 3) return '⛅';
-    if (code <= 48) return '🌫️';
-    if (code <= 67) return '🌧️';
-    if (code <= 77) return '🌨️';
-    if (code <= 82) return '🌧️';
-    if (code <= 86) return '❄️';
-    if (code >= 95) return '⛈️';
-    return '🌡️';
-};
 
 export function HomeScreen() {
     const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -174,9 +162,13 @@ export function HomeScreen() {
                         {/* Current Weather */}
                         {current && (
                             <View style={styles.currentWeather}>
-                                <Text style={styles.weatherEmoji}>
-                                    {getWeatherEmoji(current.weather_code)}
-                                </Text>
+                                <View style={styles.weatherIconContainer}>
+                                    {(() => {
+                                        const WeatherIcon = getWeatherIcon(current.weather_code);
+                                        const iconColor = getWeatherIconColor(current.weather_code, theme.is_dark);
+                                        return <WeatherIcon size={80} color={iconColor} strokeWidth={1.5} />;
+                                    })()}
+                                </View>
                                 <Text style={[styles.temperature, { color: textColor }]}>
                                     {formatTemperature(current.temperature)}
                                 </Text>
@@ -370,9 +362,10 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 30,
     },
-    weatherEmoji: {
-        fontSize: 72,
+    weatherIconContainer: {
         marginBottom: 10,
+        alignItems: 'center',
+        justifyContent: 'center',
     },
     temperature: {
         fontSize: 72,
