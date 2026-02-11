@@ -11,6 +11,8 @@ import {
     AlertTriangle,
     Clock,
 } from 'lucide-react-native';
+import { t } from '../utils';
+import type { TimeFormat } from '../types';
 
 interface AuroraData {
     current_kp: number | null;
@@ -36,6 +38,8 @@ interface AuroraCardProps {
     cardBg: string;
     isDark?: boolean;
     locationName?: string;
+    language?: 'en' | 'cs';
+    timeFormat?: TimeFormat;
 }
 
 const getKpColor = (kp: number): string => {
@@ -54,9 +58,16 @@ const getKpBgColor = (kp: number): string => {
     return 'rgba(168,85,247,0.2)';
 };
 
-const formatBestTime = (utcTimeStr: string): string => {
+const formatBestTime = (utcTimeStr: string, timeFmt: TimeFormat = '24h'): string => {
     try {
         const date = new Date(utcTimeStr.replace(' ', 'T') + 'Z');
+        if (timeFmt === '12h') {
+            return date.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true,
+            });
+        }
         return date.toLocaleTimeString('cs', {
             hour: '2-digit',
             minute: '2-digit',
@@ -73,7 +84,9 @@ export function AuroraCard({
     subTextColor,
     cardBg,
     isDark = false,
-    locationName
+    locationName,
+    language = 'cs',
+    timeFormat = '24h',
 }: AuroraCardProps) {
     if (!data || data.error) {
         return (
@@ -81,11 +94,11 @@ export function AuroraCard({
                 <View style={styles.header}>
                     <Sparkles size={16} color={subTextColor} strokeWidth={2} />
                     <Text style={[styles.headerText, { color: subTextColor }]}>
-                        Polární záře
+                        {t('aurora', language)}
                     </Text>
                 </View>
                 <Text style={[styles.unavailableText, { color: subTextColor }]}>
-                    Data o polární záři nedostupná
+                    {t('aurora_unavailable', language)}
                 </Text>
             </View>
         );
@@ -102,12 +115,12 @@ export function AuroraCard({
             <View style={styles.header}>
                 <Sparkles size={16} color={isStorm ? '#A855F7' : subTextColor} strokeWidth={2} />
                 <Text style={[styles.headerText, { color: subTextColor }]}>
-                    Polární záře
+                    {t('aurora', language)}
                 </Text>
                 {isStorm && (
                     <View style={styles.stormBadge}>
                         <AlertTriangle size={12} color="#A855F7" strokeWidth={2} />
-                        <Text style={styles.stormText}>Bouře aktivní!</Text>
+                        <Text style={styles.stormText}>{t('aurora_active', language)}</Text>
                     </View>
                 )}
             </View>
@@ -135,12 +148,12 @@ export function AuroraCard({
                         {visibilityProb}%
                     </Text>
                     <Text style={[styles.gridLabel, { color: subTextColor }]}>
-                        Viditelnost
+                        {t('aurora_visibility', language)}
                     </Text>
                     <View style={styles.locationRow}>
                         <MapPin size={10} color={subTextColor} strokeWidth={2} />
                         <Text style={[styles.locationText, { color: subTextColor }]} numberOfLines={1}>
-                            {locationName || 'Aktuální'}
+                            {locationName || (language === 'cs' ? 'Aktuální' : 'Current')}
                         </Text>
                     </View>
                 </View>
@@ -154,10 +167,10 @@ export function AuroraCard({
                         </Text>
                     </View>
                     <Text style={[styles.gridLabel, { color: subTextColor }]}>
-                        Max 24h
+                        {t('aurora_max_24h', language)}
                     </Text>
                     <Text style={[styles.maxVisibility, { color: subTextColor }]}>
-                        Max viditelnost: {data.max_visibility_probability}%
+                        {t('aurora_max_visibility', language)}: {data.max_visibility_probability}%
                     </Text>
                 </View>
             </View>
@@ -167,7 +180,7 @@ export function AuroraCard({
                 <View style={[styles.bestTimeContainer, { borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
                     <Clock size={14} color={subTextColor} strokeWidth={2} />
                     <Text style={[styles.bestTimeText, { color: subTextColor }]}>
-                        Nejlepší čas: {formatBestTime(data.best_viewing_time)} (Kp {data.best_viewing_kp?.toFixed(1)})
+                        {t('aurora_best_time', language)}: {formatBestTime(data.best_viewing_time, timeFormat)} (Kp {data.best_viewing_kp?.toFixed(1)})
                     </Text>
                 </View>
             )}
@@ -176,7 +189,7 @@ export function AuroraCard({
             {data.forecast && data.forecast.length > 0 && (
                 <View style={[styles.chartContainer, { borderTopColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)' }]}>
                     <Text style={[styles.chartTitle, { color: subTextColor }]}>
-                        3denní Kp předpověď
+                        {t('aurora_3day_forecast', language)}
                     </Text>
                     <View style={styles.chartBars}>
                         {data.forecast.slice(0, 12).map((f, i) => {

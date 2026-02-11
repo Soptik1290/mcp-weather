@@ -14,6 +14,9 @@ import {
     Sunset,
     CloudRain
 } from 'lucide-react-native';
+import { t, formatTime as formatTimeI18n, formatTimeString } from '../utils';
+
+import type { TimeFormat } from '../types';
 
 interface WeatherDetailsProps {
     humidity?: number;
@@ -29,6 +32,8 @@ interface WeatherDetailsProps {
     subTextColor: string;
     cardBg: string;
     formatTemperature?: (temp: number) => string;
+    language?: 'en' | 'cs';
+    timeFormat?: TimeFormat;
 }
 
 interface DetailItemProps {
@@ -55,18 +60,16 @@ function DetailItem({ icon, label, value, textColor, subTextColor }: DetailItemP
     );
 }
 
-const formatTime = (timeString?: string): string => {
+const formatTime = (timeString?: string, timeFmt: TimeFormat = '24h'): string => {
     if (!timeString) return '--:--';
-    try {
+    // Check if it's an ISO string (contains 'T')
+    if (timeString.includes('T')) {
         const date = new Date(timeString);
-        return date.toLocaleTimeString('cs', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
-    } catch {
-        return timeString;
+        if (!isNaN(date.getTime())) {
+            return formatTimeI18n(date, timeFmt);
+        }
     }
+    return formatTimeString(timeString, timeFmt);
 };
 
 export function WeatherDetails({
@@ -82,6 +85,8 @@ export function WeatherDetails({
     subTextColor,
     cardBg,
     formatTemperature = (t) => `${Math.round(t)}°`,
+    language = 'cs',
+    timeFormat = '24h',
 }: WeatherDetailsProps) {
     const iconColor = subTextColor;
     const iconSize = 22;
@@ -90,22 +95,22 @@ export function WeatherDetails({
     const details = [
         humidity !== undefined && {
             icon: <Droplets size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Vlhkost',
+            label: t('humidity', language),
             value: `${humidity}%`,
         },
         windSpeed !== undefined && {
             icon: <Wind size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Vítr',
+            label: t('wind', language),
             value: `${Math.round(windSpeed)} km/h`,
         },
         feelsLike !== undefined && {
             icon: <Thermometer size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Pocitově',
+            label: t('feels_like', language),
             value: formatTemperature(feelsLike),
         },
         visibility !== undefined && visibility !== null && {
             icon: <Eye size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Viditelnost',
+            label: t('aurora_visibility', language),
             value: visibility >= 1000
                 ? `${Math.round(visibility / 1000)} km`
                 : `${Math.round(visibility)} m`,
@@ -117,18 +122,18 @@ export function WeatherDetails({
         },
         precipitation !== undefined && precipitation > 0 && {
             icon: <CloudRain size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Srážky',
+            label: t('precipitation', language),
             value: `${precipitation} mm`,
         },
         sunrise && {
             icon: <Sunrise size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Východ',
-            value: formatTime(sunrise),
+            label: t('sunrise', language),
+            value: formatTime(sunrise, timeFormat),
         },
         sunset && {
             icon: <Sunset size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Západ',
-            value: formatTime(sunset),
+            label: t('sunset', language),
+            value: formatTime(sunset, timeFormat),
         },
     ].filter(Boolean) as { icon: React.ReactNode; label: string; value: string }[];
 
@@ -137,7 +142,7 @@ export function WeatherDetails({
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
             <Text style={[styles.title, { color: textColor }]}>
-                Detaily počasí
+                {t('current', language)}
             </Text>
             <View style={styles.grid}>
                 {details.map((detail, index) => (

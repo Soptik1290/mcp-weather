@@ -26,6 +26,7 @@ import {
     Github,
 } from 'lucide-react-native';
 import { useSettingsStore } from '../stores';
+import { t } from '../utils';
 
 interface SettingsScreenProps {
     onClose: () => void;
@@ -43,6 +44,7 @@ interface SettingOption {
 export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScreenProps) {
     const { settings, updateSettings } = useSettingsStore();
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
+    const lang = settings.language;
 
     const textColor = isDark ? '#fff' : '#1a1a1a';
     const subTextColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
@@ -158,7 +160,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                 <View style={styles.header}>
                     <View style={styles.headerLeft} />
                     <Text style={[styles.headerTitle, { color: textColor }]}>
-                        Nastavení
+                        {t('settings', lang)}
                     </Text>
                     <TouchableOpacity
                         onPress={onClose}
@@ -174,11 +176,11 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                 >
                     {/* General Settings */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        OBECNÉ
+                        {t('general', lang)}
                     </Text>
                     <View style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
-                            'Jazyk',
+                            t('language', lang),
                             [
                                 { label: '🇨🇿 Čeština', value: 'cs' },
                                 { label: '🇬🇧 English', value: 'en' },
@@ -188,146 +190,146 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             'language',
                             Globe,
                             '#4A90D9',
-                            'Jazyk aplikace a předpovědí'
+                            t('language_desc', lang)
                         )}
 
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderOptionRow(
-                            'Jednotky teploty',
+                            t('temperature', lang),
                             [
-                                { label: '°C Celsius', value: 'celsius' },
-                                { label: '°F Fahrenheit', value: 'fahrenheit' },
+                                { label: t('celsius', lang), value: 'celsius' },
+                                { label: t('fahrenheit', lang), value: 'fahrenheit' },
                             ],
                             settings.temperature_unit,
                             (val) => updateSettings({ temperature_unit: val }),
                             'temperature',
                             Thermometer,
                             '#FF6B6B',
-                            'Jednotky zobrazení teploty'
+                            t('temp_desc', lang)
                         )}
 
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderOptionRow(
-                            'Formát času',
+                            t('time_format', lang),
                             [
-                                { label: '24h', value: '24h' },
-                                { label: '12h AM/PM', value: '12h' },
+                                { label: t('time_24h', lang), value: '24h' },
+                                { label: t('time_12h', lang), value: '12h' },
                             ],
                             settings.time_format,
                             (val) => updateSettings({ time_format: val }),
                             'timeFormat',
                             Clock,
                             '#F59E0B',
-                            'Vyberte formát času'
+                            t('time_format_desc', lang)
                         )}
                     </View>
 
                     {/* Notifications */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        UPOZORNĚNÍ
+                        {t('notifications_section', lang)}
                     </Text>
                     <View style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderToggle(
-                            'Upozornění',
+                            t('notifications', lang),
                             settings.notifications_enabled,
                             (val) => updateSettings({ notifications_enabled: val }),
                             Bell,
                             '#FBBF24',
-                            'Push notifikace o počasí'
+                            t('notifications_desc', lang)
                         )}
 
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderToggle(
-                            'Polární záře',
+                            t('aurora', lang),
                             settings.aurora_alerts,
                             (val) => updateSettings({ aurora_alerts: val }),
                             Sparkles,
                             '#A78BFA',
-                            'Upozornění na polární záři'
+                            t('aurora_alerts_desc', lang)
                         )}
 
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderToggle(
-                            'Vibrace',
+                            t('vibration', lang),
                             settings.haptic_enabled,
                             (val) => updateSettings({ haptic_enabled: val }),
                             Vibrate,
                             '#F97316',
-                            'Haptická odezva při interakcích'
+                            t('haptic_desc', lang)
                         )}
                     </View>
 
                     {/* AI Settings */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        AI PŘEDPOVĚĎ
+                        {t('ai_section', lang)}
                     </Text>
                     <View style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
-                            'Styl předpovědi',
+                            t('forecast_style', lang),
                             [
-                                { label: '🛡️ Opatrný', value: 'cautious' },
-                                { label: '⚖️ Vyvážený', value: 'balanced' },
-                                { label: '🌟 Optimistický', value: 'optimistic' },
+                                { label: t('cautious', lang), value: 'cautious' },
+                                { label: t('balanced', lang), value: 'balanced' },
+                                { label: t('optimistic', lang), value: 'optimistic' },
                             ],
                             settings.confidence_bias,
                             (val) => updateSettings({ confidence_bias: val }),
                             'confidence',
                             Sparkles,
                             '#10B981',
-                            'Jak moc optimistická bude AI'
+                            t('confidence_desc', lang)
                         )}
                     </View>
 
                     {/* Aurora Display */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        POLÁRNÍ ZÁŘE
+                        {t('aurora_section', lang)}
                     </Text>
                     <View style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
-                            'Polární záře',
+                            t('aurora_setting', lang),
                             [
-                                { label: '🌌 Auto (když je viditelná)', value: 'auto' },
-                                { label: '✅ Vždy zobrazit', value: 'always' },
-                                { label: '❌ Nikdy nezobrazovat', value: 'never' },
+                                { label: t('aurora_auto', lang), value: 'auto' },
+                                { label: t('aurora_always', lang), value: 'always' },
+                                { label: t('aurora_never', lang), value: 'never' },
                             ],
                             settings.aurora_display,
                             (val) => updateSettings({ aurora_display: val }),
                             'auroraDisplay',
                             Sparkles,
                             '#A78BFA',
-                            'Zobrazit kartu polární záře'
+                            t('aurora_setting_desc', lang)
                         )}
                     </View>
 
                     {/* Theme Mode */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        VZHLED
+                        {t('theme_section', lang)}
                     </Text>
                     <View style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
-                            'Vzhled',
+                            t('theme_mode', lang),
                             [
-                                { label: '🌤️ Auto (počasí)', value: 'auto' },
-                                { label: '📱 Systém', value: 'system' },
-                                { label: '🌙 Tmavý', value: 'dark' },
-                                { label: '☀️ Světlý', value: 'light' },
+                                { label: t('theme_auto', lang), value: 'auto' },
+                                { label: t('theme_system', lang), value: 'system' },
+                                { label: t('theme_dark', lang), value: 'dark' },
+                                { label: t('theme_light', lang), value: 'light' },
                             ],
                             settings.theme_mode,
                             (val) => updateSettings({ theme_mode: val }),
                             'themeMode',
                             Palette,
                             '#F472B6',
-                            'Zvolte vzhled aplikace'
+                            t('theme_mode_desc', lang)
                         )}
                     </View>
 
                     {/* About */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        O APLIKACI
+                        {t('about_section', lang)}
                     </Text>
                     <View style={[styles.card, { backgroundColor: cardBg }]}>
                         <View style={styles.settingRow}>
@@ -337,7 +339,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             <View style={styles.settingContent}>
                                 <Text style={[styles.settingLabel, { color: textColor }]}>Weatherly AI</Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    AI agregace počasí ze 4 zdrojů
+                                    {t('about_desc', lang)}
                                 </Text>
                             </View>
                             <Text style={[styles.version, { color: subTextColor }]}>v1.0.0</Text>
@@ -356,7 +358,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             <View style={styles.settingContent}>
                                 <Text style={[styles.settingLabel, { color: textColor }]}>GitHub</Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    Zobrazit zdrojový kód
+                                    {t('view_source', lang)}
                                 </Text>
                             </View>
                             <ChevronRight size={16} color={subTextColor} />

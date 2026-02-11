@@ -6,7 +6,7 @@ import {
     TouchableOpacity,
 } from 'react-native';
 import { ChevronRight, Droplets } from 'lucide-react-native';
-import { getWeatherIcon, getWeatherIconColor } from '../utils';
+import { getWeatherIcon, getWeatherIconColor, t, getDayName } from '../utils';
 
 interface DailyData {
     date: string;
@@ -28,15 +28,16 @@ interface DailyForecastProps {
     cardBg: string;
     isDark?: boolean;
     onDayPress?: (day: DailyData) => void;
+    language?: 'en' | 'cs';
 }
 
-const formatDay = (dateString: string, index: number): string => {
-    if (index === 0) return 'Dnes';
-    if (index === 1) return 'Zítra';
+const formatDay = (dateString: string, index: number, lang: 'en' | 'cs' = 'cs'): string => {
+    if (index === 0) return t('today', lang);
+    if (index === 1) return lang === 'cs' ? 'Zítra' : 'Tomorrow';
 
     try {
         const date = new Date(dateString);
-        return date.toLocaleDateString('cs', { weekday: 'short' });
+        return getDayName(date, lang, true);
     } catch {
         return dateString;
     }
@@ -48,7 +49,8 @@ export function DailyForecast({
     subTextColor,
     cardBg,
     isDark = false,
-    onDayPress
+    onDayPress,
+    language = 'cs',
 }: DailyForecastProps) {
     if (!data || data.length === 0) return null;
 
@@ -64,7 +66,7 @@ export function DailyForecast({
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
             <Text style={[styles.title, { color: textColor }]}>
-                Týdenní předpověď
+                {t('daily_forecast', language)}
             </Text>
             {dailyData.map((day, index) => {
                 // Calculate bar positions
@@ -88,7 +90,7 @@ export function DailyForecast({
                     >
                         {/* Day name */}
                         <Text style={[styles.dayName, { color: textColor }]}>
-                            {formatDay(day.date, index)}
+                            {formatDay(day.date, index, language)}
                         </Text>
 
                         {/* Weather icon */}
@@ -101,7 +103,7 @@ export function DailyForecast({
                             {day.precipitation_probability !== undefined && day.precipitation_probability > 0 && (
                                 <View style={styles.rainRow}>
                                     <Droplets size={10} color="#4A90D9" strokeWidth={2} />
-                                    <Text style={[styles.rainText, { color: '#4A90D9' }]}>
+                                    <Text style={[styles.rainText, { color: textColor }]}>
                                         {day.precipitation_probability}%
                                     </Text>
                                 </View>

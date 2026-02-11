@@ -306,7 +306,7 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
             return cached
 
         # Reverse geocode to get city name
-        city_name, country = await reverse_geocode(request.latitude, request.longitude)
+        city_name, country = await reverse_geocode(request.latitude, request.longitude, request.language)
         
         location = Location(
             name=city_name,

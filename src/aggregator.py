@@ -152,11 +152,12 @@ class WeatherAggregator:
         if self.has_ai:
             return await self._ai_aggregate(weather_data, user_language)
         else:
-            return await self._statistical_aggregate(weather_data)
+            return await self._statistical_aggregate(weather_data, user_language)
     
     async def _statistical_aggregate(
         self, 
-        weather_data: list[WeatherData]
+        weather_data: list[WeatherData],
+        language: str = "en"
     ) -> AggregatedForecast:
         """
         Statistical aggregation when AI is not available.
@@ -221,7 +222,10 @@ class WeatherAggregator:
             daily_forecast=weather_data[0].daily_forecast,
             hourly_forecast=base_hourly,
             astronomy=weather_data[0].astronomy,
-            ai_summary=f"Aggregated from {len(sources)} sources using Kalman Filter & EWMA smoothing.",
+            ai_summary={
+                "en": f"Aggregated from {len(sources)} sources using Kalman Filter & EWMA smoothing.",
+                "cs": f"Agregováno z {len(sources)} zdrojů pomocí Kalmanova filtru a EWMA vyhlazování."
+            }.get(language, f"Aggregated from {len(sources)} sources using Kalman Filter & EWMA smoothing."),
             confidence_score=0.85, # Higher confidence with Kalman
             sources_used=sources
         )
@@ -336,7 +340,7 @@ Analyze these sources and deduce the most accurate current weather."""
         except Exception as e:
             # Fallback to statistical if AI fails
             print(f"[WARN] AI aggregation error: {e}")
-            return await self._statistical_aggregate(weather_data)
+            return await self._statistical_aggregate(weather_data, language)
     
     async def get_ambient_theme(
         self,

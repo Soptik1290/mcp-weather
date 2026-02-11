@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef } from 'react';
 import {
     View,
     Text,
@@ -8,7 +8,6 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     StatusBar,
-    Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -17,6 +16,7 @@ import { Search, MapPin, X, Navigation, ChevronRight } from 'lucide-react-native
 import { weatherService } from '../services';
 import { useLocationStore } from '../stores';
 import { useGeolocation } from '../hooks/useGeolocation';
+import { t } from '../utils';
 
 interface SearchResult {
     name: string;
@@ -30,12 +30,14 @@ interface SearchScreenProps {
     onClose: () => void;
     themeGradient?: string[];
     isDark?: boolean;
+    language?: 'en' | 'cs';
 }
 
 export function SearchScreen({
     onClose,
     themeGradient = ['#4A90D9', '#67B8DE', '#8BC7E8'],
-    isDark = false
+    isDark = false,
+    language = 'cs'
 }: SearchScreenProps) {
     const [query, setQuery] = useState('');
     const [results, setResults] = useState<SearchResult[]>([]);
@@ -51,7 +53,7 @@ export function SearchScreen({
     const inputBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)';
 
     // Debounced search
-    const searchTimeout = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     const handleSearch = useCallback((text: string) => {
         setQuery(text);
@@ -74,13 +76,13 @@ export function SearchScreen({
                 setResults(searchResults);
             } catch (err) {
                 console.error('Search error:', err);
-                setError('Nepodařilo se vyhledat lokace');
+                setError(t('search_error', language));
                 setResults([]);
             } finally {
                 setLoading(false);
             }
         }, 300);
-    }, []);
+    }, [language]);
 
     const handleSelectLocation = (location: SearchResult) => {
         setCurrentLocation({
@@ -110,7 +112,7 @@ export function SearchScreen({
                 onClose();
             } catch (err) {
                 console.error('Geolocation weather error:', err);
-                setError('Nepodařilo se získat počasí pro vaši polohu');
+                setError(t('error_load', language));
             }
         }
     };
@@ -153,7 +155,7 @@ export function SearchScreen({
                     {/* Header */}
                     <View style={styles.header}>
                         <Text style={[styles.title, { color: textColor }]}>
-                            Vyhledat místo
+                            {t('search_title', language)}
                         </Text>
                         <TouchableOpacity
                             onPress={onClose}
@@ -168,7 +170,7 @@ export function SearchScreen({
                         <Search size={20} color={subTextColor} />
                         <TextInput
                             style={[styles.searchInput, { color: textColor }]}
-                            placeholder="Město, kraj, země..."
+                            placeholder={t('search_city', language)}
                             placeholderTextColor={subTextColor}
                             value={query}
                             onChangeText={handleSearch}
@@ -199,10 +201,10 @@ export function SearchScreen({
                         </View>
                         <View style={styles.geoContent}>
                             <Text style={[styles.geoTitle, { color: textColor }]}>
-                                {geoLoading ? 'Hledám polohu...' : 'Použít aktuální polohu'}
+                                {geoLoading ? t('detecting_location', language) : t('use_my_location', language)}
                             </Text>
                             <Text style={[styles.geoSubtitle, { color: subTextColor }]}>
-                                Automaticky detekovat město
+                                {t('auto_detect', language)}
                             </Text>
                         </View>
                         <ChevronRight size={20} color={subTextColor} />
@@ -212,7 +214,7 @@ export function SearchScreen({
                     {results.length > 0 && (
                         <View style={styles.divider}>
                             <Text style={[styles.dividerText, { color: subTextColor }]}>
-                                Výsledky vyhledávání
+                                {t('search_results', language)}
                             </Text>
                         </View>
                     )}
@@ -229,7 +231,7 @@ export function SearchScreen({
                         <View style={styles.loadingContainer}>
                             <ActivityIndicator size="large" color={textColor} />
                             <Text style={[styles.loadingText, { color: subTextColor }]}>
-                                Vyhledávám...
+                                {t('searching', language)}
                             </Text>
                         </View>
                     )}
@@ -246,10 +248,10 @@ export function SearchScreen({
                                 <View style={styles.emptyContainer}>
                                     <MapPin size={48} color={subTextColor} strokeWidth={1} />
                                     <Text style={[styles.emptyText, { color: subTextColor }]}>
-                                        Žádné výsledky pro "{query}"
+                                        {t('no_results', language)} "{query}"
                                     </Text>
                                     <Text style={[styles.emptyHint, { color: subTextColor }]}>
-                                        Zkuste jiný název města
+                                        {t('try_another_city', language)}
                                     </Text>
                                 </View>
                             ) : null
@@ -325,6 +327,7 @@ const styles = StyleSheet.create({
     geoSubtitle: {
         fontSize: 13,
         marginTop: 2,
+        marginBottom: 2,
     },
     divider: {
         paddingHorizontal: 20,

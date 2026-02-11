@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { Search, Settings } from 'lucide-react-native';
-import { getWeatherIcon, getWeatherIconColor } from '../utils';
+import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode } from '../utils';
 
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
@@ -21,6 +21,7 @@ import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
 import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
+import { useColorScheme } from 'react-native';
 
 
 export function HomeScreen() {
@@ -40,6 +41,8 @@ export function HomeScreen() {
 
     const { currentLocation } = useLocationStore();
     const { settings } = useSettingsStore();
+    const systemColorScheme = useColorScheme();
+    const lang = settings.language;
 
     const fetchWeather = async (isRefresh = false) => {
         if (isRefresh) setRefreshing(true);
@@ -73,7 +76,7 @@ export function HomeScreen() {
             setAuroraData(aurora);
         } catch (err) {
             console.error('Weather fetch error:', err);
-            setError('Nepodařilo se načíst počasí');
+            setError(t('error_load', lang));
         } finally {
             setLoading(false);
             setRefreshing(false);
@@ -82,7 +85,7 @@ export function HomeScreen() {
 
     useEffect(() => {
         fetchWeather();
-    }, [currentLocation?.name]);
+    }, [currentLocation?.name, lang]);
 
     const formatTemperature = (temp: number): string => {
         if (settings.temperature_unit === 'fahrenheit') {
@@ -119,14 +122,15 @@ export function HomeScreen() {
     }
 
     const current = weather?.current;
-    const textColor = theme.is_dark ? '#fff' : '#1a1a1a';
-    const subTextColor = theme.is_dark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)';
-    const cardBg = theme.is_dark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
+    const isDark = shouldUseDarkMode(settings.theme_mode, theme.name, systemColorScheme === 'dark');
+    const textColor = isDark ? '#fff' : '#1a1a1a';
+    const subTextColor = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)';
+    const cardBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
 
     return (
         <>
             <StatusBar
-                barStyle={theme.is_dark ? 'light-content' : 'dark-content'}
+                barStyle={isDark ? 'light-content' : 'dark-content'}
                 backgroundColor="transparent"
                 translucent
             />
@@ -188,14 +192,14 @@ export function HomeScreen() {
                                 <Text style={[styles.temperature, { color: textColor }]}>
                                     {formatTemperature(current.temperature)}
                                 </Text>
-                                {current.weather_description && (
+                                {current.weather_code !== undefined && (
                                     <Text style={[styles.description, { color: subTextColor }]}>
-                                        {current.weather_description}
+                                        {t(`wmo_${current.weather_code}`, lang)}
                                     </Text>
                                 )}
                                 {current.feels_like !== undefined && (
                                     <Text style={[styles.feelsLike, { color: subTextColor }]}>
-                                        Pocitově {formatTemperature(current.feels_like)}
+                                        {t('feels_like', lang)} {formatTemperature(current.feels_like)}
                                     </Text>
                                 )}
                             </View>
@@ -208,8 +212,10 @@ export function HomeScreen() {
                                 textColor={textColor}
                                 subTextColor={subTextColor}
                                 cardBg={cardBg}
-                                isDark={theme.is_dark}
+                                isDark={isDark}
                                 formatTemperature={formatTemperature}
+                                language={lang}
+                                timeFormat={settings.time_format}
                             />
                         )}
 
@@ -245,7 +251,7 @@ export function HomeScreen() {
                                 <Text style={styles.aiIcon}>🤖</Text>
                                 <View style={styles.aiContent}>
                                     <Text style={[styles.aiTitle, { color: textColor }]}>
-                                        AI shrnutí
+                                        {t('ai_summary', lang)}
                                     </Text>
                                     <Text style={[styles.aiSummary, { color: subTextColor }]}>
                                         {weather.ai_summary}
@@ -261,23 +267,26 @@ export function HomeScreen() {
                                 textColor={textColor}
                                 subTextColor={subTextColor}
                                 cardBg={cardBg}
-                                isDark={theme.is_dark}
+                                isDark={isDark}
                                 onDayPress={(day) => setSelectedDay(day)}
+                                language={lang}
                             />
                         )}
 
                         {/* Aurora Card */}
-                        {settings.aurora_display !== 'never' && (
-                            settings.aurora_display === 'always' ||
-                            (auroraData && !auroraData.error)
+                        {shouldShowAurora(
+                            settings.aurora_display,
+                            auroraData?.visibility_probability
                         ) && (
                                 <AuroraCard
                                     data={auroraData}
                                     textColor={textColor}
                                     subTextColor={subTextColor}
                                     cardBg={cardBg}
-                                    isDark={theme.is_dark}
+                                    isDark={isDark}
                                     locationName={weather?.location.name}
+                                    language={lang}
+                                    timeFormat={settings.time_format}
                                 />
                             )}
 
@@ -285,8 +294,8 @@ export function HomeScreen() {
                         {weather?.confidence_score !== undefined && (
                             <View style={styles.confidenceContainer}>
                                 <Text style={[styles.confidenceText, { color: subTextColor }]}>
-                                    Spolehlivost: {Math.round(weather.confidence_score * 100)}%
-                                    ({weather.sources_used?.length || 0} zdrojů)
+                                    {t('reliability', lang)}: {Math.round(weather.confidence_score * 100)}%
+                                    ({weather.sources_used?.length || 0} {t('sources', lang)})
                                 </Text>
                             </View>
                         )}
@@ -304,6 +313,7 @@ export function HomeScreen() {
                     onClose={() => setShowSearch(false)}
                     themeGradient={theme.gradient}
                     isDark={theme.is_dark}
+                    language={settings.language}
                 />
             </Modal>
 
@@ -314,6 +324,9 @@ export function HomeScreen() {
                 day={selectedDay}
                 themeGradient={theme.gradient}
                 isDark={theme.is_dark}
+                language={settings.language}
+                timeFormat={settings.time_format}
+                temperatureUnit={settings.temperature_unit}
             />
 
             {/* Settings Modal */}

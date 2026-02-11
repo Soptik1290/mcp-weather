@@ -22,6 +22,8 @@ import {
     Sunrise,
     Sunset,
 } from 'lucide-react-native';
+import { t, formatTime as formatTimeUtil, getDayName } from '../utils';
+import type { TimeFormat } from '../types';
 
 interface DayDetailModalProps {
     visible: boolean;
@@ -40,6 +42,9 @@ interface DayDetailModalProps {
     } | null;
     themeGradient: string[];
     isDark: boolean;
+    language?: 'en' | 'cs';
+    timeFormat?: TimeFormat;
+    temperatureUnit?: 'celsius' | 'fahrenheit';
 }
 
 const getWeatherEmoji = (code?: number): string => {
@@ -55,24 +60,15 @@ const getWeatherEmoji = (code?: number): string => {
     return '🌡️';
 };
 
-const getWeatherDescription = (code?: number): string => {
-    if (!code) return 'Neznámé';
-    if (code === 0) return 'Jasno';
-    if (code <= 3) return 'Částečně oblačno';
-    if (code <= 48) return 'Mlha';
-    if (code <= 55) return 'Mrholení';
-    if (code <= 67) return 'Déšť';
-    if (code <= 77) return 'Sněžení';
-    if (code <= 82) return 'Přeháňky';
-    if (code <= 86) return 'Sněhové přeháňky';
-    if (code >= 95) return 'Bouřka';
-    return 'Proměnlivé';
+const getWeatherDescriptionKey = (code?: number): string => {
+    if (code === undefined) return 'unknown';
+    return `wmo_${code}`;
 };
 
-const formatDate = (dateString: string): string => {
+const formatDate = (dateString: string, lang: 'en' | 'cs' = 'cs'): string => {
     try {
         const date = new Date(dateString);
-        return date.toLocaleDateString('cs', {
+        return date.toLocaleDateString(lang === 'cs' ? 'cs-CZ' : 'en-US', {
             weekday: 'long',
             day: 'numeric',
             month: 'long'
@@ -82,19 +78,7 @@ const formatDate = (dateString: string): string => {
     }
 };
 
-const formatTime = (timeString?: string): string => {
-    if (!timeString) return '--:--';
-    try {
-        const date = new Date(timeString);
-        return date.toLocaleTimeString('cs', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        });
-    } catch {
-        return timeString;
-    }
-};
+
 
 // Temperature Range Chart Component
 function TemperatureRangeChart({
@@ -120,7 +104,8 @@ function TemperatureRangeChart({
     return (
         <View style={[styles.chartCard, { backgroundColor: cardBg }]}>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-                Teplotní rozsah
+                {/* Visual component, title handled by parent or removed? Keeping generic */}
+                Temperature
             </Text>
             <Svg width={width} height={height}>
                 <Defs>
@@ -211,6 +196,9 @@ export function DayDetailModal({
     day,
     themeGradient,
     isDark,
+    language = 'cs',
+    timeFormat = '24h',
+    temperatureUnit = 'celsius',
 }: DayDetailModalProps) {
     if (!day) return null;
 
@@ -220,50 +208,50 @@ export function DayDetailModal({
 
     const details: DetailItem[] = [
         {
-            label: 'Max teplota',
-            value: `${Math.round(day.temperature_max)}°C`,
+            label: t('max_temp', language),
+            value: `${Math.round(day.temperature_max)}°${temperatureUnit === 'fahrenheit' ? 'F' : 'C'}`,
             Icon: Thermometer,
             color: '#FF6B6B'
         },
         {
-            label: 'Min teplota',
-            value: `${Math.round(day.temperature_min)}°C`,
+            label: t('min_temp', language),
+            value: `${Math.round(day.temperature_min)}°${temperatureUnit === 'fahrenheit' ? 'F' : 'C'}`,
             Icon: ThermometerSnowflake,
             color: '#67B8DE'
         },
         ...(day.precipitation_probability !== undefined ? [{
-            label: 'Šance srážek',
+            label: t('precipitation_chance', language),
             value: `${day.precipitation_probability}%`,
             Icon: Droplets,
             color: '#4A90D9'
         }] : []),
         ...(day.precipitation_sum !== undefined && day.precipitation_sum > 0 ? [{
-            label: 'Srážky',
+            label: t('precipitation', language),
             value: `${day.precipitation_sum} mm`,
             Icon: CloudRain,
             color: '#5DA5E8'
         }] : []),
         ...(day.wind_speed_max !== undefined ? [{
-            label: 'Max vítr',
+            label: t('max_wind', language),
             value: `${Math.round(day.wind_speed_max)} km/h`,
             Icon: Wind,
             color: '#9CA3AF'
         }] : []),
         ...(day.uv_index_max !== undefined ? [{
-            label: 'UV Index',
+            label: t('uv_index', language),
             value: `${day.uv_index_max}`,
             Icon: Sun,
             color: '#FBBF24'
         }] : []),
         ...(day.sunrise ? [{
-            label: 'Východ slunce',
-            value: formatTime(day.sunrise),
+            label: t('sunrise', language),
+            value: formatTimeUtil(new Date(day.sunrise), timeFormat),
             Icon: Sunrise,
             color: '#FB923C'
         }] : []),
         ...(day.sunset ? [{
-            label: 'Západ slunce',
-            value: formatTime(day.sunset),
+            label: t('sunset', language),
+            value: formatTimeUtil(new Date(day.sunset), timeFormat),
             Icon: Sunset,
             color: '#F472B6'
         }] : []),
@@ -287,7 +275,7 @@ export function DayDetailModal({
                     <View style={styles.header}>
                         <View style={styles.headerLeft} />
                         <Text style={[styles.headerTitle, { color: textColor }]}>
-                            Detail dne
+                            {t('detail_modal', language)}
                         </Text>
                         <TouchableOpacity
                             onPress={onClose}
@@ -307,10 +295,10 @@ export function DayDetailModal({
                                 {getWeatherEmoji(day.weather_code)}
                             </Text>
                             <Text style={[styles.date, { color: textColor }]}>
-                                {formatDate(day.date)}
+                                {formatDate(day.date, language)}
                             </Text>
                             <Text style={[styles.description, { color: subTextColor }]}>
-                                {getWeatherDescription(day.weather_code)}
+                                {t(getWeatherDescriptionKey(day.weather_code), language)}
                             </Text>
                             <View style={styles.tempRange}>
                                 <Text style={[styles.tempMax, { color: textColor }]}>
@@ -325,7 +313,9 @@ export function DayDetailModal({
                             </View>
                         </View>
 
-                        {/* Temperature Range Chart */}
+                        <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 16, marginTop: 8 }]}>
+                            {t('temperature_range', language)}
+                        </Text>
                         <TemperatureRangeChart
                             min={day.temperature_min}
                             max={day.temperature_max}
@@ -336,7 +326,7 @@ export function DayDetailModal({
                         {/* Details Grid - 2 columns */}
                         <View style={[styles.detailsCard, { backgroundColor: cardBg }]}>
                             <Text style={[styles.sectionTitle, { color: textColor }]}>
-                                Podrobnosti
+                                {t('details', language)}
                             </Text>
                             <View style={styles.detailsGrid}>
                                 {details.map((detail, index) => (

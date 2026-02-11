@@ -6,7 +6,8 @@ import {
     ScrollView,
 } from 'react-native';
 import { Droplets } from 'lucide-react-native';
-import { getWeatherIcon, getWeatherIconColor } from '../utils';
+import { getWeatherIcon, getWeatherIconColor, t, formatTimeString } from '../utils';
+import type { TimeFormat } from '../types';
 
 interface HourlyData {
     time: string;
@@ -22,16 +23,25 @@ interface HourlyForecastProps {
     cardBg: string;
     isDark?: boolean;
     formatTemperature: (temp: number) => string;
+    language?: 'en' | 'cs';
+    timeFormat?: TimeFormat;
 }
 
-const formatHour = (timeString: string): string => {
+const formatHour = (timeString: string, lang: 'en' | 'cs' = 'cs', timeFmt: TimeFormat = '24h'): string => {
     try {
         const date = new Date(timeString);
         const now = new Date();
         const isToday = date.toDateString() === now.toDateString();
 
         if (isToday && Math.abs(date.getTime() - now.getTime()) < 3600000) {
-            return 'Teď';
+            return t('now', lang);
+        }
+
+        if (timeFmt === '12h') {
+            const h = date.getHours();
+            const period = h >= 12 ? 'PM' : 'AM';
+            const hour = h % 12 || 12;
+            return `${hour}${period}`;
         }
 
         return date.toLocaleTimeString('cs', {
@@ -60,7 +70,9 @@ export function HourlyForecast({
     subTextColor,
     cardBg,
     isDark = false,
-    formatTemperature
+    formatTemperature,
+    language = 'cs',
+    timeFormat = '24h',
 }: HourlyForecastProps) {
     if (!data || data.length === 0) return null;
 
@@ -70,7 +82,7 @@ export function HourlyForecast({
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
             <Text style={[styles.title, { color: textColor }]}>
-                Hodinová předpověď
+                {t('hourly_forecast', language)}
             </Text>
             <ScrollView
                 horizontal
@@ -85,7 +97,7 @@ export function HourlyForecast({
                     return (
                         <View key={`${hour.time}-${index}`} style={styles.hourItem}>
                             <Text style={[styles.hourTime, { color: subTextColor }]}>
-                                {formatHour(hour.time)}
+                                {formatHour(hour.time, language, timeFormat)}
                             </Text>
                             <View style={styles.iconContainer}>
                                 <WeatherIcon size={28} color={iconColor} strokeWidth={1.5} />
@@ -96,7 +108,7 @@ export function HourlyForecast({
                             {hour.precipitation_probability !== undefined && hour.precipitation_probability > 0 && (
                                 <View style={styles.rainRow}>
                                     <Droplets size={10} color="#4A90D9" strokeWidth={2} />
-                                    <Text style={[styles.hourRain, { color: '#4A90D9' }]}>
+                                    <Text style={[styles.hourRain, { color: textColor }]}>
                                         {hour.precipitation_probability}%
                                     </Text>
                                 </View>

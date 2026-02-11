@@ -15,7 +15,7 @@ _http_client = httpx.AsyncClient(timeout=10.0)
 aggregator = WeatherAggregator()
 
 # --- Geocoding ---
-async def reverse_geocode(latitude: float, longitude: float) -> Tuple[str, Optional[str]]:
+async def reverse_geocode(latitude: float, longitude: float, language: str = "en") -> Tuple[str, Optional[str]]:
     """
     Reverse geocode coordinates to get city name using Nominatim API.
     Returns (city_name, country) tuple.
@@ -31,7 +31,8 @@ async def reverse_geocode(latitude: float, longitude: float) -> Tuple[str, Optio
                 "addressdetails": 1
             },
             headers={
-                "User-Agent": "MCP-Weather-App/1.0"
+                "User-Agent": "MCP-Weather-App/1.0",
+                "Accept-Language": language
             }
         )
         response.raise_for_status()
