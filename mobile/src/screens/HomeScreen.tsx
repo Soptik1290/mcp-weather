@@ -19,7 +19,7 @@ import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
 
@@ -36,6 +36,7 @@ export function HomeScreen() {
     const [showSearch, setShowSearch] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
     const [selectedDay, setSelectedDay] = useState<any>(null);
+    const [auroraData, setAuroraData] = useState<any>(null);
 
     const { currentLocation } = useLocationStore();
     const { settings } = useSettingsStore();
@@ -48,9 +49,13 @@ export function HomeScreen() {
         try {
             const locationName = currentLocation?.name || 'Prague';
 
-            const [weatherData, themeData] = await Promise.all([
+            const [weatherData, themeData, aurora] = await Promise.all([
                 weatherService.getWeatherForecast(locationName, 7, settings.language),
                 weatherService.getAmbientTheme(locationName),
+                weatherService.getAuroraForecast(
+                    currentLocation?.latitude || 50.0,
+                    settings.language
+                ).catch(() => null),
             ]);
 
             setWeather({
@@ -65,6 +70,7 @@ export function HomeScreen() {
                 ambient_theme: themeData,
             });
             setTheme(themeData);
+            setAuroraData(aurora);
         } catch (err) {
             console.error('Weather fetch error:', err);
             setError('Nepodařilo se načíst počasí');
@@ -259,6 +265,21 @@ export function HomeScreen() {
                                 onDayPress={(day) => setSelectedDay(day)}
                             />
                         )}
+
+                        {/* Aurora Card */}
+                        {settings.aurora_display !== 'never' && (
+                            settings.aurora_display === 'always' ||
+                            (auroraData && !auroraData.error)
+                        ) && (
+                                <AuroraCard
+                                    data={auroraData}
+                                    textColor={textColor}
+                                    subTextColor={subTextColor}
+                                    cardBg={cardBg}
+                                    isDark={theme.is_dark}
+                                    locationName={weather?.location.name}
+                                />
+                            )}
 
                         {/* Confidence Score */}
                         {weather?.confidence_score !== undefined && (

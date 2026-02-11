@@ -41,6 +41,14 @@ export const useSettingsStore = create<SettingsState>()(
         {
             name: 'weatherly-settings',
             storage: createJSONStorage(() => AsyncStorage),
+            merge: (persistedState: any, currentState: SettingsState) => ({
+                ...currentState,
+                ...persistedState,
+                settings: {
+                    ...defaultSettings,
+                    ...(persistedState as any)?.settings,
+                },
+            }),
         }
     )
 );

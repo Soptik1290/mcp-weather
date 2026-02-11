@@ -4,3 +4,4 @@ export { WeatherDetails } from './WeatherDetails';
 export { TemperatureChart } from './TemperatureChart';
 export { Skeleton, WeatherSkeleton } from './Skeleton';
 export { DayDetailModal } from './DayDetailModal';
+export { AuroraCard } from './AuroraCard';
