@@ -12,12 +12,13 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
-import { Search } from 'lucide-react-native';
+import { Search, Settings } from 'lucide-react-native';
 import { getWeatherIcon, getWeatherIconColor } from '../utils';
 
 import { weatherService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
+import { SettingsScreen } from './SettingsScreen';
 import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 
@@ -33,6 +34,7 @@ export function HomeScreen() {
     const [refreshing, setRefreshing] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [showSearch, setShowSearch] = useState(false);
+    const [showSettings, setShowSettings] = useState(false);
     const [selectedDay, setSelectedDay] = useState<any>(null);
 
     const { currentLocation } = useLocationStore();
@@ -151,12 +153,20 @@ export function HomeScreen() {
                                     </Text>
                                 )}
                             </View>
-                            <TouchableOpacity
-                                style={[styles.searchButton, { backgroundColor: cardBg }]}
-                                onPress={() => setShowSearch(true)}
-                            >
-                                <Search size={22} color={textColor} />
-                            </TouchableOpacity>
+                            <View style={styles.headerButtons}>
+                                <TouchableOpacity
+                                    style={[styles.searchButton, { backgroundColor: cardBg }]}
+                                    onPress={() => setShowSettings(true)}
+                                >
+                                    <Settings size={22} color={textColor} />
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={[styles.searchButton, { backgroundColor: cardBg }]}
+                                    onPress={() => setShowSearch(true)}
+                                >
+                                    <Search size={22} color={textColor} />
+                                </TouchableOpacity>
+                            </View>
                         </View>
 
                         {/* Current Weather */}
@@ -284,6 +294,19 @@ export function HomeScreen() {
                 themeGradient={theme.gradient}
                 isDark={theme.is_dark}
             />
+
+            {/* Settings Modal */}
+            <Modal
+                visible={showSettings}
+                animationType="slide"
+                presentationStyle="fullScreen"
+            >
+                <SettingsScreen
+                    onClose={() => setShowSettings(false)}
+                    themeGradient={theme.gradient}
+                    isDark={theme.is_dark}
+                />
+            </Modal>
         </>
     );
 }
@@ -344,6 +367,10 @@ const styles = StyleSheet.create({
     },
     headerLeft: {
         flex: 1,
+    },
+    headerButtons: {
+        flexDirection: 'row',
+        gap: 8,
     },
     searchButton: {
         padding: 12,
