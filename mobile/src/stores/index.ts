@@ -18,10 +18,14 @@ interface SettingsState {
 const defaultSettings: UserSettings = {
     language: 'cs',
     temperature_unit: 'celsius',
+    time_format: '24h',
     confidence_bias: 'balanced',
+    aurora_display: 'auto',
+    theme_mode: 'auto',
     notifications_enabled: true,
     aurora_alerts: true,
     iss_alerts: false,
+    haptic_enabled: true,
 };
 
 export const useSettingsStore = create<SettingsState>()(

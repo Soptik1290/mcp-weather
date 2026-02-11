@@ -15,8 +15,11 @@ import {
     X,
     Globe,
     Thermometer,
+    Clock,
     Bell,
     Sparkles,
+    Palette,
+    Vibrate,
     Info,
     ChevronRight,
     Check,
@@ -203,6 +206,22 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             '#FF6B6B',
                             'Jednotky zobrazení teploty'
                         )}
+
+                        <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+
+                        {renderOptionRow(
+                            'Formát času',
+                            [
+                                { label: '24h', value: '24h' },
+                                { label: '12h AM/PM', value: '12h' },
+                            ],
+                            settings.time_format,
+                            (val) => updateSettings({ time_format: val }),
+                            'timeFormat',
+                            Clock,
+                            '#F59E0B',
+                            'Vyberte formát času'
+                        )}
                     </View>
 
                     {/* Notifications */}
@@ -229,6 +248,17 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             '#A78BFA',
                             'Upozornění na polární záři'
                         )}
+
+                        <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+
+                        {renderToggle(
+                            'Vibrace',
+                            settings.haptic_enabled,
+                            (val) => updateSettings({ haptic_enabled: val }),
+                            Vibrate,
+                            '#F97316',
+                            'Haptická odezva při interakcích'
+                        )}
                     </View>
 
                     {/* AI Settings */}
@@ -249,6 +279,49 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             Sparkles,
                             '#10B981',
                             'Jak moc optimistická bude AI'
+                        )}
+                    </View>
+
+                    {/* Aurora Display */}
+                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                        POLÁRNÍ ZÁŘE
+                    </Text>
+                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                        {renderOptionRow(
+                            'Polární záře',
+                            [
+                                { label: '🌌 Auto (když je viditelná)', value: 'auto' },
+                                { label: '✅ Vždy zobrazit', value: 'always' },
+                                { label: '❌ Nikdy nezobrazovat', value: 'never' },
+                            ],
+                            settings.aurora_display,
+                            (val) => updateSettings({ aurora_display: val }),
+                            'auroraDisplay',
+                            Sparkles,
+                            '#A78BFA',
+                            'Zobrazit kartu polární záře'
+                        )}
+                    </View>
+
+                    {/* Theme Mode */}
+                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                        VZHLED
+                    </Text>
+                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                        {renderOptionRow(
+                            'Vzhled',
+                            [
+                                { label: '🌤️ Auto (počasí)', value: 'auto' },
+                                { label: '📱 Systém', value: 'system' },
+                                { label: '🌙 Tmavý', value: 'dark' },
+                                { label: '☀️ Světlý', value: 'light' },
+                            ],
+                            settings.theme_mode,
+                            (val) => updateSettings({ theme_mode: val }),
+                            'themeMode',
+                            Palette,
+                            '#F472B6',
+                            'Zvolte vzhled aplikace'
                         )}
                     </View>
 

@@ -108,13 +108,21 @@ export interface WidgetCustomization {
 }
 
 // Settings types
+export type TimeFormat = '24h' | '12h';
+export type AuroraDisplay = 'auto' | 'always' | 'never';
+export type ThemeMode = 'auto' | 'system' | 'dark' | 'light';
+
 export interface UserSettings {
     language: 'en' | 'cs';
     temperature_unit: 'celsius' | 'fahrenheit';
+    time_format: TimeFormat;
     confidence_bias: 'cautious' | 'balanced' | 'optimistic';
+    aurora_display: AuroraDisplay;
+    theme_mode: ThemeMode;
     notifications_enabled: boolean;
     aurora_alerts: boolean;
     iss_alerts: boolean;
+    haptic_enabled: boolean;
 }
 
 // AstroPack types
