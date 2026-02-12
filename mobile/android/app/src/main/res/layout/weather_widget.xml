@@ -1,49 +1,83 @@
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/widget_background"
-    android:padding="16dp">
+    android:background="@drawable/widget_background">
 
-    <TextView
-        android:id="@+id/widget_city"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="City"
-        android:textColor="#FFFFFF"
-        android:textSize="14sp"
-        android:textStyle="bold"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true" />
+    <ImageView
+        android:id="@+id/widget_background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:contentDescription="Background Gradient" />
 
-    <TextView
-        android:id="@+id/widget_temp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="--"
-        android:textColor="#FFFFFF"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:layout_centerInParent="true" />
+    <LinearLayout
+        android:id="@+id/widget_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="16dp">
 
-    <TextView
-        android:id="@+id/widget_desc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Loading..."
-        android:textColor="#EEF4FF"
-        android:textSize="12sp"
-        android:layout_below="@id/widget_temp"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="4dp" />
+        <TextView
+            android:id="@+id/widget_city"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="City"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:shadowColor="#40000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"
+            android:layout_marginBottom="8dp"/>
 
-    <TextView
-        android:id="@+id/widget_updated"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Last update"
-        android:textColor="#CCEEF4FF"
-        android:textSize="10sp"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true" />
+        <ImageView
+            android:id="@+id/widget_icon"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_clear"
+            android:contentDescription="Weather Icon"
+            android:layout_marginBottom="4dp"
+            android:tint="#FFFFFF"/>
 
-</RelativeLayout>
+        <TextView
+            android:id="@+id/widget_temperature"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--"
+            android:textColor="#FFFFFF"
+            android:textSize="36sp"
+            android:textStyle="bold"
+            android:includeFontPadding="false"
+            android:shadowColor="#40000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"/>
+
+        <TextView
+            android:id="@+id/widget_description"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Loading..."
+            android:textColor="#EEFFFFFF"
+            android:textSize="12sp"
+            android:layout_marginTop="2dp"
+            android:shadowColor="#40000000"
+            android:shadowDx="1"
+            android:shadowDy="1"
+            android:shadowRadius="2"/>
+            
+        <TextView
+            android:id="@+id/widget_updated"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="--:--"
+            android:textColor="#CCFFFFFF"
+            android:textSize="10sp"
+            android:layout_marginTop="8dp"/>
+
+    </LinearLayout>
+</FrameLayout>

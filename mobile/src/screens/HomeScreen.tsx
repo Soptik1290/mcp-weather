@@ -77,13 +77,19 @@ export function HomeScreen() {
 
             // Update Android Widget
             if (weatherData.current) {
+                // Get localized description from wmo code
+                const weatherCode = weatherData.current.weather_code || 0;
+                const localizedDesc = t(`wmo_${weatherCode}`, lang);
+
                 widgetService.updateWidget({
-                    temperature: weatherData.current.temperature,
-                    weatherCode: weatherData.current.weather_code || 0,
+                    temperature: Math.round(weatherData.current.temperature),
+                    weatherCode: weatherCode,
                     city: locationName,
-                    description: weatherData.current.weather_description || '',
+                    description: localizedDesc,
                     updatedAt: Date.now(),
                     isNight: themeData.is_dark,
+                    gradientStart: themeData.gradient[0] || '#4facfe',
+                    gradientEnd: themeData.gradient[1] || '#00f2fe',
                 });
             }
         } catch (err) {

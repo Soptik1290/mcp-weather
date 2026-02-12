@@ -11,6 +11,8 @@ export interface WidgetData {
     description: string;
     updatedAt: number;
     isNight: boolean;
+    gradientStart: string;
+    gradientEnd: string;
 }
 
 class WidgetService {
@@ -18,20 +20,25 @@ class WidgetService {
         if (Platform.OS !== 'android') return;
 
         try {
-            // Android SharedPreferences structure:
-            // Filename: "WeatherlyWidgetPrefs" (defined by ANDROID_PREFERENCES_NAME)
-            // Keys: "temperature", "city", "description", etc.
-
             const groupName = ANDROID_PREFERENCES_NAME;
             const options = { useAndroidSharedPreferences: true };
 
-            // Save each field individually as expected by the native widget
-            await NativeSharedGroupPreferences.setItem('temperature', data.temperature, groupName, options);
-            await NativeSharedGroupPreferences.setItem('city', data.city, groupName, options);
-            await NativeSharedGroupPreferences.setItem('description', data.description, groupName, options);
-            await NativeSharedGroupPreferences.setItem('weatherCode', data.weatherCode, groupName, options);
-            await NativeSharedGroupPreferences.setItem('updatedAt', data.updatedAt, groupName, options);
-            await NativeSharedGroupPreferences.setItem('isNight', data.isNight, groupName, options);
+            const items: [string, any][] = [
+                ['temperature', data.temperature],
+                ['city', data.city],
+                ['description', data.description],
+                ['weatherCode', data.weatherCode],
+                ['updatedAt', data.updatedAt],
+                ['isNight', data.isNight],
+                ['gradientStart', data.gradientStart],
+                ['gradientEnd', data.gradientEnd],
+            ];
+
+            await Promise.all(
+                items.map(([key, value]) =>
+                    NativeSharedGroupPreferences.setItem(key, value, groupName, options)
+                )
+            );
 
         } catch (error) {
             console.error('Failed to update widget data:', error);
