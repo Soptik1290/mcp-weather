@@ -15,7 +15,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Search, Settings } from 'lucide-react-native';
 import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode } from '../utils';
 
-import { weatherService } from '../services';
+import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
@@ -74,6 +74,18 @@ export function HomeScreen() {
             });
             setTheme(themeData);
             setAuroraData(aurora);
+
+            // Update Android Widget
+            if (weatherData.current) {
+                widgetService.updateWidget({
+                    temperature: weatherData.current.temperature,
+                    weatherCode: weatherData.current.weather_code || 0,
+                    city: locationName,
+                    description: weatherData.current.weather_description || '',
+                    updatedAt: Date.now(),
+                    isNight: themeData.is_dark,
+                });
+            }
         } catch (err) {
             console.error('Weather fetch error:', err);
             setError(t('error_load', lang));
