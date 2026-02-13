@@ -123,6 +123,8 @@ export interface UserSettings {
     aurora_alerts: boolean;
     iss_alerts: boolean;
     haptic_enabled: boolean;
+    aurora_notifications: boolean;
+    daily_brief: boolean;
 }
 
 // AstroPack types

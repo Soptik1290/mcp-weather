@@ -10,7 +10,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { HomeScreen } from './src/screens';
+import { HomeScreen, SubscriptionScreen, WidgetConfigScreen } from './src/screens';
 import { subscriptionService } from './src/services';
 
 // Navigation types
@@ -19,7 +19,7 @@ export type RootStackParamList = {
   Search: undefined;
   Settings: undefined;
   Subscription: undefined;
-  WidgetConfig: { widgetId?: string };
+  WidgetConfig: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -69,18 +69,16 @@ function App(): React.JSX.Element {
                 }}
               />
               {/* Additional screens will be added here */}
-              {/*
-              <Stack.Screen name="Search" component={SearchScreen} />
-              <Stack.Screen name="Settings" component={SettingsScreen} />
-              <Stack.Screen 
-                name="Subscription" 
+              <Stack.Screen
+                name="Subscription"
                 component={SubscriptionScreen}
-                options={{
-                  presentation: 'modal',
-                }}
+                options={{ headerShown: false, presentation: 'modal' }}
               />
-              <Stack.Screen name="WidgetConfig" component={WidgetConfigScreen} />
-              */}
+              <Stack.Screen
+                name="WidgetConfig"
+                component={WidgetConfigScreen}
+                options={{ headerShown: false, presentation: 'modal' }}
+              />
             </Stack.Navigator>
           </NavigationContainer>
         </SafeAreaProvider>

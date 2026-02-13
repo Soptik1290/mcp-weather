@@ -16,12 +16,13 @@ import { Search, Settings } from 'lucide-react-native';
 import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode } from '../utils';
 
 import { weatherService, widgetService } from '../services';
-import { useLocationStore, useSettingsStore } from '../stores';
+import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
-import { useColorScheme } from 'react-native';
+import { useColorScheme, Alert } from 'react-native';
+import { astroService } from '../services';
 
 
 export function HomeScreen() {
@@ -38,9 +39,12 @@ export function HomeScreen() {
     const [showSettings, setShowSettings] = useState(false);
     const [selectedDay, setSelectedDay] = useState<any>(null);
     const [auroraData, setAuroraData] = useState<any>(null);
+    const [astroData, setAstroData] = useState<any>(null);
+    const [explaining, setExplaining] = useState(false);
 
     const { currentLocation } = useLocationStore();
     const { settings } = useSettingsStore();
+    const { tier } = useSubscriptionStore();
     const systemColorScheme = useColorScheme();
     const lang = settings.language;
 
@@ -53,13 +57,22 @@ export function HomeScreen() {
             const locationName = currentLocation?.name || 'Prague';
 
             const [weatherData, themeData, aurora] = await Promise.all([
-                weatherService.getWeatherForecast(locationName, 7, settings.language),
+                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias),
                 weatherService.getAmbientTheme(locationName),
                 weatherService.getAuroraForecast(
                     currentLocation?.latitude || 50.0,
                     settings.language
                 ).catch(() => null),
             ]);
+
+            // Fetch AstroPack if Ultra
+            if (tier === 'ultra' && currentLocation) {
+                astroService.getAstroPack(currentLocation.latitude, currentLocation.longitude)
+                    .then(res => setAstroData(res))
+                    .catch(e => console.log('Astro fetch failed', e));
+            } else {
+                setAstroData(null);
+            }
 
             setWeather({
                 location: weatherData.location,
@@ -90,6 +103,11 @@ export function HomeScreen() {
                     isNight: themeData.is_dark,
                     gradientStart: themeData.gradient[0] || '#4facfe',
                     gradientEnd: themeData.gradient[1] || '#00f2fe',
+                    hourly: weatherData.hourly_forecast?.slice(0, 4).map(h => ({
+                        time: new Date(h.time).getHours() + ':00',
+                        temperature: Math.round(h.temperature),
+                        weatherCode: h.weather_code || 0
+                    }))
                 });
             }
         } catch (err) {
@@ -100,6 +118,21 @@ export function HomeScreen() {
             setRefreshing(false);
         }
     };
+
+    const [notifiedAurora, setNotifiedAurora] = useState(false);
+
+    useEffect(() => {
+        if (settings.aurora_notifications && auroraData && !notifiedAurora) {
+            const prob = auroraData.visibility_probability || 0;
+            if (prob > 40) {
+                Alert.alert(
+                    t('aurora_alerts', lang),
+                    `${t('aurora_visible', lang) || 'Aurora visible!'} (${prob}%)`
+                );
+                setNotifiedAurora(true);
+            }
+        }
+    }, [auroraData, settings.aurora_notifications]);
 
     useEffect(() => {
         fetchWeather();
@@ -210,11 +243,48 @@ export function HomeScreen() {
                                 <Text style={[styles.temperature, { color: textColor }]}>
                                     {formatTemperature(current.temperature)}
                                 </Text>
-                                {current.weather_code !== undefined && (
-                                    <Text style={[styles.description, { color: subTextColor }]}>
-                                        {t(`wmo_${current.weather_code}`, lang)}
-                                    </Text>
+                                <Text style={[styles.description, { color: subTextColor }]}>
+                                    {t(`wmo_${current.weather_code}`, lang)}
+                                </Text>
+
+
+                                {tier === 'ultra' && (
+                                    <TouchableOpacity
+                                        style={[styles.explainBtn, { backgroundColor: cardBg }]}
+                                        onPress={async () => {
+                                            if (explaining) return;
+                                            setExplaining(true);
+                                            try {
+                                                const data = await astroService.explainWeather(
+                                                    weather?.location.name || '',
+                                                    lang,
+                                                    tier,
+                                                    settings.confidence_bias
+                                                );
+
+                                                // Format explanation with sources
+                                                let message = data.explanation;
+                                                if (data.sources_data && data.sources_data.length > 0) {
+                                                    message += `\n\n📊 ${t('sources', lang)}:\n`;
+                                                    data.sources_data.forEach((s: any) => {
+                                                        message += `• ${s.name}: ${Math.round(s.temp)}°C, ${s.desc}\n`;
+                                                    });
+                                                }
+
+                                                Alert.alert(t('ai_meteorologist', lang), message);
+                                            } catch (e) {
+                                                Alert.alert('Error', 'Could not generate explanation');
+                                            } finally {
+                                                setExplaining(false);
+                                            }
+                                        }}
+                                    >
+                                        <Text style={[styles.explainText, { color: textColor }]}>
+                                            {explaining ? t('thinking', lang) : t('explain_btn', lang)}
+                                        </Text>
+                                    </TouchableOpacity>
                                 )}
+
                                 {current.feels_like !== undefined && (
                                     <Text style={[styles.feelsLike, { color: subTextColor }]}>
                                         {t('feels_like', lang)} {formatTemperature(current.feels_like)}
@@ -307,6 +377,18 @@ export function HomeScreen() {
                                     timeFormat={settings.time_format}
                                 />
                             )}
+
+                        {/* AstroPack Card (Ultra) */}
+                        {tier === 'ultra' && astroData && (
+                            <AstroCard
+                                data={astroData}
+                                textColor={textColor}
+                                subTextColor={subTextColor}
+                                cardBg={cardBg}
+                                isDark={isDark}
+                                language={lang}
+                            />
+                        )}
 
                         {/* Confidence Score */}
                         {weather?.confidence_score !== undefined && (
@@ -454,6 +536,16 @@ const styles = StyleSheet.create({
         fontSize: 18,
         marginTop: 8,
         textTransform: 'capitalize',
+    },
+    explainBtn: {
+        marginTop: 12,
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 20,
+    },
+    explainText: {
+        fontSize: 14,
+        fontWeight: '600',
     },
     feelsLike: {
         fontSize: 14,

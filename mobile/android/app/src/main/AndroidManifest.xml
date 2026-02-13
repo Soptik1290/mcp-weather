@@ -29,6 +29,8 @@
       <receiver android:name=".WeatherWidget" android:exported="true" android:label="Weatherly Widget">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.weatherly.ai.FORCE_UPDATE" />
+                <action android:name="com.weatherly.ai.TOGGLE_VIEW" />
             </intent-filter>
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/weather_widget_info" />

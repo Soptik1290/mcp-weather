@@ -21,11 +21,13 @@ const defaultSettings: UserSettings = {
     time_format: '24h',
     confidence_bias: 'balanced',
     aurora_display: 'auto',
-    theme_mode: 'auto',
+    theme_mode: 'system',
     notifications_enabled: true,
     aurora_alerts: true,
     iss_alerts: false,
     haptic_enabled: true,
+    aurora_notifications: false,
+    daily_brief: false,
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -54,26 +56,52 @@ export const useSettingsStore = create<SettingsState>()(
 );
 
 // Subscription Store
+// Subscription Store
+export type SubscriptionTier = 'free' | 'pro' | 'ultra';
+
 interface SubscriptionState {
-    subscription: SubscriptionInfo;
-    setSubscription: (info: SubscriptionInfo) => void;
-    isPro: () => boolean;
+    tier: SubscriptionTier;
+    features: {
+        canCustomizeWidget: boolean;
+        isAiAdvanced: boolean;
+        hasAstroPack: boolean;
+        hasExplainMode: boolean;
+        hasConfidenceBias: boolean;
+    };
+    setTier: (tier: SubscriptionTier) => void;
+    isPro: () => boolean; // Checks if tier is Pro OR Ultra
     isUltra: () => boolean;
 }
 
-export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
-    subscription: {
-        tier: 'free',
-        is_active: true,
-        will_renew: false,
-    },
-    setSubscription: (info) => set({ subscription: info }),
-    isPro: () => {
-        const tier = get().subscription.tier;
-        return tier === 'pro' || tier === 'ultra';
-    },
-    isUltra: () => get().subscription.tier === 'ultra',
-}));
+const getFeaturesForTier = (tier: SubscriptionTier) => ({
+    canCustomizeWidget: tier === 'pro' || tier === 'ultra',
+    isAiAdvanced: tier === 'pro' || tier === 'ultra',
+    hasAstroPack: tier === 'ultra',
+    hasExplainMode: tier === 'ultra',
+    hasConfidenceBias: tier === 'ultra',
+});
+
+export const useSubscriptionStore = create<SubscriptionState>()(
+    persist(
+        (set, get) => ({
+            tier: 'free',
+            features: getFeaturesForTier('free'),
+            setTier: (tier) => set({
+                tier,
+                features: getFeaturesForTier(tier)
+            }),
+            isPro: () => {
+                const tier = get().tier;
+                return tier === 'pro' || tier === 'ultra';
+            },
+            isUltra: () => get().tier === 'ultra',
+        }),
+        {
+            name: 'weatherly-subscription',
+            storage: createJSONStorage(() => AsyncStorage),
+        }
+    )
+);
 
 // Location Store
 interface LocationState {

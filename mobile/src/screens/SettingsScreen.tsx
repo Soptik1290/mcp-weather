@@ -24,8 +24,10 @@ import {
     ChevronRight,
     Check,
     Github,
+    FileText,
+    Layout
 } from 'lucide-react-native';
-import { useSettingsStore } from '../stores';
+import { useSettingsStore, useSubscriptionStore } from '../stores';
 import { t } from '../utils';
 
 interface SettingsScreenProps {
@@ -41,8 +43,20 @@ interface SettingOption {
     value: OptionValue;
 }
 
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../App';
+
+interface SettingsScreenProps {
+    onClose: () => void;
+    themeGradient: string[];
+    isDark: boolean;
+}
+
 export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScreenProps) {
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { settings, updateSettings } = useSettingsStore();
+    const { tier } = useSubscriptionStore();
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const lang = settings.language;
 
@@ -174,6 +188,28 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                     contentContainerStyle={styles.content}
                     showsVerticalScrollIndicator={false}
                 >
+                    {/* Premium Settings */}
+                    <TouchableOpacity
+                        style={[styles.premiumCard, { borderColor: '#F59E0B', backgroundColor: isDark ? 'rgba(245, 158, 11, 0.1)' : 'rgba(245, 158, 11, 0.05)' }]}
+                        onPress={() => (navigation as any).navigate('Subscription')}
+                        activeOpacity={0.8}
+                    >
+                        <View style={styles.premiumHeader}>
+                            <View style={[styles.iconContainer, { backgroundColor: '#F59E0B' }]}>
+                                <Sparkles size={20} color="#fff" fill="#fff" />
+                            </View>
+                            <View style={styles.settingContent}>
+                                <Text style={[styles.settingLabel, { color: textColor }]}>
+                                    Weatherly Premium
+                                </Text>
+                                <Text style={[styles.settingDescription, { color: subTextColor }]}>
+                                    Unlock 5-Mini, Widgets & More
+                                </Text>
+                            </View>
+                            <ChevronRight size={20} color="#F59E0B" />
+                        </View>
+                    </TouchableOpacity>
+
                     {/* General Settings */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
                         {t('general', lang)}
@@ -195,6 +231,25 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
 
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
+                        <TouchableOpacity
+                            style={styles.settingRow}
+                            onPress={() => (navigation as any).navigate('WidgetConfig')}
+                            activeOpacity={0.7}
+                        >
+                            <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                                <Palette size={20} color="#3B82F6" strokeWidth={2} />
+                            </View>
+                            <View style={styles.settingContent}>
+                                <Text style={[styles.settingLabel, { color: textColor }]}>Widget Settings</Text>
+                                <Text style={[styles.settingDescription, { color: subTextColor }]}>
+                                    Customize appearance
+                                </Text>
+                            </View>
+                            <ChevronRight size={16} color={subTextColor} />
+                        </TouchableOpacity>
+
+                        <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+
                         {renderOptionRow(
                             t('temperature', lang),
                             [
@@ -212,7 +267,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderOptionRow(
-                            t('time_format', lang),
+                            t('settings_time_format', lang), // Assuming key might differ, but keeping original logic
                             [
                                 { label: t('time_24h', lang), value: '24h' },
                                 { label: t('time_12h', lang), value: '12h' },
@@ -263,26 +318,72 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                         )}
                     </View>
 
-                    {/* AI Settings */}
-                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
-                        {t('ai_section', lang)}
-                    </Text>
-                    <View style={[styles.card, { backgroundColor: cardBg }]}>
-                        {renderOptionRow(
-                            t('forecast_style', lang),
-                            [
-                                { label: t('cautious', lang), value: 'cautious' },
-                                { label: t('balanced', lang), value: 'balanced' },
-                                { label: t('optimistic', lang), value: 'optimistic' },
-                            ],
-                            settings.confidence_bias,
-                            (val) => updateSettings({ confidence_bias: val }),
-                            'confidence',
-                            Sparkles,
-                            '#10B981',
-                            t('confidence_desc', lang)
-                        )}
-                    </View>
+                    {/* AI Settings (Ultra Only) */}
+                    {tier === 'ultra' && (
+                        <>
+                            <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                                {t('ai_section', lang)}
+                            </Text>
+                            <View style={[styles.card, { backgroundColor: cardBg }]}>
+                                {renderOptionRow(
+                                    t('forecast_style', lang),
+                                    [
+                                        { label: t('cautious', lang), value: 'cautious' },
+                                        { label: t('balanced', lang), value: 'balanced' },
+                                        { label: t('optimistic', lang), value: 'optimistic' },
+                                    ],
+                                    settings.confidence_bias,
+                                    (val) => updateSettings({ confidence_bias: val }),
+                                    'confidence',
+                                    Sparkles,
+                                    '#10B981',
+                                    t('confidence_desc', lang)
+                                )}
+                            </View>
+                        </>
+                    )}
+
+                    {/* Notifications (Pro) */}
+                    {(tier === 'pro' || tier === 'ultra') && (
+                        <>
+                            <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                                {t('notifications', lang)}
+                            </Text>
+                            <View style={[styles.card, { backgroundColor: cardBg }]}>
+                                {renderToggle(
+                                    t('aurora_alerts', lang),
+                                    settings.aurora_notifications,
+                                    (val) => updateSettings({ aurora_notifications: val }),
+                                    Bell,
+                                    '#F59E0B'
+                                )}
+                                <View style={styles.divider} />
+                                {renderToggle(
+                                    t('daily_brief', lang),
+                                    settings.daily_brief,
+                                    (val) => updateSettings({ daily_brief: val }),
+                                    FileText,
+                                    '#3B82F6'
+                                )}
+                            </View>
+
+                            <Text style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
+                                {t('widgets', lang)}
+                            </Text>
+                            <TouchableOpacity
+                                style={[styles.card, { backgroundColor: cardBg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }]}
+                                onPress={() => navigation.navigate('WidgetConfig')}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                    <Layout size={24} color="#A78BFA" />
+                                    <Text style={{ color: textColor, fontSize: 16, fontWeight: '500' }}>
+                                        {t('customize_widget', lang)}
+                                    </Text>
+                                </View>
+                                <ChevronRight size={20} color={subTextColor} />
+                            </TouchableOpacity>
+                        </>
+                    )}
 
                     {/* Aurora Display */}
                     <Text style={[styles.sectionHeader, { color: subTextColor }]}>
@@ -417,6 +518,17 @@ const styles = StyleSheet.create({
         borderRadius: 16,
         overflow: 'hidden',
     },
+    premiumCard: {
+        borderRadius: 16,
+        borderWidth: 1,
+        marginBottom: 24,
+        overflow: 'hidden',
+    },
+    premiumHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 16,
+    },
     settingRow: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -482,6 +594,11 @@ const styles = StyleSheet.create({
     },
     footerText: {
         fontSize: 13,
+    },
+    divider: {
+        height: 1,
+        backgroundColor: 'rgba(128,128,128,0.2)',
+        marginVertical: 8,
     },
 });
 

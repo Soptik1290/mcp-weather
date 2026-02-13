@@ -1,3 +1,4 @@
 export { weatherService } from './weatherService';
-export { subscriptionService, PRODUCT_IDS, ENTITLEMENTS } from './subscriptionService';
-export { widgetService } from './WidgetService';
+export { subscriptionService } from './subscriptionService';
+export { widgetService } from './widgetService';
+export { astroService } from './astroService';

@@ -61,13 +61,15 @@ class WeatherService {
 
     async getCurrentWeather(
         locationName: string,
-        language: string = 'cs'
+        language: string = 'cs',
+        tier: string = 'free',
+        confidenceBias: string = 'balanced'
     ): Promise<WeatherResponse> {
         try {
             const response = await fetch(`${this.baseUrl}/weather/current`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ location_name: locationName, language }),
+                body: JSON.stringify({ location_name: locationName, language, tier, confidence_bias: confidenceBias }),
             });
 
             if (!response.ok) {
@@ -84,13 +86,15 @@ class WeatherService {
     async getWeatherForecast(
         locationName: string,
         days: number = 7,
-        language: string = 'cs'
+        language: string = 'cs',
+        tier: string = 'free',
+        confidenceBias: string = 'balanced'
     ): Promise<WeatherResponse> {
         try {
             const response = await fetch(`${this.baseUrl}/weather/forecast`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ location_name: locationName, days, language }),
+                body: JSON.stringify({ location_name: locationName, days, language, tier, confidence_bias: confidenceBias }),
             });
 
             if (!response.ok) {
@@ -108,13 +112,15 @@ class WeatherService {
         latitude: number,
         longitude: number,
         days: number = 7,
-        language: string = 'cs'
+        language: string = 'cs',
+        tier: string = 'free',
+        confidenceBias: string = 'balanced'
     ): Promise<WeatherResponse> {
         try {
             const response = await fetch(`${this.baseUrl}/weather/coordinates`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ latitude, longitude, days, language }),
+                body: JSON.stringify({ latitude, longitude, days, language, tier, confidence_bias: confidenceBias }),
             });
 
             if (!response.ok) {

@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 import json
+import traceback
 import httpx
 
 
@@ -131,6 +132,8 @@ class WeatherRequest(BaseModel):
     location_name: str = Field(..., min_length=2, max_length=100)
     days: int = Field(7, ge=1, le=16)
     language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
+    tier: str = Field("free", pattern=r"^(free|pro|ultra)$")
+    confidence_bias: str = Field("balanced", pattern=r"^(cautious|balanced|optimistic)$")
 
 
 class CoordinatesRequest(BaseModel):
@@ -138,6 +141,18 @@ class CoordinatesRequest(BaseModel):
     longitude: float = Field(..., ge=-180, le=180)
     days: int = Field(7, ge=1, le=16)
     language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
+    tier: str = Field("free", pattern=r"^(free|pro|ultra)$")
+    confidence_bias: str = Field("balanced", pattern=r"^(cautious|balanced|optimistic)$")
+
+# # ... (inside get_current_weather)
+# 
+#         # Get AI aggregation
+#         aggregated = await aggregator.aggregate(
+#             [weather], 
+#             request.language, 
+#             model=model,
+#             confidence_bias=request.confidence_bias
+#         )
 
 
 @app.get("/")
@@ -191,8 +206,11 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         location = locations[0]
         weather = await open_meteo.get_weather(location, days=1)
         
+        # Determine model based on tier
+        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
+        
         # Get AI aggregation
-        aggregated = await aggregator.aggregate([weather], request.language)
+        aggregated = await aggregator.aggregate([weather], request.language, model=model)
         
         # Get ambient theme
         from datetime import datetime
@@ -210,7 +228,8 @@ async def get_current_weather(request: WeatherRequest, response: Response):
             "ai_summary": aggregated.ai_summary,
             "confidence": aggregated.confidence_score,
             "ambient_theme": theme,
-            "sources": aggregated.sources_used
+            "sources": aggregated.sources_used,
+            "model_used": model
         }
         
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
@@ -257,7 +276,8 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
             raise HTTPException(status_code=500, detail="All weather providers failed")
         
         # AI Aggregation - deduce best values from all sources
-        aggregated = await aggregator.aggregate(weather_data_list, request.language)
+        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
+        aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model)
         
         # Get ambient theme
         from datetime import datetime
@@ -278,7 +298,8 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
             "confidence": aggregated.confidence_score,
             "ambient_theme": theme,
             "sources": aggregated.sources_used,
-            "provider_count": len(weather_data_list)
+            "provider_count": len(weather_data_list),
+            "model_used": model
         }
         
         # Save to cache
@@ -289,6 +310,8 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
     except HTTPException:
         raise
     except Exception as e:
+        print(f"Internal Error: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -318,7 +341,8 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
         weather = await open_meteo.get_weather(location, days=min(request.days, 16))
         
         # Get AI aggregation
-        aggregated = await aggregator.aggregate([weather], request.language)
+        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
+        aggregated = await aggregator.aggregate([weather], request.language, model=model)
         
         # Get ambient theme
         from datetime import datetime
@@ -338,7 +362,8 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
             "ai_summary": aggregated.ai_summary,
             "confidence": aggregated.confidence_score,
             "ambient_theme": theme,
-            "sources": aggregated.sources_used
+            "sources": aggregated.sources_used,
+            "model_used": model
         }
         
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
@@ -405,6 +430,131 @@ async def get_ambient_theme(request: WeatherRequest, response: Response):
         return theme
     except HTTPException:
         raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# --- ULTRA FEATURES ---
+class AstroRequest(BaseModel):
+    latitude: float
+    longitude: float
+
+@app.post("/astro/pack", dependencies=[Depends(RateLimiter(requests_per_minute=10))])
+async def get_astro_pack(request: AstroRequest, response: Response):
+    """Get ISS position and meteor showers (Ultra)."""
+    try:
+        from src.services.astro import astro_service
+        
+        # Short cache for ISS (moves fast)
+        cache_key = "astro:pack" 
+        cached = await get_cached_weather(cache_key)
+        
+        # Only use cache if it's very fresh (< 10s) because ISS moves fast. 
+        # Actually for mobile app checking every few mins, 30s cache is fine.
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
+        data = await astro_service.get_astro_pack(request.latitude, request.longitude)
+        
+        if data:
+            await set_cached_weather(cache_key, data, ttl_seconds=30) 
+            response.headers["X-Cache-Status"] = "MISS"
+            return data
+        else:
+            raise HTTPException(status_code=503, detail="Astro service unavailable")
+            
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/weather/explain", dependencies=[Depends(RateLimiter(requests_per_minute=5))])
+async def explain_weather(request: WeatherRequest, response: Response):
+    """Explain weather conditions using AI (Ultra)."""
+    if request.tier != "ultra":
+         raise HTTPException(status_code=403, detail="Explain Mode requires Ultra subscription")
+
+    try:
+        # Cache explanation for 1h
+        cache_key = f"explain:{request.location_name.lower()}:{request.language}:{request.confidence_bias}"
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+            
+        # Search for location
+        locations = await open_meteo.search_location(request.location_name)
+        if not locations:
+             raise HTTPException(status_code=404, detail="Location not found")
+        location = locations[0]
+             
+        # Collect weather data from all providers for comparison
+        weather_data_list: list[WeatherData] = []
+        sources_summary = []
+
+        for provider_name, provider in providers:
+            try:
+                w = await provider.get_weather(location, days=1)
+                weather_data_list.append(w)
+                if w.current:
+                    sources_summary.append({
+                        "name": provider_name.upper(),
+                        "temp": w.current.temperature,
+                        "desc": w.current.weather_description,
+                        "wind": w.current.wind_speed
+                    })
+            except Exception:
+                continue
+        
+        if not weather_data_list:
+             raise HTTPException(status_code=500, detail="Weather data unavailable")
+        
+        # Prepare context for AI
+        context = "\n".join([
+            f"- {s['name']}: {s['temp']}°C, {s['desc']}, Wind {s['wind']}km/h"
+            for s in sources_summary
+        ])
+        
+        # Prepare prompt
+        prompt = f"""
+        Act as an expert AI Meteorologist.
+        Location: {request.location_name}
+        
+        Data from multiple sources:
+        {context}
+        
+        User Preference: {request.confidence_bias.upper()} bias.
+        
+        Task:
+        1. Compare these sources. Are they consistent?
+        2. Give a final forecast based on the user's bias.
+        3. Explain WHY you chose this outcome (e.g. "OpenMeteo is usually more accurate here...").
+        
+        Output Language: {request.language}
+        Format: clearly structured paragraph.
+        """
+        
+        # Call AI
+        from src.aggregator import aggregator
+        explanation = "AI service unavailable."
+        
+        if aggregator.client:
+             ai_resp = await aggregator.client.chat.completions.create(
+                 model="gpt-5-mini",
+                 messages=[{"role": "user", "content": prompt}],
+                 max_completion_tokens=250
+             )
+             explanation = ai_resp.choices[0].message.content
+
+        result = {
+            "explanation": explanation,
+            "sources_data": sources_summary
+        }
+        
+        await set_cached_weather(cache_key, result, ttl_seconds=3600)
+        
+        return result
+        
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
