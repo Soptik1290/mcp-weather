@@ -61,5 +61,18 @@
                 android:name="android.appwidget.provider"
                 android:resource="@xml/astro_widget_info" />
         </receiver>
+
+        <receiver
+            android:name=".AuroraWidget"
+            android:label="Weatherly Aurora"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.weatherly.ai.FORCE_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/aurora_widget_info" />
+        </receiver>
     </application>
 </manifest>

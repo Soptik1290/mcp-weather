@@ -156,51 +156,58 @@ class WeatherWidget : AppWidgetProvider() {
                 }
 
                 // 3. Set Dynamic Gradient Background via Bitmap
-                // 3. Set Dynamic Gradient Background via Bitmap
-                try {
-                    val width = 400
-                    val height = 400
-                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    val canvas = Canvas(bitmap)
-                    val paint = Paint()
-                    
-                    if (fixedColor.isNotEmpty()) {
-                        // Solid color
-                        try {
-                            paint.color = Color.parseColor(fixedColor)
-                        } catch (e: IllegalArgumentException) {
-                            Log.e("WeatherWidget", "Invalid fixedColor: $fixedColor", e)
-                            paint.color = Color.DKGRAY // Fallback
-                        }
-                    } else {
-                        // Gradient
-                        try {
-                            val startColor = Color.parseColor(colorStartStr)
-                            val endColor = Color.parseColor(colorEndStr)
-                            val shader = LinearGradient(0f, 0f, 0f, height.toFloat(), startColor, endColor, Shader.TileMode.CLAMP)
-                            paint.shader = shader
-                        } catch (e: IllegalArgumentException) {
-                            Log.e("WeatherWidget", "Invalid gradient colors: $colorStartStr, $colorEndStr", e)
-                            paint.color = Color.DKGRAY // Fallback
-                        }
-                    }
-                    
-                    // Apply opacity
-                    paint.alpha = opacity
-                    
-                    // Draw a full rectangle (let the system/widget container handle corner clipping)
-                    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-                    
-                    views.setImageViewBitmap(R.id.widget_background_image, bitmap)
-                } catch (e: Exception) {
-                    Log.e("WeatherWidget", "Failed to generate background bitmap", e)
-                    e.printStackTrace()
+                val bgBitmap = createBackgroundBitmap(opacity, colorStartStr, colorEndStr, fixedColor)
+                if (bgBitmap != null) {
+                    views.setImageViewBitmap(R.id.widget_background_image, bgBitmap)
                 }
 
                 // Instruct the widget manager to update the widget
                 appWidgetManager.updateAppWidget(appWidgetId, views)
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+        
+        fun createBackgroundBitmap(opacity: Int, colorStartStr: String, colorEndStr: String, fixedColor: String): Bitmap? {
+            return try {
+                val width = 400
+                val height = 400
+                val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                val paint = Paint()
+                
+                if (fixedColor.isNotEmpty()) {
+                    // Solid color
+                    try {
+                        paint.color = Color.parseColor(fixedColor)
+                    } catch (e: IllegalArgumentException) {
+                        Log.e("WeatherWidget", "Invalid fixedColor: $fixedColor", e)
+                        paint.color = Color.DKGRAY // Fallback
+                    }
+                } else {
+                    // Gradient
+                    try {
+                        val startColor = Color.parseColor(colorStartStr)
+                        val endColor = Color.parseColor(colorEndStr)
+                        val shader = LinearGradient(0f, 0f, 0f, height.toFloat(), startColor, endColor, Shader.TileMode.CLAMP)
+                        paint.shader = shader
+                    } catch (e: IllegalArgumentException) {
+                        Log.e("WeatherWidget", "Invalid gradient colors: $colorStartStr, $colorEndStr", e)
+                        paint.color = Color.DKGRAY // Fallback
+                    }
+                }
+                
+                // Apply opacity
+                paint.alpha = opacity
+                
+                // Draw a full rectangle (let the system/widget container handle corner clipping)
+                canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
+                
+                bitmap
+            } catch (e: Exception) {
+                Log.e("WeatherWidget", "Failed to generate background bitmap", e)
+                e.printStackTrace()
+                null
             }
         }
         

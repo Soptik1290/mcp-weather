@@ -25,6 +25,8 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
         sendUpdateBroadcast(context, DailyWidget::class.java)
         // Update AstroWidget
         sendUpdateBroadcast(context, AstroWidget::class.java)
+        // Update AuroraWidget
+        sendUpdateBroadcast(context, AuroraWidget::class.java)
         
         android.util.Log.d("WidgetModule", "Broadcasts sent to all widgets")
     }

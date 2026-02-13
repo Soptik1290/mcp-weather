@@ -121,7 +121,13 @@ export function HomeScreen() {
                     },
                     aurora: aurora ? {
                         kp: aurora.current_kp || 0,
-                        visibilityProb: aurora.visibility_probability || 0
+                        visibilityProb: aurora.visibility_probability || 0,
+                        maxKp: aurora.max_forecast_kp || 0,
+                        maxProb: aurora.max_visibility_probability || 0,
+                        bestTime: aurora.best_viewing_time || '',
+                        bestKp: aurora.best_viewing_kp || 0,
+                        // Take first 12 forecast items (e.g. 12 hours/intervals)
+                        forecast: aurora.forecast?.slice(0, 12).map((f: any) => f.kp) || []
                     } : undefined
                 });
             }

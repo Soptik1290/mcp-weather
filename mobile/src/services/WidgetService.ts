@@ -37,6 +37,11 @@ export interface WidgetData {
     aurora?: {
         kp: number;
         visibilityProb: number;
+        maxKp?: number;
+        maxProb?: number;
+        bestTime?: string;
+        bestKp?: number;
+        forecast?: number[]; // Array of Kp values for graph
     };
 }
 
