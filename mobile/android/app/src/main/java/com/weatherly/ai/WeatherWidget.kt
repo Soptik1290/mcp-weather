@@ -208,7 +208,7 @@ class WeatherWidget : AppWidgetProvider() {
             return if (a <= b) a else b
         }
 
-        private fun getWeatherIcon(code: Int): Int {
+        fun getWeatherIcon(code: Int): Int {
             return when (code) {
                 0, 1 -> R.drawable.ic_clear        // Clear
                 2 -> R.drawable.ic_cloudy          // Partly cloudy

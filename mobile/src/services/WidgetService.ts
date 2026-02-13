@@ -23,6 +23,21 @@ export interface WidgetData {
         temperature: number;
         weatherCode: number;
     }>;
+    daily?: Array<{
+        date: string;
+        maxTemp: number;
+        minTemp: number;
+        weatherCode: number;
+    }>;
+    astronomy?: {
+        sunrise: string;
+        sunset: string;
+        moonPhase: string;
+    };
+    aurora?: {
+        kp: number;
+        visibilityProb: number;
+    };
 }
 
 class WidgetService {
@@ -47,6 +62,9 @@ class WidgetService {
                 ['theme', data.customization?.theme ?? 'auto'],
                 ['fixedColor', data.customization?.fixed_color ?? ''],
                 ['hourly', JSON.stringify(data.hourly ?? [])],
+                ['daily', JSON.stringify(data.daily ?? [])],
+                ['astronomy', JSON.stringify(data.astronomy ?? {})],
+                ['aurora', JSON.stringify(data.aurora ?? {})],
             ];
 
             console.log('WidgetService: Saving data to', groupName, items);

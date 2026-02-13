@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Weatherly</string>
+    <string name="widget_daily_label">Weatherly Daily</string>
+    <string name="widget_astro_label">Weatherly Astro</string>
 </resources>

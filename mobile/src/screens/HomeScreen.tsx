@@ -107,7 +107,22 @@ export function HomeScreen() {
                         time: new Date(h.time).getHours() + ':00',
                         temperature: Math.round(h.temperature),
                         weatherCode: h.weather_code || 0
-                    }))
+                    })),
+                    daily: weatherData.daily_forecast?.slice(0, 3).map(d => ({
+                        date: new Date(d.date).toLocaleDateString(lang, { weekday: 'short' }),
+                        maxTemp: Math.round(d.temperature_max),
+                        minTemp: Math.round(d.temperature_min),
+                        weatherCode: d.weather_code || 0
+                    })),
+                    astronomy: {
+                        sunrise: weatherData.astronomy?.sunrise || '',
+                        sunset: weatherData.astronomy?.sunset || '',
+                        moonPhase: weatherData.astronomy?.moon_phase_name || ''
+                    },
+                    aurora: aurora ? {
+                        kp: aurora.current_kp || 0,
+                        visibilityProb: aurora.visibility_probability || 0
+                    } : undefined
                 });
             }
         } catch (err) {

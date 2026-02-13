@@ -35,5 +35,31 @@
             <meta-data android:name="android.appwidget.provider"
                 android:resource="@xml/weather_widget_info" />
       </receiver>
+
+        <receiver
+            android:name=".DailyWidget"
+            android:label="@string/widget_daily_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.weatherly.ai.FORCE_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/daily_widget_info" />
+        </receiver>
+
+        <receiver
+            android:name=".AstroWidget"
+            android:label="@string/widget_astro_label"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.weatherly.ai.FORCE_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/astro_widget_info" />
+        </receiver>
     </application>
 </manifest>

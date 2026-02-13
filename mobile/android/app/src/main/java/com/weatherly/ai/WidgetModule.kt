@@ -19,16 +19,27 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
         android.util.Log.d("WidgetModule", "reloadAllWidgets called")
         val context = reactApplicationContext
         
-        // Use exact same intent structure that worked via ADB
+        // Update WeatherWidget
+        sendUpdateBroadcast(context, WeatherWidget::class.java)
+        // Update DailyWidget
+        sendUpdateBroadcast(context, DailyWidget::class.java)
+        // Update AstroWidget
+        sendUpdateBroadcast(context, AstroWidget::class.java)
+        
+        android.util.Log.d("WidgetModule", "Broadcasts sent to all widgets")
+    }
+
+    private fun sendUpdateBroadcast(context: com.facebook.react.bridge.ReactContext, cls: Class<*>) {
         val intent = Intent("com.weatherly.ai.FORCE_UPDATE")
-        intent.component = ComponentName(context, WeatherWidget::class.java)
+        intent.component = ComponentName(context, cls)
         
         val widgetManager = AppWidgetManager.getInstance(context)
-        val ids = widgetManager.getAppWidgetIds(ComponentName(context, WeatherWidget::class.java))
-        android.util.Log.d("WidgetModule", "Found ${ids.size} widgets to update")
+        val ids = widgetManager.getAppWidgetIds(ComponentName(context, cls))
         
-        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
-        context.sendBroadcast(intent)
-        android.util.Log.d("WidgetModule", "Broadcast sent to com.weatherly.ai.FORCE_UPDATE")
+        if (ids.isNotEmpty()) {
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, ids)
+            context.sendBroadcast(intent)
+            android.util.Log.d("WidgetModule", "Sent update to ${cls.simpleName} (${ids.size} widgets)")
+        }
     }
 }
