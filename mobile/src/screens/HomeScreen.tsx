@@ -22,7 +22,7 @@ import { SettingsScreen } from './SettingsScreen';
 import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 import { useColorScheme, Alert } from 'react-native';
-import { astroService } from '../services';
+
 
 
 export function HomeScreen() {
@@ -67,7 +67,7 @@ export function HomeScreen() {
 
             // Fetch AstroPack if Ultra
             if (tier === 'ultra' && currentLocation) {
-                astroService.getAstroPack(currentLocation.latitude, currentLocation.longitude)
+                weatherService.getAstroPack(currentLocation.latitude, currentLocation.longitude, settings.language)
                     .then(res => setAstroData(res))
                     .catch(e => console.log('Astro fetch failed', e));
             } else {
@@ -276,7 +276,7 @@ export function HomeScreen() {
                                             if (explaining) return;
                                             setExplaining(true);
                                             try {
-                                                const data = await astroService.explainWeather(
+                                                const data = await weatherService.explainWeather(
                                                     weather?.location.name || '',
                                                     lang,
                                                     tier,

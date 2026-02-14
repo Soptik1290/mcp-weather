@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ChevronLeft, Rocket, Star, Eye } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore } from '../stores';
+import { weatherService } from '../services';
 import { t } from '../utils';
 
 const { width } = Dimensions.get('window');
@@ -59,20 +60,39 @@ export const AstroPackScreen = () => {
     }, []);
 
     const loadData = async () => {
-        // Mock data for now, waiting for backend connection
-        // In real impl, we will call weatherService.getAstroPack({ lat, lon })
-        setLoading(true);
-        setTimeout(() => {
-            setAstroData({
-                iss: { iss_position: { latitude: '45.0', longitude: '12.0' } },
-                meteors: [
-                    { name: 'Perseids', peak_date: 'Aug 12', zhr: 100 },
-                    { name: 'Geminids', peak_date: 'Dec 14', zhr: 120 }
-                ]
-            });
+        try {
+            setLoading(true);
+            // Default to Prague if no location, or last known
+            const lat = 50.0755;
+            const lon = 14.4378;
+
+            const data = await weatherService.getAstroPack(lat, lon, settings.language);
+            setAstroData(data);
+        } catch (error) {
+            console.error('Failed to load AstroPack', error);
+        } finally {
             setLoading(false);
-        }, 1000);
+        }
     };
+
+    // Auto-refresh ISS position every 10s if screen is focused
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            // Only update if we already have data (silent update)
+            if (astroData) {
+                try {
+                    const lat = 50.0755;
+                    const lon = 14.4378;
+                    const newData = await weatherService.getAstroPack(lat, lon, settings.language);
+                    setAstroData((prev: any) => ({
+                        ...prev,
+                        iss: newData.iss
+                    }));
+                } catch (e) {/* ignore silent update error */ }
+            }
+        }, 10000);
+        return () => clearInterval(interval);
+    }, [astroData]);
 
     if (tier !== 'ultra') {
         return (

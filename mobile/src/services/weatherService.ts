@@ -1,4 +1,4 @@
-import type { WeatherData, Location, AmbientTheme } from '../types';
+import type { WeatherData, Location, AmbientTheme, AstroPackData } from '../types';
 
 // API Base URL - adjust for production
 const API_BASE_URL = __DEV__
@@ -217,7 +217,7 @@ class WeatherService {
         latitude: number,
         longitude: number,
         language: string = 'cs'
-    ): Promise<any> {
+    ): Promise<AstroPackData> {
         try {
             const response = await fetch(`${this.baseUrl}/astro/pack`, {
                 method: 'POST',
@@ -232,6 +232,30 @@ class WeatherService {
             return await response.json();
         } catch (error) {
             console.error('Get AstroPack error:', error);
+            throw error;
+        }
+    }
+
+    async explainWeather(
+        location: string,
+        language: string,
+        tier: string,
+        confidenceBias: string
+    ): Promise<{ explanation: string; sources_data: any[] }> {
+        try {
+            const response = await fetch(`${this.baseUrl}/weather/explain`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ location_name: location, language, tier, confidence_bias: confidenceBias }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Explain request failed: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Explain weather error:', error);
             throw error;
         }
     }

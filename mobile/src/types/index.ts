@@ -128,34 +128,20 @@ export interface UserSettings {
 }
 
 // AstroPack types
-export interface ISSPass {
-    rise_time: string;
-    rise_azimuth: number;
-    max_altitude: number;
-    set_time: string;
-    set_azimuth: number;
-    duration_seconds: number;
-    visible: boolean;
+export interface ISSPosition {
+    latitude: number;
+    longitude: number;
+    timestamp: number;
 }
 
-export interface MeteorShower {
+export interface ActiveMeteorShower {
     name: string;
+    status: 'active' | 'peak' | 'near_peak';
     peak_date: string;
-    active_start: string;
-    active_end: string;
-    zhr: number; // Zenithal Hourly Rate
-    radiant: {
-        ra: number;
-        dec: number;
-        constellation: string;
-    };
+    intensity: number; // ZHR
 }
 
-export interface StargazingIndex {
-    score: number; // 0-100
-    cloud_cover: number;
-    light_pollution: number;
-    moon_interference: number;
-    best_time: string;
-    recommendation: string;
+export interface AstroPackData {
+    iss: ISSPosition | null;
+    meteors: ActiveMeteorShower[];
 }
