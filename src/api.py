@@ -8,7 +8,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
-import os
 from fastapi import FastAPI, HTTPException, Response, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -209,8 +208,8 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         # Determine model based on tier
         model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
         
-        # Get AI aggregation
-        aggregated = await aggregator.aggregate([weather], request.language, model=model)
+    # Get AI aggregation
+    aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
         
         # Get ambient theme
         from datetime import datetime

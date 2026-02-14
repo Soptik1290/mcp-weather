@@ -4,7 +4,7 @@ Provides Kp index data and aurora visibility predictions.
 """
 
 import httpx
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 # NOAA SWPC API endpoints (no API key required)
@@ -133,7 +133,7 @@ async def get_aurora_data(latitude: float = 50.0, lang: str = "en") -> dict:
             
             # Parse forecast (skip header row)
             forecast = []
-            now = datetime.utcnow()
+            now = datetime.now(timezone.utc)
             for row in forecast_raw[1:]:  # Skip header
                 time_str, kp_str, status, noaa_scale = row
                 try:

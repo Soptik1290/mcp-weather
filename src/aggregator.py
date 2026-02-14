@@ -10,6 +10,7 @@ from src.models import (
     WeatherData, AggregatedForecast, Location,
     CurrentWeather, DailyForecast, HourlyForecast, Astronomy
 )
+from src.astro_calc import get_astronomy_data
 import json
 
 
@@ -249,13 +250,45 @@ Analyze these sources and deduce the most accurate current weather."""
         )
         
         sources = [w.provider for w in weather_data]
-        
+
+        # Calculate complete astronomy data using ephem
+        location = weather_data[0].location
+        astro_data = get_astronomy_data(location.latitude, location.longitude)
+
+        # Merge with existing astronomy data if available
+        base_astro = weather_data[0].astronomy
+        if base_astro:
+            astronomy = Astronomy(
+                sunrise=base_astro.sunrise or astro_data.get("sunrise"),
+                sunset=base_astro.sunset or astro_data.get("sunset"),
+                moonrise=astro_data.get("moonrise"),
+                moonset=astro_data.get("moonset"),
+                moon_phase=astro_data.get("moon_phase"),
+                moon_phase_name=base_astro.moon_phase_name,
+                moon_illumination=astro_data.get("moon_illumination"),
+                daylight_duration=astro_data.get("daylight_duration"),
+                moon_distance=astro_data.get("moon_distance"),
+                next_full_moon=astro_data.get("next_full_moon")
+            )
+        else:
+            astronomy = Astronomy(
+                sunrise=astro_data.get("sunrise"),
+                sunset=astro_data.get("sunset"),
+                moonrise=astro_data.get("moonrise"),
+                moonset=astro_data.get("moonset"),
+                moon_phase=astro_data.get("moon_phase"),
+                moon_illumination=astro_data.get("moon_illumination"),
+                daylight_duration=astro_data.get("daylight_duration"),
+                moon_distance=astro_data.get("moon_distance"),
+                next_full_moon=astro_data.get("next_full_moon")
+            )
+
         return AggregatedForecast(
             location=weather_data[0].location,
             current=avg_current,
             daily_forecast=weather_data[0].daily_forecast,
             hourly_forecast=weather_data[0].hourly_forecast,
-            astronomy=weather_data[0].astronomy,
+            astronomy=astronomy,
             ai_summary="Statistical aggregation (fallback)",
             confidence_score=0.5 + (0.1 * len(weather_data)),
             sources_used=sources

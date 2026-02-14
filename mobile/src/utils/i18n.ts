@@ -215,10 +215,12 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_tier': 'Pro',
         'pro_price': '€4.99 / year',
         'pro_desc': 'For weather enthusiasts',
-        'pro_feat_1': 'Everything in Free',
-        'pro_feat_2': 'GPT-5-mini Advanced Model', // Updated model name
-        'pro_feat_3': 'Customizable Widgets',
-        'pro_feat_4': 'Aurora Alerts',
+        'pro_feat_1': 'More widgets (7-day, Astro, Aurora)',
+        'pro_feat_2': 'Interactive widgets (Tap & Swipe)',
+        'pro_feat_3': 'Advanced widget customization',
+        'pro_feat_4': 'More weather sources',
+        'pro_feat_5': 'Smarter AI model (GPT-5-mini)',
+        'pro_feat_6': 'AI Notifications & Aurora alerts',
         // 'No Ads' removed
         'ultra_tier': 'Ultra',
         'ultra_price': '€9.99 / year',
@@ -442,19 +444,23 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_tier': 'Pro',
         'pro_price': '129 Kč / rok',
         'pro_desc': 'Pro nadšence do počasí',
-        'pro_feat_1': 'Vše co je zdarma',
-        'pro_feat_2': 'Pokročilý model GPT-5-mini', // Updated
-        'pro_feat_3': 'Přizpůsobitelné widgety',
-        'pro_feat_4': 'Upozornění na polární záři',
-        // 'No Ads' removed
+        'pro_feat_1': 'Více widgetů (7-denní, Astro, Aurora)',
+        'pro_feat_2': 'Interaktivní widgety (Tap & Swipe)',
+        'pro_feat_3': 'Pokročilá úprava widgetů',
+        'pro_feat_4': 'Více zdrojů počasí',
+        'pro_feat_5': 'Chytřejší AI model (GPT-5-mini)',
+        'pro_feat_6': 'AI Notifikace a Aurora alerty',
+
         'ultra_tier': 'Ultra',
         'ultra_price': '249 Kč / rok',
         'ultra_desc': 'Maximální AI zážitek',
         'ultra_feat_1': 'Vše co je v Pro',
-        'ultra_feat_2': 'AstroPack (ISS, Meteory)',
-        'ultra_feat_3': 'AI Vysvětlení počasí',
-        'ultra_feat_4': 'Nastavení důvěry AI',
-        'ultra_feat_5': 'Předběžný přístup k novinkám',
+        'ultra_feat_2': 'Rozšířené grafy větru a tlaku',
+        'ultra_feat_3': 'Export dat (CSV/JSON)',
+        'ultra_feat_4': 'AstroPack (ISS, Meteory, Pozorování)',
+        'ultra_feat_5': 'AI Vysvětlení předpovědi',
+        'ultra_feat_6': 'Nastavení důvěry AI (Optimista/Varuj)',
+        // 'ultra_feat_5': 'Předběžný přístup k novinkám', // Deprecated/Moved // Deprecated/Moved
 
         // AstroPack & Ultra
         'astro_pack': 'AstroPack (Ultra)',

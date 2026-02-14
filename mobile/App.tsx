@@ -10,7 +10,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { HomeScreen, SubscriptionScreen, WidgetConfigScreen } from './src/screens';
+import { HomeScreen, SubscriptionScreen, WidgetConfigScreen, AstroPackScreen } from './src/screens';
 import { subscriptionService } from './src/services';
 
 // Navigation types
@@ -20,6 +20,7 @@ export type RootStackParamList = {
   Settings: undefined;
   Subscription: undefined;
   WidgetConfig: undefined;
+  AstroPack: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -35,12 +36,15 @@ const queryClient = new QueryClient({
   },
 });
 
+import { initBackgroundFetch } from './src/tasks/BackgroundJob';
+
 function App(): React.JSX.Element {
   useEffect(() => {
     // Initialize services
     const initServices = async () => {
       try {
         await subscriptionService.initialize();
+        await initBackgroundFetch(); // Start background jobs
       } catch (error) {
         console.error('Failed to initialize services:', error);
       }
@@ -78,6 +82,11 @@ function App(): React.JSX.Element {
                 name="WidgetConfig"
                 component={WidgetConfigScreen}
                 options={{ headerShown: false, presentation: 'modal' }}
+              />
+              <Stack.Screen
+                name="AstroPack"
+                component={AstroPackScreen}
+                options={{ headerShown: false }}
               />
             </Stack.Navigator>
           </NavigationContainer>

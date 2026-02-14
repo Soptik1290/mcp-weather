@@ -36,22 +36,24 @@ def get_astronomy_data(lat: float, lon: float, dt: date = None):
     
     try:
         # Calculate sunrise/sunset relative to the observer date (midnight)
-        # We want the sunrise/sunset strictly for the given date.
-        # usually next_rising(sun) from midnight gives today's sunrise.
         sunrise_d = observer.next_rising(sun)
         sunset_d = observer.next_setting(sun)
         
-        # Simple daylight duration
-        # If sunset is before sunrise (e.g. calculated for next day vs today), careful.
-        # But starting from midnight:
-        # Sunrise should be e.g. 0.2 (4.8h)
-        # Sunset should be e.g. 0.7 (16.8h)
-        if sunset_d > sunrise_d:
-             daylight_duration = (sunset_d - sunrise_d) * 24 * 3600
+        # Calculate daylight duration
+        # Both times should be on the same day (starting from midnight observer.date)
+        # In rare cases (polar regions), one might not occur
+        if sunrise_d is not None and sunset_d is not None:
+            # Both sunrise and sunset occurred - calculate duration
+            daylight_duration = (float(sunset_d) - float(sunrise_d)) * 24 * 3600
+        elif sunrise_d is not None and sunset_d is None:
+            # Only sunrise - likely polar day (sun never sets)
+            daylight_duration = 24 * 3600  # Full day
+        elif sunrise_d is None and sunset_d is not None:
+            # Only sunset - likely polar night just ended
+            daylight_duration = (float(sunset_d) - float(observer.date)) * 24 * 3600
         else:
-             # Sunset found is likely previous day or sunrise is next day?
-             # Actually observer.next_setting returns next setting AFTER start date.
-             pass
+            # Neither occurred - polar night
+            daylight_duration = 0
 
         sunrise = format_date(sunrise_d)
         sunset = format_date(sunset_d)

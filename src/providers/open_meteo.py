@@ -46,32 +46,10 @@ WMO_CODES = {
 }
 
 
-def get_moon_phase_name(phase: float) -> str:
-    """Convert moon phase (0-1) to human-readable name."""
-    if phase < 0.0625:
-        return "New Moon"
-    elif phase < 0.1875:
-        return "Waxing Crescent"
-    elif phase < 0.3125:
-        return "First Quarter"
-    elif phase < 0.4375:
-        return "Waxing Gibbous"
-    elif phase < 0.5625:
-        return "Full Moon"
-    elif phase < 0.6875:
-        return "Waning Gibbous"
-    elif phase < 0.8125:
-        return "Last Quarter"
-    elif phase < 0.9375:
-        return "Waning Crescent"
-    else:
-        return "New Moon"
-
-
 class OpenMeteoProvider(WeatherProvider):
     """Open-Meteo weather provider - free, no API key required."""
     
-    name = "open-meteo"
+    name = "open_meteo"
     BASE_URL = "https://api.open-meteo.com/v1"
     GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1"
     

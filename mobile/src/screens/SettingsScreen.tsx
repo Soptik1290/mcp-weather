@@ -25,10 +25,12 @@ import {
     Check,
     Github,
     FileText,
-    Layout
+    Layout,
+    Rocket
 } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore } from '../stores';
 import { t } from '../utils';
+import { notificationService } from '../services/NotificationService';
 
 interface SettingsScreenProps {
     onClose: () => void;
@@ -142,25 +144,40 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
         IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>,
         iconColor: string,
         description?: string
-    ) => (
-        <View style={styles.settingRow}>
-            <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
-                <IconComponent size={20} color={iconColor} strokeWidth={2} />
+    ) => {
+        const handleToggle = async (newValue: boolean) => {
+            if (newValue) {
+                const granted = await notificationService.requestPermission();
+                if (granted) {
+                    onToggle(true);
+                } else {
+                    onToggle(false);
+                }
+            } else {
+                onToggle(false);
+            }
+        };
+
+        return (
+            <View style={styles.settingRow}>
+                <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
+                    <IconComponent size={20} color={iconColor} strokeWidth={2} />
+                </View>
+                <View style={styles.settingContent}>
+                    <Text style={[styles.settingLabel, { color: textColor }]}>{label}</Text>
+                    {description && (
+                        <Text style={[styles.settingDescription, { color: subTextColor }]}>{description}</Text>
+                    )}
+                </View>
+                <Switch
+                    value={value}
+                    onValueChange={handleToggle}
+                    trackColor={{ false: 'rgba(128,128,128,0.3)', true: '#4A90D9' }}
+                    thumbColor="#fff"
+                />
             </View>
-            <View style={styles.settingContent}>
-                <Text style={[styles.settingLabel, { color: textColor }]}>{label}</Text>
-                {description && (
-                    <Text style={[styles.settingDescription, { color: subTextColor }]}>{description}</Text>
-                )}
-            </View>
-            <Switch
-                value={value}
-                onValueChange={onToggle}
-                trackColor={{ false: 'rgba(128,128,128,0.3)', true: '#4A90D9' }}
-                thumbColor="#fff"
-            />
-        </View>
-    );
+        );
+    };
 
     return (
         <LinearGradient
@@ -340,6 +357,29 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     t('confidence_desc', lang)
                                 )}
                             </View>
+
+                            <Text style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
+                                {t('astro_pack', lang)}
+                            </Text>
+                            <TouchableOpacity
+                                style={[styles.card, { backgroundColor: cardBg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }]}
+                                onPress={() => navigation.navigate('AstroPack')}
+                            >
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 215, 0, 0.2)', marginRight: 0, width: 36, height: 36 }]}>
+                                        <Rocket size={20} color="#FFD700" />
+                                    </View>
+                                    <View>
+                                        <Text style={{ color: textColor, fontSize: 16, fontWeight: '500' }}>
+                                            {t('astro_pack', lang)}
+                                        </Text>
+                                        <Text style={{ color: subTextColor, fontSize: 13 }}>
+                                            ISS, Meteors & Best Viewing
+                                        </Text>
+                                    </View>
+                                </View>
+                                <ChevronRight size={20} color={subTextColor} />
+                            </TouchableOpacity>
                         </>
                     )}
 

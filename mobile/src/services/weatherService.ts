@@ -147,9 +147,47 @@ class WeatherService {
             }
 
             return await response.json();
+            return await response.json();
         } catch (error) {
             console.error('Get ambient theme error:', error);
             throw error;
+        }
+    }
+
+    async getSmartSummary(params: {
+        location: string;
+        lat: number;
+        lon: number;
+        language: string;
+        tier: string;
+        include_astronomy: boolean;
+    }): Promise<any> {
+        try {
+            const response = await fetch(`${this.baseUrl}/weather/smart_summary`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location_name: params.location,
+                    latitude: params.lat,
+                    longitude: params.lon,
+                    language: params.language,
+                    tier: params.tier,
+                    include_astronomy: params.include_astronomy
+                }),
+            });
+
+            if (!response.ok) {
+                // If endpoint doesn't exist, generic fallback
+                return "Daily weather summary not available.";
+            }
+
+            // Backend returns { summary: "..." } or raw string?
+            // Usually Python backend returns JSON. 
+            const data = await response.json();
+            return data.summary || data; // Handle both wrapper and raw
+        } catch (error) {
+            console.error('Get smart summary error:', error);
+            return "Unable to fetch daily summary.";
         }
     }
 
@@ -171,6 +209,29 @@ class WeatherService {
             return await response.json();
         } catch (error) {
             console.error('Get aurora forecast error:', error);
+            throw error;
+        }
+    }
+
+    async getAstroPack(
+        latitude: number,
+        longitude: number,
+        language: string = 'cs'
+    ): Promise<any> {
+        try {
+            const response = await fetch(`${this.baseUrl}/astro/pack`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ latitude, longitude, language }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`AstroPack fetch failed: ${response.status}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Get AstroPack error:', error);
             throw error;
         }
     }

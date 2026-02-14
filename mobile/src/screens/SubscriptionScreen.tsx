@@ -52,18 +52,27 @@ export function SubscriptionScreen() {
     const handlePurchase = async (selectedTier: SubscriptionTier) => {
         if (selectedTier === tier) return;
 
-        try {
-            const success = await subscriptionService.purchaseSubscription(selectedTier);
-            if (success) {
-                Alert.alert(
-                    'Success!',
-                    `Welcome to ${selectedTier.toUpperCase()}! Please restart the app for all changes to take effect.`,
-                    [{ text: 'OK', onPress: () => navigation.goBack() }]
-                );
-            }
-        } catch (error) {
-            Alert.alert('Error', 'Purchase failed. Please try again.');
-        }
+        // Mock purchase for testing
+        Alert.alert(
+            'Confirm Mock Purchase',
+            `Switch to ${selectedTier.toUpperCase()}?`,
+            [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                    text: 'Confirm',
+                    onPress: async () => {
+                        // Directly update store
+                        useSubscriptionStore.getState().setTier(selectedTier);
+
+                        Alert.alert(
+                            'Success!',
+                            `Welcome to ${selectedTier.toUpperCase()}! Features unlocked.`,
+                            [{ text: 'OK', onPress: () => navigation.goBack() }]
+                        );
+                    }
+                }
+            ]
+        );
     };
 
     const TierCard = ({
@@ -298,11 +307,9 @@ const styles = StyleSheet.create({
     },
     recommendedCard: {
         transform: [{ scale: 1.02 }],
-        shadowColor: "#F59E0B",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
-        elevation: 10,
+        borderWidth: 2,
+        borderColor: '#F59E0B',
+        // Removed elevation/shadow which caused "grey box" artifact
     },
     recommendedBadge: {
         position: 'absolute',
