@@ -28,9 +28,11 @@ import {
     Layout,
     Rocket
 } from 'lucide-react-native';
-import { useSettingsStore, useSubscriptionStore } from '../stores';
+import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { t } from '../utils';
 import { notificationService } from '../services/NotificationService';
+import { weatherService, dataExportService } from '../services';
+import { Alert } from 'react-native';
 
 interface SettingsScreenProps {
     onClose: () => void;
@@ -380,6 +382,60 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 </View>
                                 <ChevronRight size={20} color={subTextColor} />
                             </TouchableOpacity>
+                            <Text style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
+                                {t('data_export', lang) || 'Data Export'}
+                            </Text>
+                            <View style={[styles.card, { backgroundColor: cardBg }]}>
+                                <TouchableOpacity
+                                    style={styles.settingRow}
+                                    onPress={async () => {
+                                        try {
+                                            const { currentLocation } = useLocationStore.getState();
+                                            if (!currentLocation) return;
+                                            const data = await weatherService.getWeatherForecast(currentLocation.name, 7, lang, tier, settings.confidence_bias);
+                                            await dataExportService.exportToJSON(data);
+                                        } catch (e) {
+                                            console.error(e);
+                                            Alert.alert('Export Failed', String(e));
+                                        }
+                                    }}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
+                                        <FileText size={20} color="#10B981" />
+                                    </View>
+                                    <View style={styles.settingContent}>
+                                        <Text style={[styles.settingLabel, { color: textColor }]}>Export JSON</Text>
+                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>Full weather data</Text>
+                                    </View>
+                                    <ChevronRight size={16} color={subTextColor} />
+                                </TouchableOpacity>
+
+                                <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+
+                                <TouchableOpacity
+                                    style={styles.settingRow}
+                                    onPress={async () => {
+                                        try {
+                                            const { currentLocation } = useLocationStore.getState();
+                                            if (!currentLocation) return;
+                                            const data = await weatherService.getWeatherForecast(currentLocation.name, 7, lang, tier, settings.confidence_bias);
+                                            await dataExportService.exportToCSV(data);
+                                        } catch (e) {
+                                            console.error(e);
+                                            Alert.alert('Export Failed', String(e));
+                                        }
+                                    }}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                                        <FileText size={20} color="#3B82F6" />
+                                    </View>
+                                    <View style={styles.settingContent}>
+                                        <Text style={[styles.settingLabel, { color: textColor }]}>Export CSV</Text>
+                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>Forecast table</Text>
+                                    </View>
+                                    <ChevronRight size={16} color={subTextColor} />
+                                </TouchableOpacity>
+                            </View>
                         </>
                     )}
 
