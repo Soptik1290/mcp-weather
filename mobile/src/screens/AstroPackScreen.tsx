@@ -10,43 +10,49 @@ import { t } from '../utils';
 const { width } = Dimensions.get('window');
 
 // Components (will be extracted later if complex)
-const IssTracker = ({ data }: { data: any }) => (
-    <View style={styles.card}>
-        <View style={styles.cardHeader}>
-            <Rocket color="#FFD700" size={24} />
-            <Text style={styles.cardTitle}>{t('iss_location', 'en')}</Text>
-        </View>
-        {data ? (
-            <View>
-                <Text style={styles.dataText}>Lat: {data.iss_position?.latitude}</Text>
-                <Text style={styles.dataText}>Lon: {data.iss_position?.longitude}</Text>
-                <Text style={styles.subText}>Next pass: calculating...</Text>
+const IssTracker = ({ data }: { data: any }) => {
+    const settings = useSettingsStore(state => state.settings);
+    return (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <Rocket color="#FFD700" size={24} />
+                <Text style={styles.cardTitle}>{t('iss_location', settings.language)}</Text>
             </View>
-        ) : (
-            <ActivityIndicator color="#FFD700" />
-        )}
-    </View>
-);
-
-const MeteorShowerList = ({ data }: { data: any }) => (
-    <View style={styles.card}>
-        <View style={styles.cardHeader}>
-            <Star color="#F59E0B" size={24} />
-            <Text style={styles.cardTitle}>{t('active_showers', 'en')}</Text>
-        </View>
-        {data && data.length > 0 ? (
-            data.map((shower: any, i: number) => (
-                <View key={i} style={styles.showerRow}>
-                    <Text style={styles.showerName}>{shower.name}</Text>
-                    <Text style={styles.showerDate}>Peak: {shower.peak_date}</Text>
-                    <Text style={styles.showerZhr}>ZHR: {shower.zhr}</Text>
+            {data ? (
+                <View>
+                    <Text style={styles.dataText}>Lat: {data.iss_position?.latitude}</Text>
+                    <Text style={styles.dataText}>Lon: {data.iss_position?.longitude}</Text>
+                    <Text style={styles.subText}>{t('next_pass', settings.language)}: {t('calculating', settings.language)}</Text>
                 </View>
-            ))
-        ) : (
-            <Text style={styles.subText}>{t('no_showers', 'en')}</Text>
-        )}
-    </View>
-);
+            ) : (
+                <ActivityIndicator color="#FFD700" />
+            )}
+        </View>
+    );
+};
+
+const MeteorShowerList = ({ data }: { data: any }) => {
+    const settings = useSettingsStore(state => state.settings);
+    return (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <Star color="#F59E0B" size={24} />
+                <Text style={styles.cardTitle}>{t('active_showers', settings.language)}</Text>
+            </View>
+            {data && data.length > 0 ? (
+                data.map((shower: any, i: number) => (
+                    <View key={i} style={styles.showerRow}>
+                        <Text style={styles.showerName}>{shower.name}</Text>
+                        <Text style={styles.showerDate}>{t('peak', settings.language)}: {shower.peak_date}</Text>
+                        <Text style={styles.showerZhr}>{t('zhr', settings.language)}: {shower.zhr}</Text>
+                    </View>
+                ))
+            ) : (
+                <Text style={styles.subText}>{t('no_showers', settings.language)}</Text>
+            )}
+        </View>
+    );
+};
 
 export const AstroPackScreen = () => {
     const navigation = useNavigation();

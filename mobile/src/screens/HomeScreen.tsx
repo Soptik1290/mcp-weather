@@ -19,7 +19,7 @@ import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 import { useColorScheme, Alert } from 'react-native';
 
@@ -40,7 +40,13 @@ export function HomeScreen() {
     const [selectedDay, setSelectedDay] = useState<any>(null);
     const [auroraData, setAuroraData] = useState<any>(null);
     const [astroData, setAstroData] = useState<any>(null);
-    const [explaining, setExplaining] = useState(false);
+    const [explainModalVisible, setExplainModalVisible] = useState(false);
+    const [explainLoading, setExplainLoading] = useState(false);
+    const [explainData, setExplainData] = useState<{ explanation: string; sources: any[] }>({ explanation: '', sources: [] });
+
+    // ... existing code ...
+
+
 
     const { currentLocation } = useLocationStore();
     const { settings } = useSettingsStore();
@@ -157,7 +163,7 @@ export function HomeScreen() {
 
     useEffect(() => {
         fetchWeather();
-    }, [currentLocation?.name, lang]);
+    }, [currentLocation?.name, lang, tier, settings.confidence_bias]);
 
     const formatTemperature = (temp: number): string => {
         if (settings.temperature_unit === 'fahrenheit') {
@@ -273,8 +279,8 @@ export function HomeScreen() {
                                     <TouchableOpacity
                                         style={[styles.explainBtn, { backgroundColor: cardBg }]}
                                         onPress={async () => {
-                                            if (explaining) return;
-                                            setExplaining(true);
+                                            setExplainModalVisible(true);
+                                            setExplainLoading(true);
                                             try {
                                                 const data = await weatherService.explainWeather(
                                                     weather?.location.name || '',
@@ -282,26 +288,22 @@ export function HomeScreen() {
                                                     tier,
                                                     settings.confidence_bias
                                                 );
-
-                                                // Format explanation with sources
-                                                let message = data.explanation;
-                                                if (data.sources_data && data.sources_data.length > 0) {
-                                                    message += `\n\n📊 ${t('sources', lang)}:\n`;
-                                                    data.sources_data.forEach((s: any) => {
-                                                        message += `• ${s.name}: ${Math.round(s.temp)}°C, ${s.desc}\n`;
-                                                    });
-                                                }
-
-                                                Alert.alert(t('ai_meteorologist', lang), message);
+                                                setExplainData({
+                                                    explanation: data.explanation,
+                                                    sources: data.sources_data || []
+                                                });
                                             } catch (e) {
-                                                Alert.alert('Error', 'Could not generate explanation');
+                                                setExplainData({
+                                                    explanation: t('explain_error', lang),
+                                                    sources: []
+                                                });
                                             } finally {
-                                                setExplaining(false);
+                                                setExplainLoading(false);
                                             }
                                         }}
                                     >
                                         <Text style={[styles.explainText, { color: textColor }]}>
-                                            {explaining ? t('thinking', lang) : t('explain_btn', lang)}
+                                            {t('explain_btn', lang)}
                                         </Text>
                                     </TouchableOpacity>
                                 )}
@@ -462,6 +464,18 @@ export function HomeScreen() {
                     isDark={theme.is_dark}
                 />
             </Modal>
+
+            {/* AI Explanation Modal */}
+            <ExplainModal
+                visible={explainModalVisible}
+                onClose={() => setExplainModalVisible(false)}
+                loading={explainLoading}
+                explanation={explainData.explanation}
+                sources={explainData.sources}
+                themeGradient={theme.gradient}
+                isDark={theme.is_dark}
+                language={lang}
+            />
         </>
     );
 }

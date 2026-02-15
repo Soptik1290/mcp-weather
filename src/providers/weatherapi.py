@@ -103,7 +103,7 @@ class WeatherAPIProvider(WeatherProvider):
             print(f"WeatherAPI search error: {e}")
             return []
     
-    async def get_weather(self, location: Location, days: int = 7) -> WeatherData:
+    async def get_weather(self, location: Location, days: int = 7, language: str = "en") -> WeatherData:
         """Get weather data for a location."""
         try:
             response = await self.client.get(
@@ -114,6 +114,7 @@ class WeatherAPIProvider(WeatherProvider):
                     "days": min(days, 14),  # WeatherAPI max 14 days
                     "aqi": "no",
                     "alerts": "no",
+                    "lang": language,
                 }
             )
             response.raise_for_status()

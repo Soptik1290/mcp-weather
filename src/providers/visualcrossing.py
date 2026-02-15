@@ -61,7 +61,7 @@ class VisualCrossingProvider(WeatherProvider):
         """Visual Crossing doesn't have a search API, returns empty."""
         return []
     
-    async def get_weather(self, location: Location, days: int = 7) -> WeatherData:
+    async def get_weather(self, location: Location, days: int = 7, language: str = "en") -> WeatherData:
         """Get weather data for a location."""
         try:
             response = await self.client.get(
@@ -71,6 +71,7 @@ class VisualCrossingProvider(WeatherProvider):
                     "unitGroup": "metric",
                     "include": "current,days,hours",
                     "contentType": "json",
+                    "lang": language,
                 }
             )
             response.raise_for_status()

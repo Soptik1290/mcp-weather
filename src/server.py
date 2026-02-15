@@ -11,7 +11,7 @@ load_dotenv()
 import asyncio
 from datetime import datetime
 from mcp.server.fastmcp import FastMCP
-from src.services import initialize_providers, reverse_geocode
+from src.app_services import initialize_providers, reverse_geocode
 from src.aggregator import WeatherAggregator
 from src.models import Location
 import json

@@ -1,8 +1,12 @@
-
 import httpx
 from datetime import date, datetime
-import ephem
 from typing import Dict, Any, Optional, List
+
+try:
+    import ephem
+except ImportError:
+    ephem = None
+    print("WARNING: 'ephem' library not found. Astro calculations will fail.")
 
 class AstroService:
     """
@@ -22,6 +26,8 @@ class AstroService:
                 response.raise_for_status()
                 data = response.json()
                 
+                data = response.json()
+                
                 if data.get("message") == "success":
                     pos = data.get("iss_position", {})
                     return {
@@ -29,10 +35,10 @@ class AstroService:
                         "longitude": float(pos.get("longitude", 0)),
                         "timestamp": data.get("timestamp")
                     }
-                return None
+                return {"latitude": 0.0, "longitude": 0.0, "timestamp": 0}
         except Exception as e:
             print(f"ISS fetch error: {e}")
-            return None
+            return {"latitude": 0.0, "longitude": 0.0, "timestamp": 0}
 
     def get_meteor_showers(self, today: date = None) -> List[Dict[str, Any]]:
         """
@@ -78,11 +84,18 @@ class AstroService:
         """
         Get comprehensive AstroPack data (ISS + Meteors).
         """
-        iss = await self.get_iss_position()
+        iss_data = await self.get_iss_position()
+        
+        if not ephem:
+             return {
+                 "iss": iss_data,
+                 "meteors": []
+             }
+
         meteors = self.get_meteor_showers(dt)
         
         return {
-            "iss": iss,
+            "iss": iss_data,
             "meteors": meteors
         }
 

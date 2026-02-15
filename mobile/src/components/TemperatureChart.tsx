@@ -14,6 +14,9 @@ interface HourlyData {
     time: string;
     temperature: number;
     weather_code?: number;
+    precipitation_probability?: number;
+    wind_speed?: number;
+    humidity?: number;
 }
 
 interface TemperatureChartProps {
@@ -55,12 +58,13 @@ export function TemperatureChart({
     cardBg,
     height = 160
 }: TemperatureChartProps) {
+    const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+
     if (!data || data.length < 2) return null;
 
-    // Take 12 hours for the chart (easier to read)
+    // Take 12 hours for the chart
     const chartData = data.slice(0, 12);
     const screenWidth = Dimensions.get('window').width;
-    // Account for card padding (16px each side) + screen padding (20px each side)
     const chartWidth = screenWidth - 72;
     const chartHeight = height;
     const paddingTop = 30;
@@ -75,136 +79,132 @@ export function TemperatureChart({
 
     // Calculate points
     const graphHeight = chartHeight - paddingTop - paddingBottom;
-    const graphWidth = chartWidth - paddingHorizontal * 2;
-    const stepX = graphWidth / (chartData.length - 1);
+    const stepX = (chartWidth - paddingHorizontal * 2) / (chartData.length - 1);
 
     const points = chartData.map((item, index) => {
         const x = paddingHorizontal + index * stepX;
         const y = paddingTop + graphHeight - ((item.temperature - minTemp) / tempRange) * graphHeight;
-        return { x, y, temp: item.temperature, time: item.time, code: item.weather_code };
+        return { x, y, ...item };
     });
 
-    // Create smooth curve path using cubic bezier
+    // Create paths (omitted for brevity, same as before)
     const createSmoothPath = () => {
         if (points.length < 2) return '';
-
         let path = `M ${points[0].x} ${points[0].y}`;
-
         for (let i = 0; i < points.length - 1; i++) {
             const current = points[i];
             const next = points[i + 1];
             const tension = 0.3;
-
             const cp1x = current.x + (next.x - current.x) * tension;
             const cp1y = current.y;
             const cp2x = next.x - (next.x - current.x) * tension;
             const cp2y = next.y;
-
             path += ` C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${next.x} ${next.y}`;
         }
-
         return path;
     };
 
-    // Create gradient fill path
-    const createFillPath = () => {
-        const linePath = createSmoothPath();
-        const lastPoint = points[points.length - 1];
-        const firstPoint = points[0];
-        return `${linePath} L ${lastPoint.x} ${chartHeight - paddingBottom + 10} L ${firstPoint.x} ${chartHeight - paddingBottom + 10} Z`;
-    };
-
+    const fillPath = `${createSmoothPath()} L ${points[points.length - 1].x} ${chartHeight - paddingBottom + 10} L ${points[0].x} ${chartHeight - paddingBottom + 10} Z`;
     const linePath = createSmoothPath();
-    const fillPath = createFillPath();
+
+    const selectedPoint = selectedIndex !== null ? points[selectedIndex] : null;
 
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
             <Text style={[styles.title, { color: textColor }]}>
-                Graf teploty
+                {selectedIndex !== null ? 'Detail' : 'Temperature Trend'}
             </Text>
 
-            <Svg width={chartWidth} height={chartHeight}>
-                <Defs>
-                    <LinearGradient id="gradientFill" x1="0%" y1="0%" x2="0%" y2="100%">
-                        <Stop offset="0%" stopColor="#4A90D9" stopOpacity="0.4" />
-                        <Stop offset="100%" stopColor="#4A90D9" stopOpacity="0" />
-                    </LinearGradient>
-                    <LinearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                        <Stop offset="0%" stopColor="#4A90D9" />
-                        <Stop offset="50%" stopColor="#67B8DE" />
-                        <Stop offset="100%" stopColor="#4A90D9" />
-                    </LinearGradient>
-                </Defs>
+            <View>
+                <Svg width={chartWidth} height={chartHeight}>
+                    <Defs>
+                        <LinearGradient id="gradientFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                            <Stop offset="0%" stopColor="#4A90D9" stopOpacity="0.4" />
+                            <Stop offset="100%" stopColor="#4A90D9" stopOpacity="0" />
+                        </LinearGradient>
+                        <LinearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <Stop offset="0%" stopColor="#4A90D9" />
+                            <Stop offset="50%" stopColor="#67B8DE" />
+                            <Stop offset="100%" stopColor="#4A90D9" />
+                        </LinearGradient>
+                    </Defs>
 
-                {/* Gradient fill under line */}
-                <Path
-                    d={fillPath}
-                    fill="url(#gradientFill)"
-                />
+                    <Path d={fillPath} fill="url(#gradientFill)" />
+                    <Path d={linePath} stroke="url(#lineGradient)" strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
 
-                {/* Line */}
-                <Path
-                    d={linePath}
-                    stroke="url(#lineGradient)"
-                    strokeWidth={3}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                />
+                    {/* Interactive Areas */}
+                    {points.map((point, index) => (
+                        <G key={index} onPress={() => setSelectedIndex(index === selectedIndex ? null : index)}>
+                            {/* Invisible touch target */}
+                            <Circle cx={point.x} cy={point.y} r={20} fill="transparent" />
 
-                {/* Points and labels */}
-                {points.map((point, index) => (
-                    <G key={index}>
-                        {/* Temperature label above point */}
-                        <SvgText
-                            x={point.x}
-                            y={point.y - 12}
-                            fontSize={12}
-                            fontWeight="600"
-                            fill={textColor}
-                            textAnchor="middle"
-                        >
-                            {Math.round(point.temp)}°
-                        </SvgText>
+                            {/* Visible Dot */}
+                            <Circle
+                                cx={point.x}
+                                cy={point.y}
+                                r={selectedIndex === index ? 6 : 4}
+                                fill={selectedIndex === index ? "#ffeb3b" : "#fff"}
+                                stroke="#4A90D9"
+                                strokeWidth={2}
+                            />
 
-                        {/* Point dot */}
-                        <Circle
-                            cx={point.x}
-                            cy={point.y}
-                            r={4}
-                            fill="#fff"
-                            stroke="#4A90D9"
-                            strokeWidth={2}
-                        />
+                            {/* Labels (hide if selected to avoid clutter) */}
+                            {selectedIndex !== index && (
+                                <SvgText
+                                    x={point.x}
+                                    y={point.y - 12}
+                                    fontSize={12}
+                                    fontWeight="600"
+                                    fill={textColor}
+                                    textAnchor="middle"
+                                >
+                                    {Math.round(point.temperature)}°
+                                </SvgText>
+                            )}
 
-                        {/* Weather emoji */}
-                        {index % 2 === 0 && (
-                            <SvgText
-                                x={point.x}
-                                y={chartHeight - paddingBottom + 20}
-                                fontSize={16}
-                                textAnchor="middle"
-                            >
-                                {getWeatherEmoji(point.code)}
-                            </SvgText>
-                        )}
+                            {index % 2 === 0 && (
+                                <SvgText
+                                    x={point.x}
+                                    y={chartHeight - paddingBottom + 40}
+                                    fontSize={11}
+                                    fill={textColor}
+                                    textAnchor="middle"
+                                    opacity={0.7}
+                                >
+                                    {formatHour(point.time, index)}
+                                </SvgText>
+                            )}
+                        </G>
+                    ))}
+                </Svg>
 
-                        {/* Time label */}
-                        {index % 2 === 0 && (
-                            <SvgText
-                                x={point.x}
-                                y={chartHeight - paddingBottom + 40}
-                                fontSize={11}
-                                fill={textColor}
-                                textAnchor="middle"
-                                opacity={0.7}
-                            >
-                                {formatHour(point.time, index)}
-                            </SvgText>
-                        )}
-                    </G>
-                ))}
-            </Svg>
+                {/* Tooltip Overlay */}
+                {selectedPoint && (
+                    <View style={[
+                        styles.tooltip,
+                        {
+                            left: Math.min(Math.max(selectedPoint.x - 60, 0), chartWidth - 120),
+                            top: selectedPoint.y - 70,
+                            backgroundColor: textColor === '#fff' ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)'
+                        }
+                    ]}>
+                        <Text style={[styles.tooltipText, { color: textColor === '#fff' ? '#fff' : '#000', fontWeight: 'bold' }]}>
+                            {formatHour(selectedPoint.time, 1)} • {Math.round(selectedPoint.temperature)}°C
+                        </Text>
+                        <View style={styles.tooltipRow}>
+                            {selectedPoint.precipitation_probability !== undefined && (
+                                <Text style={styles.tooltipSub}>💧 {selectedPoint.precipitation_probability}%</Text>
+                            )}
+                            {selectedPoint.wind_speed !== undefined && (
+                                <Text style={styles.tooltipSub}>💨 {Math.round(selectedPoint.wind_speed)}km/h</Text>
+                            )}
+                            {selectedPoint.humidity !== undefined && (
+                                <Text style={styles.tooltipSub}>💧 {selectedPoint.humidity}%</Text>
+                            )}
+                        </View>
+                    </View>
+                )}
+            </View>
         </View>
     );
 }
@@ -220,6 +220,32 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '600',
         marginBottom: 8,
+    },
+    tooltip: {
+        position: 'absolute',
+        padding: 8,
+        borderRadius: 8,
+        minWidth: 100,
+        zIndex: 100,
+        elevation: 5,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+    },
+    tooltipText: {
+        fontSize: 13,
+        marginBottom: 4,
+        textAlign: 'center',
+    },
+    tooltipRow: {
+        flexDirection: 'row',
+        justifyContent: 'center',
+        gap: 8,
+    },
+    tooltipSub: {
+        fontSize: 11,
+        color: '#94a3b8',
     },
 });
 

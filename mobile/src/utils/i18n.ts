@@ -102,8 +102,14 @@ const translations: Record<Language, Record<string, string>> = {
         'choose_language': 'Choose your preferred language',
         'temperature': 'Temperature',
         'select_unit': 'Select temperature unit',
-        'time_format': 'Time Format',
-        'select_time_format': 'Select time format',
+        'astro_pack': 'AstroPack',
+        'iss_location': 'ISS Location',
+        'active_showers': 'Active Meteor Showers',
+        'no_showers': 'No active meteor showers',
+        'next_pass': 'Next pass',
+        'calculating': 'calculating...',
+        'peak': 'Peak',
+        'zhr': 'ZHR',
         'about': 'About',
         'about_desc': 'Weather AI Aggregator',
         'about_text': 'AI-powered weather aggregation from 4 sources with intelligent deduction.',
@@ -231,14 +237,14 @@ const translations: Record<Language, Record<string, string>> = {
         'ultra_feat_4': 'Confidence Bias Setting',
 
         // AstroPack & Ultra
-        'astro_pack': 'AstroPack (Ultra)',
-        'iss_location': 'ISS Location',
-        'active_showers': 'Active Meteor Showers',
-        'no_showers': 'No active meteor showers',
+
         'explain_btn': 'Why? 🤔',
         'thinking': 'Thinking...',
         'ai_meteorologist': 'AI Meteorologist',
         'explain_error': 'Could not generate explanation',
+        'analyzing_data': 'Analyzing data sources...',
+        'analyzing_models': 'Comparing 6 weather models',
+        'analyzed_sources': 'Analyzed Sources',
     },
     cs: {
         // Weather cards
@@ -322,8 +328,14 @@ const translations: Record<Language, Record<string, string>> = {
         'choose_language': 'Jazyk aplikace a předpovědí',
         'temperature': 'Jednotky teploty',
         'select_unit': 'Jednotky zobrazení teploty',
-        'time_format': 'Formát času',
-        'select_time_format': 'Vyberte formát času',
+        'astro_pack': 'AstroPack',
+        'iss_location': 'Poloha ISS',
+        'active_showers': 'Aktivní meteorické roje',
+        'no_showers': 'Žádné aktivní roje',
+        'next_pass': 'Další přelet',
+        'calculating': 'vypočítávám...',
+        'peak': 'Maximum',
+        'zhr': 'ZHR (Intenzita)',
         'about': 'O aplikaci',
         'about_desc': 'AI agregace počasí ze 4 zdrojů',
         'about_text': 'AI agregace počasí ze 4 zdrojů s inteligentní dedukcí.',
@@ -442,7 +454,7 @@ const translations: Record<Language, Record<string, string>> = {
         'free_feat_2': 'Model GPT-4o-mini',
         'free_feat_3': 'Standardní widget',
         'pro_tier': 'Pro',
-        'pro_price': '129 Kč / rok',
+        'pro_price': '129 Kč / měsíc',
         'pro_desc': 'Pro nadšence do počasí',
         'pro_feat_1': 'Více widgetů (7-denní, Astro, Aurora)',
         'pro_feat_2': 'Interaktivní widgety (Tap & Swipe)',
@@ -452,25 +464,23 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_feat_6': 'AI Notifikace a Aurora alerty',
 
         'ultra_tier': 'Ultra',
-        'ultra_price': '249 Kč / rok',
+        'ultra_price': '249 Kč / měsíc',
         'ultra_desc': 'Maximální AI zážitek',
         'ultra_feat_1': 'Vše co je v Pro',
         'ultra_feat_2': 'Rozšířené grafy větru a tlaku',
         'ultra_feat_3': 'Export dat (CSV/JSON)',
         'ultra_feat_4': 'AstroPack (ISS, Meteory, Pozorování)',
-        'ultra_feat_5': 'AI Vysvětlení předpovědi',
+        'ultra_feat_5': 'AI Vysvětlení a Shrnutí',
         'ultra_feat_6': 'Nastavení důvěry AI (Optimista/Varuj)',
         // 'ultra_feat_5': 'Předběžný přístup k novinkám', // Deprecated/Moved // Deprecated/Moved
 
         // AstroPack & Ultra
-        'astro_pack': 'AstroPack (Ultra)',
-        'iss_location': 'Poloha ISS',
-        'active_showers': 'Aktivní meteorické roje',
-        'no_showers': 'Žádné aktivní roje',
+
         'explain_btn': 'Proč? 🤔',
         'thinking': 'Přemýšlím...',
         'ai_meteorologist': 'AI Meteorolog',
         'explain_error': 'Nepodařilo se vygenerovat vysvětlení',
+
     },
 };
 

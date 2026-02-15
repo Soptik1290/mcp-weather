@@ -19,7 +19,7 @@ import httpx
 
 # HTTP client for reverse geocoding is now in src.services
 
-from src.services import initialize_providers, reverse_geocode, get_open_meteo_provider
+from src.app_services import initialize_providers, reverse_geocode, get_open_meteo_provider
 from src.aggregator import WeatherAggregator
 from src.models import Location, WeatherData
 
@@ -186,7 +186,7 @@ async def search_location(request: SearchRequest, response: Response):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/weather/current", dependencies=[Depends(RateLimiter(requests_per_minute=10))])
+@app.post("/weather/current", dependencies=[Depends(RateLimiter(requests_per_minute=30))])
 async def get_current_weather(request: WeatherRequest, response: Response):
     """Get current weather with AI summary."""
     try:
@@ -203,13 +203,13 @@ async def get_current_weather(request: WeatherRequest, response: Response):
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
         
         location = locations[0]
-        weather = await open_meteo.get_weather(location, days=1)
+        weather = await open_meteo.get_weather(location, days=1, language=request.language)
         
         # Determine model based on tier
         model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
         
-    # Get AI aggregation
-    aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
+        # Get AI aggregation
+        aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
         
         # Get ambient theme
         from datetime import datetime
@@ -240,12 +240,12 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/weather/forecast", dependencies=[Depends(RateLimiter(requests_per_minute=10))])
+@app.post("/weather/forecast", dependencies=[Depends(RateLimiter(requests_per_minute=30))])
 async def get_weather_forecast(request: WeatherRequest, response: Response):
     """Get weather forecast with AI analysis from multiple sources."""
     try:
         # Cache: 30m (Dynamic + AI cost)
-        cache_key = f"weather:forecast:{request.location_name.lower()}:{request.days}:{request.language}"
+        cache_key = f"weather:forecast:v5:{request.location_name.lower()}:{request.days}:{request.language}"
         
         # Try cache
         cached = await get_cached_weather(cache_key)
@@ -265,7 +265,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         
         for provider_name, provider in providers:
             try:
-                weather = await provider.get_weather(location, days=min(request.days, 16))
+                weather = await provider.get_weather(location, days=min(request.days, 16), language=request.language)
                 weather_data_list.append(weather)
             except Exception as e:
                 print(f"Provider {provider_name} failed: {e}")
@@ -274,9 +274,15 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         if not weather_data_list:
             raise HTTPException(status_code=500, detail="All weather providers failed")
         
-        # AI Aggregation - deduce best values from all sources
-        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
-        aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model)
+        if request.tier in ["pro", "ultra"]:
+             # AI Aggregation for paid tiers
+             model = "gpt-5-mini"
+             aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model)
+        else:
+             # Statistical Aggregation for free tier
+             model = "statistical"
+             msg = "Statistický souhrn (Upgrade pro AI)" if request.language == "cs" else "Statistical summary (Upgrade for AI)"
+             aggregated = await aggregator._statistical_aggregate(weather_data_list, request.language, availability_message=msg)
         
         # Get ambient theme
         from datetime import datetime
@@ -464,18 +470,20 @@ async def get_astro_pack(request: AstroRequest, response: Response):
             raise HTTPException(status_code=503, detail="Astro service unavailable")
             
     except Exception as e:
+        print(f"AstroPack Error: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.post("/weather/explain", dependencies=[Depends(RateLimiter(requests_per_minute=5))])
+@app.post("/weather/explain", dependencies=[Depends(RateLimiter(requests_per_minute=20))])
 async def explain_weather(request: WeatherRequest, response: Response):
     """Explain weather conditions using AI (Ultra)."""
     if request.tier != "ultra":
-         raise HTTPException(status_code=403, detail="Explain Mode requires Ultra subscription")
+        raise HTTPException(status_code=403, detail="Explain Mode requires Ultra subscription")
 
     try:
         # Cache explanation for 1h
-        cache_key = f"explain:{request.location_name.lower()}:{request.language}:{request.confidence_bias}"
+        cache_key = f"explain:v6:{request.location_name.lower()}:{request.language}:{request.confidence_bias}"
         cached = await get_cached_weather(cache_key)
         if cached:
             response.headers["X-Cache-Status"] = "HIT"
@@ -484,7 +492,7 @@ async def explain_weather(request: WeatherRequest, response: Response):
         # Search for location
         locations = await open_meteo.search_location(request.location_name)
         if not locations:
-             raise HTTPException(status_code=404, detail="Location not found")
+            raise HTTPException(status_code=404, detail="Location not found")
         location = locations[0]
              
         # Collect weather data from all providers for comparison
@@ -493,7 +501,7 @@ async def explain_weather(request: WeatherRequest, response: Response):
 
         for provider_name, provider in providers:
             try:
-                w = await provider.get_weather(location, days=1)
+                w = await provider.get_weather(location, days=1, language=request.language)
                 weather_data_list.append(w)
                 if w.current:
                     sources_summary.append({
@@ -506,7 +514,7 @@ async def explain_weather(request: WeatherRequest, response: Response):
                 continue
         
         if not weather_data_list:
-             raise HTTPException(status_code=500, detail="Weather data unavailable")
+            raise HTTPException(status_code=500, detail="Weather data unavailable")
         
         # Prepare context for AI
         context = "\n".join([
@@ -516,34 +524,60 @@ async def explain_weather(request: WeatherRequest, response: Response):
         
         # Prepare prompt
         prompt = f"""
-        Act as an expert AI Meteorologist.
-        Location: {request.location_name}
-        
-        Data from multiple sources:
-        {context}
-        
-        User Preference: {request.confidence_bias.upper()} bias.
-        
-        Task:
-        1. Compare these sources. Are they consistent?
-        2. Give a final forecast based on the user's bias.
-        3. Explain WHY you chose this outcome (e.g. "OpenMeteo is usually more accurate here...").
-        
-        Output Language: {request.language}
-        Format: clearly structured paragraph.
-        """
+Act as an expert AI Meteorologist.
+Location: {request.location_name}
+
+Data from multiple sources:
+{context}
+
+User Preference: {request.confidence_bias.upper()} bias.
+
+Task:
+1. Compare these sources. Are they consistent?
+2. Give a final forecast based on the user's bias.
+3. Explain WHY you chose this outcome.
+
+Output Language: {request.language}
+Format: Use these exact headers (in {request.language}):
+- "ANALYSIS" (Detailed comparison)
+- "FORECAST" (Final prediction)
+- "REASONING" (Why this choice)
+Do not use markdown symbols like ** or ##, just capitalized headers.
+"""
         
         # Call AI
-        from src.aggregator import aggregator
-        explanation = "AI service unavailable."
+        # aggregator is already imported from app_services globally
+        explanation = "Omlouváme se, AI vysvětlení není momentálně dostupné." if request.language == "cs" else "Sorry, AI explanation is currently unavailable."
         
         if aggregator.client:
-             ai_resp = await aggregator.client.chat.completions.create(
-                 model="gpt-5-mini",
-                 messages=[{"role": "user", "content": prompt}],
-                 max_completion_tokens=250
-             )
-             explanation = ai_resp.choices[0].message.content
+            try:
+                # Primary model attempt
+                try:
+                    ai_resp = await aggregator.client.chat.completions.create(
+                        model="gpt-5-mini",
+                        messages=[{"role": "user", "content": prompt}],
+                        max_completion_tokens=2000
+                    )
+                    explanation = ai_resp.choices[0].message.content
+                except Exception as e:
+                    print(f"GPT-5-mini failed, trying fallback: {e}")
+                    # Fallback model attempt
+                    ai_resp = await aggregator.client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[{"role": "user", "content": prompt}],
+                        max_completion_tokens=1000
+                    )
+                    explanation = ai_resp.choices[0].message.content
+
+                if not explanation or not explanation.strip():
+                    # Debugging empty response
+                    debug_info = f"Finish: {ai_resp.choices[0].finish_reason}, ID: {ai_resp.id}, Model: {ai_resp.model}"
+                    print(f"Empty AI Response Debug: {debug_info}")
+                    raise ValueError(f"Empty AI response ({debug_info})")
+            except Exception as ai_error:
+                print(f"AI Explain Error: {ai_error}")
+                # DEBUG: Showing actual error to user to help debug
+                explanation = f"AI Error: {str(ai_error)}"
 
         result = {
             "explanation": explanation,
@@ -555,7 +589,15 @@ async def explain_weather(request: WeatherRequest, response: Response):
         return result
         
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print(f"Explain Error: {e}")
+        traceback.print_exc()
+        # Return a friendly error instead of 500/429 to avoid crashing the client app logic
+        # which might not handle non-200 responses gracefully for this specific features
+        err_msg = "Omlouváme se, vysvětlení není dostupné." if request.language == "cs" else "Sorry, explanation unavailable."
+        return {
+            "explanation": err_msg,
+            "sources_data": []
+        }
 
 
 def main():

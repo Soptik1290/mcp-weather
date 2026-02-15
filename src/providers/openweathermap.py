@@ -40,6 +40,38 @@ class OpenWeatherMapProvider(WeatherProvider):
         801: 1, 802: 2, 803: 3, 804: 3,
     }
     
+    # WMO code to description
+    WMO_CODES = {
+        0: {"en": "Clear sky", "cs": "Jasno"},
+        1: {"en": "Mainly clear", "cs": "Skoro jasno"},
+        2: {"en": "Partly cloudy", "cs": "Polojasno"},
+        3: {"en": "Overcast", "cs": "Zataženo"},
+        45: {"en": "Foggy", "cs": "Mlha"},
+        48: {"en": "Depositing rime fog", "cs": "Mrznoucí mlha"},
+        51: {"en": "Light drizzle", "cs": "Slabé mrholení"},
+        53: {"en": "Moderate drizzle", "cs": "Mírné mrholení"},
+        55: {"en": "Dense drizzle", "cs": "Husté mrholení"},
+        56: {"en": "Light freezing drizzle", "cs": "Slabé mrznoucí mrholení"},
+        57: {"en": "Dense freezing drizzle", "cs": "Husté mrznoucí mrholení"},
+        61: {"en": "Slight rain", "cs": "Slabý déšť"},
+        63: {"en": "Moderate rain", "cs": "Mírný déšť"},
+        65: {"en": "Heavy rain", "cs": "Silný déšť"},
+        66: {"en": "Light freezing rain", "cs": "Slabý mrznoucí déšť"},
+        67: {"en": "Heavy freezing rain", "cs": "Silný mrznoucí déšť"},
+        71: {"en": "Slight snow", "cs": "Slabé sněžení"},
+        73: {"en": "Moderate snow", "cs": "Mírné sněžení"},
+        75: {"en": "Heavy snow", "cs": "Silné sněžení"},
+        77: {"en": "Snow grains", "cs": "Sněhová zrna"},
+        80: {"en": "Slight rain showers", "cs": "Slabé přeháňky"},
+        81: {"en": "Moderate rain showers", "cs": "Mírné přeháňky"},
+        82: {"en": "Violent rain showers", "cs": "Silné přeháňky"},
+        85: {"en": "Slight snow showers", "cs": "Slabé sněhové přeháňky"},
+        86: {"en": "Heavy snow showers", "cs": "Silné sněhové přeháňky"},
+        95: {"en": "Thunderstorm", "cs": "Bouřka"},
+        96: {"en": "Thunderstorm with slight hail", "cs": "Bouřka s kroupami"},
+        99: {"en": "Thunderstorm with heavy hail", "cs": "Silná bouřka s kroupami"},
+    }
+    
     def __init__(self, api_key: Optional[str] = None):
         """
         Initialize provider.
@@ -79,13 +111,13 @@ class OpenWeatherMapProvider(WeatherProvider):
             print(f"OpenWeatherMap search error: {e}")
             return []
     
-    async def get_weather(self, location: Location, days: int = 7) -> WeatherData:
+    async def get_weather(self, location: Location, days: int = 7, language: str = "en") -> WeatherData:
         """Get weather data for a location."""
         # Get current weather
-        current = await self._get_current(location)
+        current = await self._get_current(location, language)
         
         # Get 5-day/3-hour forecast (free tier)
-        daily, hourly = await self._get_forecast(location)
+        daily, hourly = await self._get_forecast(location, language)
         
         return WeatherData(
             provider="openweathermap",
@@ -96,7 +128,7 @@ class OpenWeatherMapProvider(WeatherProvider):
             astronomy=None,  # Not available in free tier
         )
     
-    async def _get_current(self, location: Location) -> CurrentWeather:
+    async def _get_current(self, location: Location, language: str = "en") -> CurrentWeather:
         """Get current weather conditions."""
         response = await self.client.get(
             f"{self.BASE_URL}/weather",
@@ -105,6 +137,7 @@ class OpenWeatherMapProvider(WeatherProvider):
                 "lon": location.longitude,
                 "appid": self.api_key,
                 "units": "metric",
+                "lang": language,
             }
         )
         response.raise_for_status()
@@ -119,13 +152,13 @@ class OpenWeatherMapProvider(WeatherProvider):
             wind_speed=data["wind"].get("speed", 0) * 3.6,  # m/s to km/h
             wind_direction=data["wind"].get("deg"),
             weather_code=self.OWM_TO_WMO.get(weather_id, 0),
-            weather_description=data["weather"][0].get("description", "").title() if data.get("weather") else "",
+            weather_description=self.WMO_CODES.get(self.OWM_TO_WMO.get(weather_id, 0), {}).get(language, "Unknown"),
             pressure=data["main"].get("pressure"),
             cloud_cover=data["clouds"].get("all"),
             visibility=data.get("visibility", 0) / 1000 if data.get("visibility") else None,  # m to km
         )
     
-    async def _get_forecast(self, location: Location) -> tuple[list[DailyForecast], list[HourlyForecast]]:
+    async def _get_forecast(self, location: Location, language: str = "en") -> tuple[list[DailyForecast], list[HourlyForecast]]:
         """Get 5-day/3-hour forecast."""
         response = await self.client.get(
             f"{self.BASE_URL}/forecast",
@@ -134,6 +167,7 @@ class OpenWeatherMapProvider(WeatherProvider):
                 "lon": location.longitude,
                 "appid": self.api_key,
                 "units": "metric",
+                "lang": language,
             }
         )
         response.raise_for_status()
@@ -152,7 +186,7 @@ class OpenWeatherMapProvider(WeatherProvider):
                 time=dt.isoformat(),
                 temperature=item["main"]["temp"],
                 weather_code=self.OWM_TO_WMO.get(weather_id, 0),
-                weather_description=item["weather"][0].get("description", "").title() if item.get("weather") else "",
+                weather_description=self.WMO_CODES.get(self.OWM_TO_WMO.get(weather_id, 0), {}).get(language, "Unknown"),
                 precipitation_probability=int(item.get("pop", 0) * 100),
                 wind_speed=item["wind"].get("speed", 0) * 3.6,
                 humidity=item["main"].get("humidity"),
@@ -177,7 +211,7 @@ class OpenWeatherMapProvider(WeatherProvider):
                 temperature_max=max(info["temps"]),
                 temperature_min=min(info["temps"]),
                 weather_code=self.OWM_TO_WMO.get(info["weather_id"], 0),
-                weather_description=info["description"],
+                weather_description=self.WMO_CODES.get(self.OWM_TO_WMO.get(info["weather_id"], 0), {}).get(language, "Unknown"),
                 precipitation_probability=int(max(info["pop"]) * 100) if info["pop"] else None,
             ))
         

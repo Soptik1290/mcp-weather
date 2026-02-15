@@ -15,34 +15,34 @@ from src.models import (
 
 # WMO Weather interpretation codes
 WMO_CODES = {
-    0: "Clear sky",
-    1: "Mainly clear",
-    2: "Partly cloudy",
-    3: "Overcast",
-    45: "Foggy",
-    48: "Depositing rime fog",
-    51: "Light drizzle",
-    53: "Moderate drizzle",
-    55: "Dense drizzle",
-    56: "Light freezing drizzle",
-    57: "Dense freezing drizzle",
-    61: "Slight rain",
-    63: "Moderate rain",
-    65: "Heavy rain",
-    66: "Light freezing rain",
-    67: "Heavy freezing rain",
-    71: "Slight snow",
-    73: "Moderate snow",
-    75: "Heavy snow",
-    77: "Snow grains",
-    80: "Slight rain showers",
-    81: "Moderate rain showers",
-    82: "Violent rain showers",
-    85: "Slight snow showers",
-    86: "Heavy snow showers",
-    95: "Thunderstorm",
-    96: "Thunderstorm with slight hail",
-    99: "Thunderstorm with heavy hail",
+    0: {"en": "Clear sky", "cs": "Jasno"},
+    1: {"en": "Mainly clear", "cs": "Skoro jasno"},
+    2: {"en": "Partly cloudy", "cs": "Polojasno"},
+    3: {"en": "Overcast", "cs": "Zataženo"},
+    45: {"en": "Foggy", "cs": "Mlha"},
+    48: {"en": "Depositing rime fog", "cs": "Mrznoucí mlha"},
+    51: {"en": "Light drizzle", "cs": "Slabé mrholení"},
+    53: {"en": "Moderate drizzle", "cs": "Mírné mrholení"},
+    55: {"en": "Dense drizzle", "cs": "Husté mrholení"},
+    56: {"en": "Light freezing drizzle", "cs": "Slabé mrznoucí mrholení"},
+    57: {"en": "Dense freezing drizzle", "cs": "Husté mrznoucí mrholení"},
+    61: {"en": "Slight rain", "cs": "Slabý déšť"},
+    63: {"en": "Moderate rain", "cs": "Mírný déšť"},
+    65: {"en": "Heavy rain", "cs": "Silný déšť"},
+    66: {"en": "Light freezing rain", "cs": "Slabý mrznoucí déšť"},
+    67: {"en": "Heavy freezing rain", "cs": "Silný mrznoucí déšť"},
+    71: {"en": "Slight snow", "cs": "Slabé sněžení"},
+    73: {"en": "Moderate snow", "cs": "Mírné sněžení"},
+    75: {"en": "Heavy snow", "cs": "Silné sněžení"},
+    77: {"en": "Snow grains", "cs": "Sněhová zrna"},
+    80: {"en": "Slight rain showers", "cs": "Slabé přeháňky"},
+    81: {"en": "Moderate rain showers", "cs": "Mírné přeháňky"},
+    82: {"en": "Violent rain showers", "cs": "Silné přeháňky"},
+    85: {"en": "Slight snow showers", "cs": "Slabé sněhové přeháňky"},
+    86: {"en": "Heavy snow showers", "cs": "Silné sněhové přeháňky"},
+    95: {"en": "Thunderstorm", "cs": "Bouřka"},
+    96: {"en": "Thunderstorm with slight hail", "cs": "Bouřka s kroupami"},
+    99: {"en": "Thunderstorm with heavy hail", "cs": "Silná bouřka s kroupami"},
 }
 
 
@@ -101,7 +101,7 @@ class OpenMeteoProvider(WeatherProvider):
         
         return locations
     
-    async def get_weather(self, location: Location, days: int = 7) -> WeatherData:
+    async def get_weather(self, location: Location, days: int = 7, language: str = "en") -> WeatherData:
         """Fetch weather data from Open-Meteo API."""
         
         # Current weather + forecast request
@@ -175,7 +175,7 @@ class OpenMeteoProvider(WeatherProvider):
             wind_speed=current_data.get("wind_speed_10m"),
             wind_direction=current_data.get("wind_direction_10m"),
             weather_code=current_data.get("weather_code"),
-            weather_description=WMO_CODES.get(current_data.get("weather_code", 0), "Unknown"),
+            weather_description=WMO_CODES.get(current_data.get("weather_code", 0), {}).get(language, "Unknown"),
             pressure=current_data.get("pressure_msl"),
             cloud_cover=current_data.get("cloud_cover"),
             uv_index=current_uv
@@ -192,7 +192,7 @@ class OpenMeteoProvider(WeatherProvider):
                 temperature_max=daily_data.get("temperature_2m_max", [])[i] if i < len(daily_data.get("temperature_2m_max", [])) else 0,
                 temperature_min=daily_data.get("temperature_2m_min", [])[i] if i < len(daily_data.get("temperature_2m_min", [])) else 0,
                 weather_code=weather_code,
-                weather_description=WMO_CODES.get(weather_code, "Unknown") if weather_code else None,
+                weather_description=WMO_CODES.get(weather_code, {}).get(language, "Unknown") if weather_code else None,
                 precipitation_probability=daily_data.get("precipitation_probability_max", [])[i] if i < len(daily_data.get("precipitation_probability_max", [])) else None,
                 precipitation_sum=daily_data.get("precipitation_sum", [])[i] if i < len(daily_data.get("precipitation_sum", [])) else None,
                 wind_speed_max=daily_data.get("wind_speed_10m_max", [])[i] if i < len(daily_data.get("wind_speed_10m_max", [])) else None,
@@ -214,7 +214,7 @@ class OpenMeteoProvider(WeatherProvider):
                 time=time,
                 temperature=hourly_data.get("temperature_2m", [])[original_idx] if original_idx < len(hourly_data.get("temperature_2m", [])) else 0,
                 weather_code=weather_code,
-                weather_description=WMO_CODES.get(weather_code, "Unknown") if weather_code else None,
+                weather_description=WMO_CODES.get(weather_code, {}).get(language, "Unknown") if weather_code else None,
                 precipitation_probability=hourly_data.get("precipitation_probability", [])[original_idx] if original_idx < len(hourly_data.get("precipitation_probability", [])) else None,
                 wind_speed=hourly_data.get("wind_speed_10m", [])[original_idx] if original_idx < len(hourly_data.get("wind_speed_10m", [])) else None,
                 humidity=hourly_data.get("relative_humidity_2m", [])[original_idx] if original_idx < len(hourly_data.get("relative_humidity_2m", [])) else None

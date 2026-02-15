@@ -122,7 +122,7 @@ class WeatherAggregator:
         
         language_instruction = ""
         if (language and language.lower() != "en"):
-             language_instruction = f"Output must be compatible with {language} language context, but keep the JSON keys in English as specified."
+             language_instruction = f"The 'reasoning' and 'conditions' fields MUST be in {language} language. All other JSON keys must remain in English."
 
         system_prompt = f"""You are an expert meteorologist AI. Analyze weather data from multiple sources and deduce the most accurate forecast.
 
@@ -132,20 +132,23 @@ class WeatherAggregator:
 Your task:
 1. Compare the values from each source
 2. Identify any outliers or inconsistencies
-3. Determine the most likely actual values using Bayesian reasoning (simulate a mental Kalman Filter):
-   - Prioritize sources with historically higher reliability
-   - Treat each value as a noisy measurement
-   - "Fuse" the values to find the most probable true state
+3. Determine the most likely actual values using Bayesian reasoning (simulate a mental Kalman Filter)
 4. Provide a confidence score (0-1) based on source convergence
+
+Formatting Instructions:
+- The "reasoning" field should be a concise summary.
+- Use bullet points (•) or short paragraphs for readability.
+- AVOID long blocks of text.
+- If the language is Czech, use natural, fluent Czech terminology.
 
 Return a JSON object with:
 - "temperature": your deduced temperature in °C
 - "feels_like": feels like temperature
 - "humidity": humidity percentage
 - "wind_speed": wind speed in km/h
-- "conditions": weather description
+- "conditions": weather description (in target language)
 - "confidence": 0-1 score
-- "reasoning": brief explanation of your deduction"""
+- "reasoning": brief explanation of your deduction (in target language, formatted)"""
 
         user_prompt = f"""Location: {safe_location_name}
 
@@ -161,7 +164,7 @@ Analyze these sources and deduce the most accurate current weather."""
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
                 ],
-                max_completion_tokens=500,
+                max_completion_tokens=2000,
                 response_format={"type": "json_object"}
             )
             
@@ -196,14 +199,74 @@ Analyze these sources and deduce the most accurate current weather."""
             )
             
         except Exception as e:
-            # Fallback to statistical if AI fails
-            print(f"[WARN] AI aggregation error: {e}")
-            return await self._statistical_aggregate(weather_data, language)
+            # First failure with primary model
+            print(f"[WARN] AI aggregation error (primary {model}): {e}")
+            
+            # Fallback to gpt-4o if primary was gpt-5-mini
+            if model == "gpt-5-mini":
+                try:
+                    print("[INFO] Retrying with gpt-4o...")
+                    response = await self.client.chat.completions.create(
+                        model="gpt-4o",
+                        messages=[
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt}
+                        ],
+                        max_completion_tokens=1000,
+                        response_format={"type": "json_object"}
+                    )
+                    
+                    content = response.choices[0].message.content
+                    if not content:
+                        raise ValueError("Empty response from backup model")
+                    
+                    result = json.loads(content)
+                    
+                    # Create aggregated weather with AI-deduced values
+                    aggregated_current = CurrentWeather(
+                        temperature=result.get("temperature", weather_data[0].current.temperature),
+                        feels_like=result.get("feels_like"),
+                        humidity=result.get("humidity"),
+                        wind_speed=result.get("wind_speed"),
+                        weather_description=result.get("conditions", weather_data[0].current.weather_description),
+                        weather_code=weather_data[0].current.weather_code,
+                        uv_index=weather_data[0].current.uv_index,
+                        pressure=weather_data[0].current.pressure,
+                        cloud_cover=weather_data[0].current.cloud_cover,
+                    )
+                    
+                    return AggregatedForecast(
+                        location=location,
+                        current=aggregated_current,
+                        daily_forecast=weather_data[0].daily_forecast,
+                        hourly_forecast=weather_data[0].hourly_forecast,
+                        astronomy=weather_data[0].astronomy,
+                        ai_summary=result.get("reasoning", "AI aggregation complete (backup)"),
+                        confidence_score=result.get("confidence", 0.80),
+                        sources_used=sources
+                    )
+                except Exception as e2:
+                    print(f"[ERR] Backup AI model failed: {e2}")
+                    # Convert error to string for display
+                    error_msg = str(e2)
+                    if "429" in error_msg:
+                        friendly_error = "AI Overload (429)"
+                    elif "length" in error_msg:
+                        friendly_error = "AI Context Limit"
+                    else:
+                        friendly_error = f"AI Error: {type(e2).__name__}"
+                    
+                    return await self._statistical_aggregate(weather_data, language, availability_message=f"Statistický souhrn ({friendly_error})")
+
+            # If not gpt-5-mini or fallback failed (though backup failure is handled above)
+            error_msg = f"AI Error: {type(e).__name__}"
+            return await self._statistical_aggregate(weather_data, language, availability_message=f"Statistický souhrn ({error_msg})")
     
     async def _statistical_aggregate(
         self,
         weather_data: list[WeatherData],
-        language: str = "en"
+        language: str = "en",
+        availability_message: Optional[str] = None
     ) -> AggregatedForecast:
         """
         Fallback aggregation method using statistical averages.
@@ -283,13 +346,101 @@ Analyze these sources and deduce the most accurate current weather."""
                 next_full_moon=astro_data.get("next_full_moon")
             )
 
+    async def _statistical_aggregate(
+        self,
+        weather_data: list[WeatherData],
+        language: str = "en",
+        availability_message: Optional[str] = None
+    ) -> AggregatedForecast:
+        """
+        Fallback aggregation method using statistical averages.
+        """
+        if not weather_data:
+            raise ValueError("No weather data to aggregate")
+            
+        # Initialize sums
+        temp_sum = 0
+        wind_sum = 0
+        humidity_sum = 0
+        pressure_sum = 0
+        valid_temps = 0
+        valid_winds = 0
+        valid_humidity = 0
+        valid_pressure = 0
+        
+        # Calculate averages
+        for w in weather_data:
+            if w.current.temperature is not None:
+                temp_sum += w.current.temperature
+                valid_temps += 1
+            if w.current.wind_speed is not None:
+                wind_sum += w.current.wind_speed
+                valid_winds += 1
+            if w.current.humidity is not None:
+                humidity_sum += w.current.humidity
+                valid_humidity += 1
+            if w.current.pressure is not None:
+                pressure_sum += w.current.pressure
+                valid_pressure += 1
+                
+        # Create averaged current weather
+        avg_current = CurrentWeather(
+            temperature=round(temp_sum / valid_temps, 1) if valid_temps > 0 else None,
+            wind_speed=round(wind_sum / valid_winds, 1) if valid_winds > 0 else None,
+            humidity=round(humidity_sum / valid_humidity) if valid_humidity > 0 else None,
+            pressure=round(pressure_sum / valid_pressure) if valid_pressure > 0 else None,
+            weather_code=weather_data[0].current.weather_code, # Use primary source
+            weather_description=weather_data[0].current.weather_description,
+            uv_index=weather_data[0].current.uv_index,
+            cloud_cover=weather_data[0].current.cloud_cover,
+            feels_like=weather_data[0].current.feels_like # simplified
+        )
+        
+        sources = [w.provider for w in weather_data]
+
+        # Calculate complete astronomy data using ephem
+        location = weather_data[0].location
+        astro_data = get_astronomy_data(location.latitude, location.longitude)
+
+        # Merge with existing astronomy data if available
+        base_astro = weather_data[0].astronomy
+        if base_astro:
+            astronomy = Astronomy(
+                sunrise=base_astro.sunrise or astro_data.get("sunrise"),
+                sunset=base_astro.sunset or astro_data.get("sunset"),
+                moonrise=astro_data.get("moonrise"),
+                moonset=astro_data.get("moonset"),
+                moon_phase=astro_data.get("moon_phase"),
+                moon_phase_name=base_astro.moon_phase_name,
+                moon_illumination=astro_data.get("moon_illumination"),
+                daylight_duration=astro_data.get("daylight_duration"),
+                moon_distance=astro_data.get("moon_distance"),
+                next_full_moon=astro_data.get("next_full_moon")
+            )
+        else:
+            astronomy = Astronomy(
+                sunrise=astro_data.get("sunrise"),
+                sunset=astro_data.get("sunset"),
+                moonrise=astro_data.get("moonrise"),
+                moonset=astro_data.get("moonset"),
+                moon_phase=astro_data.get("moon_phase"),
+                moon_illumination=astro_data.get("moon_illumination"),
+                daylight_duration=astro_data.get("daylight_duration"),
+                moon_distance=astro_data.get("moon_distance"),
+                next_full_moon=astro_data.get("next_full_moon")
+            )
+
+        fallback_msg = availability_message
+        if not fallback_msg:
+             fallback_msg = "Statistický souhrn (AI nedostupné)" if language == "cs" else "Statistical aggregation (AI unavailable)"
+
         return AggregatedForecast(
             location=weather_data[0].location,
             current=avg_current,
             daily_forecast=weather_data[0].daily_forecast,
             hourly_forecast=weather_data[0].hourly_forecast,
             astronomy=astronomy,
-            ai_summary="Statistical aggregation (fallback)",
+            ai_summary=fallback_msg,
             confidence_score=0.5 + (0.1 * len(weather_data)),
             sources_used=sources
         )
