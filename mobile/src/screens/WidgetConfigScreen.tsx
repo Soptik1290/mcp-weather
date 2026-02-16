@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     View,
     Text,
@@ -6,18 +6,20 @@ import {
     TouchableOpacity,
     SafeAreaView,
     ScrollView,
-    Switch
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { ChevronLeft, Palette, Layout, Droplet } from 'lucide-react-native';
+import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useSettingsStore, useSubscriptionStore } from '../stores'; // Assuming stores exist
-import { widgetService, WidgetData } from '../services/widgetService';
+import { useSettingsStore, useSubscriptionStore } from '../stores';
+import { widgetService } from '../services/widgetService';
 import { t } from '../utils';
 
 // Simple color presets
 const COLOR_PRESETS = [
-    '#2563EB', '#7C3AED', '#DB2777', '#DC2626', '#D97706', '#059669', '#0f172a', '#000000'
+    '#2563EB', '#7C3AED', '#DB2777', '#DC2626', '#D97706', '#059669', '#0f172a', '#000000',
+    '#ef4444', '#f97316', '#f59e0b', '#eab308', '#84cc16', '#22c55e', '#10b981', '#14b8a6',
+    '#06b6d4', '#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#d946ef', '#ec4899',
+    '#f43f5e', '#64748b', '#6b7280', '#71717a', '#737373', '#78716c', '#ffffff'
 ];
 
 export function WidgetConfigScreen() {
@@ -31,26 +33,7 @@ export function WidgetConfigScreen() {
     const [themeMode, setThemeMode] = useState<'auto' | 'light' | 'dark' | 'custom'>('auto');
     const [fixedColor, setFixedColor] = useState('');
 
-    // Mock saving - in real app we'd read current widget config first
-    // For now we just set state defaults
-
     const saveConfig = () => {
-        // We need to trigger an update. 
-        // In a real scenario, we'd fetch the latest weather data to pass along, 
-        // or update just the shared prefs 'customization' fields if the native side supports partial updates.
-        // For MVP, we'll just save to our store or directly via widgetService if we expose a "updateConfig" method.
-
-        // Since widgetService.updateWidget takes full data, let's assume we can pass just customization 
-        // if we modify the service, OR we just update the shared prefs directly.
-        // Let's modify widgetService to allow updating config only.
-
-        // For now, let's just simulate it by calling updateWidget with dummy data + customization
-        // In reality, HomeScreen updates the widget with real data. 
-        // We should probably save these prefs to useSettingsStore and let HomeScreen pick them up next update.
-
-        // Let's add widget_settings to useSettingsStore instead!
-        // But for this task, I'll assume we save to Native directly.
-
         widgetService.updateWidget({
             temperature: 0, weatherCode: 0, city: '', description: '', updatedAt: 0, // dummy
             isNight: false, gradientStart: '', gradientEnd: '',
@@ -75,14 +58,14 @@ export function WidgetConfigScreen() {
                         <TouchableOpacity onPress={saveConfig} style={styles.backButton}>
                             <ChevronLeft size={28} color="#fff" />
                         </TouchableOpacity>
-                        <Text style={styles.headerTitle}>Widget Settings</Text>
+                        <Text style={styles.headerTitle}>{t('customize_widget')}</Text>
                         <View style={{ width: 28 }} />
                     </View>
 
                     <ScrollView contentContainerStyle={styles.content}>
                         {/* Preview (Mock) */}
                         <View style={styles.previewContainer}>
-                            <Text style={styles.sectionTitle}>Preview</Text>
+                            <Text style={styles.sectionTitle}>{t('widget_preview')}</Text>
                             <View style={[
                                 styles.widgetPreview,
                                 {
@@ -97,21 +80,26 @@ export function WidgetConfigScreen() {
 
                         {/* Theme Selection */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Theme</Text>
+                            <Text style={styles.sectionTitle}>{t('widget_theme')}</Text>
                             <View style={styles.row}>
-                                {['auto', 'light', 'dark', 'custom'].map((m) => (
+                                {[
+                                    { key: 'auto', label: t('theme_option_auto') },
+                                    { key: 'light', label: t('theme_option_light') },
+                                    { key: 'dark', label: t('theme_option_dark') },
+                                    { key: 'custom', label: t('theme_option_custom') }
+                                ].map((item) => (
                                     <TouchableOpacity
-                                        key={m}
-                                        onPress={() => setThemeMode(m as any)}
+                                        key={item.key}
+                                        onPress={() => setThemeMode(item.key as any)}
                                         style={[
                                             styles.optionBtn,
-                                            themeMode === m && styles.optionBtnActive
+                                            themeMode === item.key && styles.optionBtnActive
                                         ]}
                                     >
                                         <Text style={[
                                             styles.optionText,
-                                            themeMode === m && styles.optionTextActive
-                                        ]}>{m.toUpperCase()}</Text>
+                                            themeMode === item.key && styles.optionTextActive
+                                        ]}>{item.label}</Text>
                                     </TouchableOpacity>
                                 ))}
                             </View>
@@ -120,7 +108,7 @@ export function WidgetConfigScreen() {
                         {/* Custom Color Picker */}
                         {themeMode === 'custom' && (
                             <View style={styles.section}>
-                                <Text style={styles.sectionTitle}>Background Color</Text>
+                                <Text style={styles.sectionTitle}>{t('widget_background_color')}</Text>
                                 <View style={styles.colorGrid}>
                                     {COLOR_PRESETS.map(c => (
                                         <TouchableOpacity
@@ -137,11 +125,11 @@ export function WidgetConfigScreen() {
                             </View>
                         )}
 
-                        {/* Opacity Mock Slider (Buttons for MVP since no Slider lib) */}
+                        {/* Opacity Selection */}
                         <View style={styles.section}>
-                            <Text style={styles.sectionTitle}>Opacity: {Math.round(opacity / 2.55)}%</Text>
+                            <Text style={styles.sectionTitle}>{t('widget_opacity')}: {Math.round(opacity / 2.55)}%</Text>
                             <View style={styles.row}>
-                                {[25, 50, 75, 100].map(pct => (
+                                {[0, 25, 50, 75, 100].map(pct => (
                                     <TouchableOpacity
                                         key={pct}
                                         onPress={() => setOpacity(Math.round(pct * 2.55))}
@@ -158,6 +146,10 @@ export function WidgetConfigScreen() {
                                 ))}
                             </View>
                         </View>
+
+                        <TouchableOpacity style={styles.saveButton} onPress={saveConfig}>
+                            <Text style={styles.saveButtonText}>{t('widget_save')}</Text>
+                        </TouchableOpacity>
 
                     </ScrollView>
                 </SafeAreaView>
@@ -230,4 +222,16 @@ const styles = StyleSheet.create({
         borderColor: '#fff',
         borderWidth: 3,
     },
+    saveButton: {
+        backgroundColor: '#3B82F6',
+        paddingVertical: 16,
+        borderRadius: 16,
+        alignItems: 'center',
+        marginBottom: 40,
+    },
+    saveButtonText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 16,
+    }
 });

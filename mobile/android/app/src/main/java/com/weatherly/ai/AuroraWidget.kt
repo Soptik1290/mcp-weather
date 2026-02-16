@@ -61,8 +61,9 @@ class AuroraWidget : AppWidgetProvider() {
                 val colorStartStr = prefs.getString("gradientStart", "#4facfe") ?: "#4facfe"
                 val colorEndStr = prefs.getString("gradientEnd", "#00f2fe") ?: "#00f2fe"
                 val fixedColor = prefs.getString("fixedColor", "") ?: ""
+                val theme = prefs.getString("theme", "auto") ?: "auto"
                 
-                val bgBitmap = WeatherWidget.createBackgroundBitmap(opacity, colorStartStr, colorEndStr, fixedColor)
+                val bgBitmap = WeatherWidget.createBackgroundBitmap(opacity, colorStartStr, colorEndStr, fixedColor, theme)
                 if (bgBitmap != null) {
                     views.setImageViewBitmap(R.id.widget_background_image, bgBitmap)
                 }

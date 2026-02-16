@@ -556,7 +556,7 @@ Do not use markdown symbols like ** or ##, just capitalized headers.
                     ai_resp = await aggregator.client.chat.completions.create(
                         model="gpt-5-mini",
                         messages=[{"role": "user", "content": prompt}],
-                        max_completion_tokens=2000
+                        max_completion_tokens=4000
                     )
                     explanation = ai_resp.choices[0].message.content
                 except Exception as e:
@@ -565,7 +565,7 @@ Do not use markdown symbols like ** or ##, just capitalized headers.
                     ai_resp = await aggregator.client.chat.completions.create(
                         model="gpt-4o",
                         messages=[{"role": "user", "content": prompt}],
-                        max_completion_tokens=1000
+                        max_completion_tokens=2000
                     )
                     explanation = ai_resp.choices[0].message.content
 

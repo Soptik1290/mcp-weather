@@ -139,6 +139,15 @@ const translations: Record<Language, Record<string, string>> = {
         'aggregated_from': 'Aggregated from',
         'sources': 'sources',
         'reliability': 'Reliability',
+        'widget_preview': 'Preview',
+        'widget_theme': 'Theme',
+        'widget_background_color': 'Background Color',
+        'widget_opacity': 'Opacity',
+        'widget_save': 'Save Settings',
+        'theme_option_auto': 'AUTO',
+        'theme_option_light': 'LIGHT',
+        'theme_option_dark': 'DARK',
+        'theme_option_custom': 'CUSTOM',
 
         // Aurora
         'aurora': 'Aurora Borealis',
@@ -369,6 +378,15 @@ const translations: Record<Language, Record<string, string>> = {
         'aggregated_from': 'Agregováno z',
         'sources': 'zdrojů',
         'reliability': 'Spolehlivost',
+        'widget_preview': 'Náhled',
+        'widget_theme': 'Téma',
+        'widget_background_color': 'Barva pozadí',
+        'widget_opacity': 'Průhlednost',
+        'widget_save': 'Uložit nastavení',
+        'theme_option_auto': 'AUTO',
+        'theme_option_light': 'SVĚTLÉ',
+        'theme_option_dark': 'TMAVÉ',
+        'theme_option_custom': 'VLASTNÍ',
 
         // Aurora
         'aurora': 'Polární záře',

@@ -79,36 +79,19 @@ class DailyWidget : AppWidgetProvider() {
                 }
 
                 // 3. Background/Theme
-                // Reuse parsing logic from WeatherWidget - simplified here
                 val opacityStr = prefs.getString("opacity", "255") ?: "255"
                 val opacity = opacityStr.toIntOrNull() ?: 255
                 val colorStartStr = prefs.getString("gradientStart", "#4facfe") ?: "#4facfe"
                 val colorEndStr = prefs.getString("gradientEnd", "#00f2fe") ?: "#00f2fe"
                 val fixedColor = prefs.getString("fixedColor", "") ?: ""
+                val theme = prefs.getString("theme", "auto") ?: "auto"
 
                 // Draw background
                 try {
-                    val width = 400
-                    val height = 400
-                    val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
-                    val canvas = Canvas(bitmap)
-                    val paint = Paint()
-
-                    if (fixedColor.isNotEmpty()) {
-                         try {
-                            paint.color = Color.parseColor(fixedColor)
-                        } catch (e: Exception) { paint.color = Color.DKGRAY }
-                    } else {
-                        try {
-                            val startColor = Color.parseColor(colorStartStr)
-                            val endColor = Color.parseColor(colorEndStr)
-                            val shader = LinearGradient(0f, 0f, 0f, height.toFloat(), startColor, endColor, Shader.TileMode.CLAMP)
-                            paint.shader = shader
-                        } catch (e: Exception) { paint.color = Color.DKGRAY }
+                    val bgBitmap = WeatherWidget.createBackgroundBitmap(opacity, colorStartStr, colorEndStr, fixedColor, theme)
+                    if (bgBitmap != null) {
+                        views.setImageViewBitmap(R.id.widget_background_image, bgBitmap)
                     }
-                    paint.alpha = opacity
-                    canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), paint)
-                    views.setImageViewBitmap(R.id.widget_background_image, bitmap)
                 } catch (e: Exception) {
                     Log.e("DailyWidget", "Bg error", e)
                 }

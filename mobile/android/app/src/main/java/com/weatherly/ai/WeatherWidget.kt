@@ -156,7 +156,7 @@ class WeatherWidget : AppWidgetProvider() {
                 }
 
                 // 3. Set Dynamic Gradient Background via Bitmap
-                val bgBitmap = createBackgroundBitmap(opacity, colorStartStr, colorEndStr, fixedColor)
+                val bgBitmap = createBackgroundBitmap(opacity, colorStartStr, colorEndStr, fixedColor, theme)
                 if (bgBitmap != null) {
                     views.setImageViewBitmap(R.id.widget_background_image, bgBitmap)
                 }
@@ -168,7 +168,7 @@ class WeatherWidget : AppWidgetProvider() {
             }
         }
         
-        fun createBackgroundBitmap(opacity: Int, colorStartStr: String, colorEndStr: String, fixedColor: String): Bitmap? {
+        fun createBackgroundBitmap(opacity: Int, colorStartStr: String, colorEndStr: String, fixedColor: String, theme: String): Bitmap? {
             return try {
                 val width = 400
                 val height = 400
@@ -187,8 +187,15 @@ class WeatherWidget : AppWidgetProvider() {
                 } else {
                     // Gradient
                     try {
-                        val startColor = Color.parseColor(colorStartStr)
-                        val endColor = Color.parseColor(colorEndStr)
+                        var startColor = Color.parseColor(colorStartStr)
+                        var endColor = Color.parseColor(colorEndStr)
+
+                        // Darken if theme is dark
+                        if (theme == "dark") {
+                            startColor = darkenColor(startColor, 0.4f)
+                            endColor = darkenColor(endColor, 0.4f)
+                        }
+
                         val shader = LinearGradient(0f, 0f, 0f, height.toFloat(), startColor, endColor, Shader.TileMode.CLAMP)
                         paint.shader = shader
                     } catch (e: IllegalArgumentException) {
@@ -209,6 +216,14 @@ class WeatherWidget : AppWidgetProvider() {
                 e.printStackTrace()
                 null
             }
+        }
+
+        fun darkenColor(color: Int, factor: Float): Int {
+            val a = Color.alpha(color)
+            val r = (Color.red(color) * factor).toInt()
+            val g = (Color.green(color) * factor).toInt()
+            val b = (Color.blue(color) * factor).toInt()
+            return Color.argb(a, r, g, b)
         }
         
         private fun minOf(a: Int, b: Int): Int {

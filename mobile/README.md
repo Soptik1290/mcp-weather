@@ -5,27 +5,35 @@ AI-powered weather app for iOS and Android with native widgets, built with React
 ## 📱 Features
 
 ### FREE Tier
-- Current weather widget
-- Basic weather app (current + 3 days)
-- 1 weather provider (Open-Meteo)
-- AI model: GPT-4o-mini
+- **Current Weather Widget** (Resizable)
+- **Basic Weather App** (Current + 3-day forecast)
+- **1 Weather Provider** (Open-Meteo)
+- **AI Model**: GPT-4o-mini (Statistical summary)
+- **Localization**: English, Czech (Auto-detect)
 
 ### PRO (€4.99/month)
-- Multi-day forecast widgets (3, 5, 7 days)
-- Aurora forecast widget
-- Interactive widgets (tap for detail, swipe for next day)
-- Widget customization (opacity, themes, colors)
-- 6 weather providers
-- AI model: GPT-5-mini
-- Push notifications with AI recommendations
+- **Advanced Widgets**:
+    - **Daily Forecast** (3-5 days)
+    - **Aurora Forecast** (Kp index, visibility probability)
+    - **Astro Widget** (Sun & Moon phasex)
+- **Widget Customization**:
+    - **Themes**: Auto, Light, Dark
+    - **Transparency**: Adjustable opacity (0-100%)
+    - **Colors**: Custom accent colors (Material Design)
+- **Interactive Widgets**: Tap to refresh or open specific screens
+- **6 Weather Providers** (OpenWeatherMap, WeatherAPI, etc.)
+- **AI Model**: GPT-5-mini (Smart Summary)
+- **Push Notifications**: Morning/Evening briefs + Aurora Alerts
 
 ### Ultra (€9.99/month)
-- Everything in PRO
-- Extended chart widgets
-- Data export (CSV, JSON, PDF)
-- AstroPack (ISS passes, meteor showers, stargazing index)
-- AI Explain Mode (source differences, reasoning)
-- Personal Confidence Bias (cautious/balanced/optimistic)
+- **Everything in PRO**
+- **AstroPack**:
+    - **ISS Tracker**: Real-time position & flyover alerts
+    - **Meteor Showers**: Active shower list & peak dates
+    - **Stargazing Index**: Best time to observe
+- **Data Export**: Download history/forecast as CSV/JSON
+- **AI Explain Mode**: Deep analysis of weather sources & reasoning
+- **Personal Confidence Bias**: Adjust AI optimism (Cautious/Balanced/Optimistic)
 
 ## 🚀 Getting Started
 
