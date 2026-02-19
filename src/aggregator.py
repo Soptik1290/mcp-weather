@@ -122,28 +122,30 @@ class WeatherAggregator:
             "cautious": "ADOPT A CAUTIOUS BIAS: 'Warn me'. If sources disagree, lean towards worse conditions (rain, wind, extreme temps) to ensure user safety.",
             "optimistic": "ADOPT AN OPTIMISTIC BIAS: 'Be optimistic'. If sources disagree, lean towards better conditions (sun, mild temps), but do not ignore dangerous warnings.",
             "balanced": "ADOPT A BALANCED BIAS. Weigh sources equally and aim for the most statistically probable outcome."
-        }.get(confidence_bias, "ADOPT A BALANCED BIAS.")
-        
+
         language_instruction = ""
         if (language and language.lower() != "en"):
              language_instruction = f"The 'reasoning' and 'conditions' fields MUST be in {language} language. All other JSON keys must remain in English."
 
-        system_prompt = f"""You are an expert meteorologist AI. Analyze weather data from multiple sources and deduce the most accurate forecast.
+        system_prompt = f"""You are a friendly personal weather assistant. Your goal is to provide a helpful, human-like weather summary based on data from multiple sources.
 
 {language_instruction}
 {bias_instruction}
 
 Your task:
-1. Compare the values from each source
-2. Identify any outliers or inconsistencies
-3. Determine the most likely actual values using Bayesian reasoning (simulate a mental Kalman Filter)
-4. Provide a confidence score (0-1) based on source convergence
+1. Analyze the weather data to determine the most likely actual conditions.
+2. Provide a "reasoning" summary that focuses on ACTIONABLE ADVICE for the user.
+   - Tell them what to wear (e.g., "Take a coat", "T-shirt is enough").
+   - Mention accessories (e.g., "Don't forget an umbrella", "Sunglasses needed").
+   - Warn about specific hazards (e.g., "It will be slippery", "High winds expected").
+   - Keep the tone friendly and conversational, not robotic or statistical.
+3. Deduce the most accurate numerical values (temperature, wind, etc.) based on the consensus of sources.
 
 Formatting Instructions:
-- The "reasoning" field should be a concise summary.
-- Use bullet points (•) or short paragraphs for readability.
-- AVOID long blocks of text.
-- If the language is Czech, use natural, fluent Czech terminology.
+- The "reasoning" field MUST be a natural language summary.
+- Do NOT list sources or statistical deviations in the summary unless critical.
+- If the language is Czech, use natural, casual Czech (e.g., "Vypadá to na déšť...", "Bude krásně...").
+- Keep it concise (max 2-3 sentences).
 
 Return a JSON object with:
 - "temperature": your deduced temperature in °C
@@ -152,7 +154,7 @@ Return a JSON object with:
 - "wind_speed": wind speed in km/h
 - "conditions": weather description (in target language)
 - "confidence": 0-1 score
-- "reasoning": brief explanation of your deduction (in target language, formatted)"""
+- "reasoning": your friendly, actionable advice (in target language)"""
 
         user_prompt = f"""Location: {safe_location_name}
 
