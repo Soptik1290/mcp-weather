@@ -69,13 +69,14 @@ async def search_location(query: str) -> str:
 
 
 @mcp.tool()
-async def get_current_weather(location_name: str, language: str = "en") -> str:
+async def get_current_weather(location_name: str, language: str = "en", confidence_bias: str = "balanced") -> str:
     """
     Get current weather conditions with AI-powered summary.
     
     Args:
         location_name: Name of the city/location (e.g., "Prague", "London")
         language: Language for AI summary (en, cs)
+        confidence_bias: AI confidence bias (cautious, balanced, optimistic)
         
     Returns:
         JSON with current weather, AI summary, and ambient theme
@@ -97,7 +98,7 @@ async def get_current_weather(location_name: str, language: str = "en") -> str:
         return json.dumps({"error": "Failed to fetch weather data from any provider"})
     
     # Get AI aggregation
-    aggregated = await aggregator.aggregate(weather_data_list, language)
+    aggregated = await aggregator.aggregate(weather_data_list, language, confidence_bias=confidence_bias)
     
     # Get ambient theme
     current_hour = datetime.now().hour
@@ -121,7 +122,7 @@ async def get_current_weather(location_name: str, language: str = "en") -> str:
 
 
 @mcp.tool()
-async def get_weather_forecast(location_name: str, days: int = 7, language: str = "en") -> str:
+async def get_weather_forecast(location_name: str, days: int = 7, language: str = "en", confidence_bias: str = "balanced") -> str:
     """
     Get weather forecast with AI-powered analysis.
     
@@ -129,6 +130,7 @@ async def get_weather_forecast(location_name: str, days: int = 7, language: str 
         location_name: Name of the city/location (e.g., "Prague", "London")
         days: Number of forecast days (1-16, default 7)
         language: Language for AI summary (en, cs)
+        confidence_bias: AI confidence bias (cautious, balanced, optimistic)
         
     Returns:
         JSON with forecast, AI analysis, and ambient theme
@@ -150,7 +152,7 @@ async def get_weather_forecast(location_name: str, days: int = 7, language: str 
         return json.dumps({"error": "Failed to fetch weather data from any provider"})
     
     # Get AI aggregation
-    aggregated = await aggregator.aggregate(weather_data_list, language)
+    aggregated = await aggregator.aggregate(weather_data_list, language, confidence_bias=confidence_bias)
     
     # Get ambient theme
     current_hour = datetime.now().hour
@@ -177,20 +179,22 @@ async def get_weather_forecast(location_name: str, days: int = 7, language: str 
 
 @mcp.tool()
 async def get_weather_by_coordinates(
-    latitude: float, 
-    longitude: float, 
+    latitude: float,
+    longitude: float,
     days: int = 7,
-    language: str = "en"
+    language: str = "en",
+    confidence_bias: str = "balanced"
 ) -> str:
     """
     Get weather forecast using exact coordinates with AI analysis.
-    
+
     Args:
         latitude: Latitude of the location
-        longitude: Longitude of the location  
+        longitude: Longitude of the location
         days: Number of forecast days (1-16, default 7)
         language: Language for AI summary (en, cs)
-        
+        confidence_bias: AI confidence bias (cautious, balanced, optimistic)
+
     Returns:
         JSON with complete weather data, AI analysis, and ambient theme
     """
@@ -211,8 +215,8 @@ async def get_weather_by_coordinates(
         return json.dumps({"error": "Failed to fetch weather data from any provider"})
     
     # Get AI aggregation
-    aggregated = await aggregator.aggregate(weather_data_list, language)
-    
+    aggregated = await aggregator.aggregate(weather_data_list, language, confidence_bias=confidence_bias)
+
     # Get ambient theme
     current_hour = datetime.now().hour
     theme = await aggregator.get_ambient_theme(
@@ -220,7 +224,7 @@ async def get_weather_by_coordinates(
         aggregated.astronomy,
         current_hour
     )
-    
+
     result = {
         "location": aggregated.location.model_dump(),
         "current": aggregated.current.model_dump() if aggregated.current else None,
@@ -232,7 +236,7 @@ async def get_weather_by_coordinates(
         "ambient_theme": theme,
         "sources": aggregated.sources_used
     }
-    
+
     return json.dumps(result, indent=2, default=str)
 
 

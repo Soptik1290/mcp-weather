@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Response, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -19,7 +20,7 @@ import httpx
 
 # HTTP client for reverse geocoding is now in src.services
 
-from src.app_services import initialize_providers, reverse_geocode, get_open_meteo_provider
+from src.app_services import initialize_providers, reverse_geocode, get_open_meteo_provider, close_services
 from src.aggregator import WeatherAggregator
 from src.models import Location, WeatherData
 
@@ -29,6 +30,13 @@ app = FastAPI(
     description="AI-powered weather aggregation API",
     version="1.0.0"
 )
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Cleanup on application shutdown."""
+    await close_services()
+    if redis_client:
+        await redis_client.close()
 
 # CORS for frontend and mobile apps
 app.add_middleware(
@@ -191,7 +199,7 @@ async def get_current_weather(request: WeatherRequest, response: Response):
     """Get current weather with AI summary."""
     try:
         # Cache: 30m (Dynamic data)
-        cache_key = f"weather:current:{request.location_name.lower()}:{request.language}"
+        cache_key = f"weather:current:{request.location_name.lower()}:{request.language}:{request.tier}:{request.confidence_bias}"
         cached = await get_cached_weather(cache_key)
         if cached:
             response.headers["X-Cache-Status"] = "HIT"
@@ -210,9 +218,8 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         
         # Get AI aggregation
         aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
-        
+
         # Get ambient theme
-        from datetime import datetime
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
             weather.current,
@@ -245,7 +252,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
     """Get weather forecast with AI analysis from multiple sources."""
     try:
         # Cache: 30m (Dynamic + AI cost)
-        cache_key = f"weather:forecast:v5:{request.location_name.lower()}:{request.days}:{request.language}"
+        cache_key = f"weather:forecast:v6:{request.location_name.lower()}:{request.days}:{request.language}:{request.tier}:{request.confidence_bias}"
         
         # Try cache
         cached = await get_cached_weather(cache_key)
@@ -277,7 +284,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         if request.tier in ["pro", "ultra"]:
              # AI Aggregation for paid tiers
              model = "gpt-5-mini"
-             aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model)
+             aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model, confidence_bias=request.confidence_bias)
         else:
              # Statistical Aggregation for free tier
              model = "statistical"
@@ -285,7 +292,6 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
              aggregated = await aggregator._statistical_aggregate(weather_data_list, request.language, availability_message=msg)
         
         # Get ambient theme
-        from datetime import datetime
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
             aggregated.current,
@@ -343,14 +349,13 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
             country=country
         )
         
-        weather = await open_meteo.get_weather(location, days=min(request.days, 16))
+        weather = await open_meteo.get_weather(location, days=min(request.days, 16), language=request.language)
         
         # Get AI aggregation
         model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
         aggregated = await aggregator.aggregate([weather], request.language, model=model)
         
         # Get ambient theme
-        from datetime import datetime
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
             weather.current,
@@ -374,7 +379,11 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
         response.headers["X-Cache-Status"] = "MISS"
         return response_data
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Coordinates Error: {e}")
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -421,8 +430,7 @@ async def get_ambient_theme(request: WeatherRequest, response: Response):
         
         location = locations[0]
         weather = await open_meteo.get_weather(location, days=1)
-        
-        from datetime import datetime
+
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
             weather.current,

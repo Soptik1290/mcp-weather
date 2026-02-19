@@ -26,8 +26,6 @@ class AstroService:
                 response.raise_for_status()
                 data = response.json()
                 
-                data = response.json()
-                
                 if data.get("message") == "success":
                     pos = data.get("iss_position", {})
                     return {

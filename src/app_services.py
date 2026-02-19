@@ -14,6 +14,11 @@ from src.aggregator import WeatherAggregator
 _http_client = httpx.AsyncClient(timeout=10.0)
 aggregator = WeatherAggregator()
 
+async def close_services():
+    """Close all service connections gracefully."""
+    await _http_client.aclose()
+    print("[OK] Services closed gracefully")
+
 # --- Geocoding ---
 async def reverse_geocode(latitude: float, longitude: float, language: str = "en") -> Tuple[str, Optional[str]]:
     """

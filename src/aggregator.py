@@ -105,12 +105,16 @@ class WeatherAggregator:
         
         context_parts = []
         for w in weather_data:
-            context_parts.append(f"Source: {w.provider}")
-            context_parts.append(f"Temperature: {w.current.temperature}°C")
-            context_parts.append(f"Conditions: {w.current.weather_description}")
-            context_parts.append(f"Wind: {w.current.wind_speed} km/h")
-            context_parts.append(f"Humidity: {w.current.humidity}%")
-            context_parts.append("---")
+            if w.current:
+                context_parts.append(f"Source: {w.provider}")
+                context_parts.append(f"Temperature: {w.current.temperature}°C")
+                context_parts.append(f"Conditions: {w.current.weather_description}")
+                context_parts.append(f"Wind: {w.current.wind_speed} km/h")
+                context_parts.append(f"Humidity: {w.current.humidity}%")
+                context_parts.append("---")
+        
+        if not context_parts:
+            raise ValueError("No valid weather data available from any provider")
         
         context = "\n".join(context_parts)
         
@@ -262,90 +266,6 @@ Analyze these sources and deduce the most accurate current weather."""
             error_msg = f"AI Error: {type(e).__name__}"
             return await self._statistical_aggregate(weather_data, language, availability_message=f"Statistický souhrn ({error_msg})")
     
-    async def _statistical_aggregate(
-        self,
-        weather_data: list[WeatherData],
-        language: str = "en",
-        availability_message: Optional[str] = None
-    ) -> AggregatedForecast:
-        """
-        Fallback aggregation method using statistical averages.
-        """
-        if not weather_data:
-            raise ValueError("No weather data to aggregate")
-            
-        # Initialize sums
-        temp_sum = 0
-        wind_sum = 0
-        humidity_sum = 0
-        pressure_sum = 0
-        valid_temps = 0
-        valid_winds = 0
-        valid_humidity = 0
-        valid_pressure = 0
-        
-        # Calculate averages
-        for w in weather_data:
-            if w.current.temperature is not None:
-                temp_sum += w.current.temperature
-                valid_temps += 1
-            if w.current.wind_speed is not None:
-                wind_sum += w.current.wind_speed
-                valid_winds += 1
-            if w.current.humidity is not None:
-                humidity_sum += w.current.humidity
-                valid_humidity += 1
-            if w.current.pressure is not None:
-                pressure_sum += w.current.pressure
-                valid_pressure += 1
-                
-        # Create averaged current weather
-        avg_current = CurrentWeather(
-            temperature=round(temp_sum / valid_temps, 1) if valid_temps > 0 else None,
-            wind_speed=round(wind_sum / valid_winds, 1) if valid_winds > 0 else None,
-            humidity=round(humidity_sum / valid_humidity) if valid_humidity > 0 else None,
-            pressure=round(pressure_sum / valid_pressure) if valid_pressure > 0 else None,
-            weather_code=weather_data[0].current.weather_code, # Use primary source
-            weather_description=weather_data[0].current.weather_description,
-            uv_index=weather_data[0].current.uv_index,
-            cloud_cover=weather_data[0].current.cloud_cover,
-            feels_like=weather_data[0].current.feels_like # simplified
-        )
-        
-        sources = [w.provider for w in weather_data]
-
-        # Calculate complete astronomy data using ephem
-        location = weather_data[0].location
-        astro_data = get_astronomy_data(location.latitude, location.longitude)
-
-        # Merge with existing astronomy data if available
-        base_astro = weather_data[0].astronomy
-        if base_astro:
-            astronomy = Astronomy(
-                sunrise=base_astro.sunrise or astro_data.get("sunrise"),
-                sunset=base_astro.sunset or astro_data.get("sunset"),
-                moonrise=astro_data.get("moonrise"),
-                moonset=astro_data.get("moonset"),
-                moon_phase=astro_data.get("moon_phase"),
-                moon_phase_name=base_astro.moon_phase_name,
-                moon_illumination=astro_data.get("moon_illumination"),
-                daylight_duration=astro_data.get("daylight_duration"),
-                moon_distance=astro_data.get("moon_distance"),
-                next_full_moon=astro_data.get("next_full_moon")
-            )
-        else:
-            astronomy = Astronomy(
-                sunrise=astro_data.get("sunrise"),
-                sunset=astro_data.get("sunset"),
-                moonrise=astro_data.get("moonrise"),
-                moonset=astro_data.get("moonset"),
-                moon_phase=astro_data.get("moon_phase"),
-                moon_illumination=astro_data.get("moon_illumination"),
-                daylight_duration=astro_data.get("daylight_duration"),
-                moon_distance=astro_data.get("moon_distance"),
-                next_full_moon=astro_data.get("next_full_moon")
-            )
-
     async def _statistical_aggregate(
         self,
         weather_data: list[WeatherData],

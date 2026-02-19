@@ -57,7 +57,7 @@ def get_kp_description(kp: float, lang: str = "en") -> str:
         return d["extreme_storm"]
 
 
-def calculate_visibility_probability(kp: float, latitude: float) -> int:
+def calculate_visibility_probability(kp: float, latitude: float) -> float:
     """
     Calculate aurora visibility probability based on Kp index and latitude.
     
@@ -137,9 +137,9 @@ async def get_aurora_data(latitude: float = 50.0, lang: str = "en") -> dict:
             for row in forecast_raw[1:]:  # Skip header
                 time_str, kp_str, status, noaa_scale = row
                 try:
-                    time = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S")
+                    time = datetime.strptime(time_str, "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
                     kp = float(kp_str)
-                    
+
                     # Only include future predictions
                     if time > now and status in ("estimated", "predicted"):
                         forecast.append({
@@ -158,7 +158,7 @@ async def get_aurora_data(latitude: float = 50.0, lang: str = "en") -> dict:
             best_kp = current_kp
             for f in forecast[:8]:  # Next 24 hours (8 x 3h periods)
                 try:
-                    time = datetime.strptime(f["time"], "%Y-%m-%d %H:%M:%S")
+                    time = datetime.strptime(f["time"], "%Y-%m-%d %H:%M:%S").replace(tzinfo=timezone.utc)
                     hour = time.hour
                     # Aurora is best visible at night (20:00 - 04:00)
                     is_night = hour >= 20 or hour <= 4
@@ -184,7 +184,7 @@ async def get_aurora_data(latitude: float = 50.0, lang: str = "en") -> dict:
                 "best_viewing_time": best_time,
                 "best_viewing_kp": round(best_kp, 1),
                 "forecast": forecast[:24],  # Next 24 3-hour periods (3 days)
-                "timestamp": datetime.utcnow().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "source": "NOAA Space Weather Prediction Center",
             }
             
