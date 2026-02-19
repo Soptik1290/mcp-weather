@@ -9,6 +9,8 @@ import Svg, {
     Text as SvgText,
     G
 } from 'react-native-svg';
+import { t } from '../utils';
+import { useSettingsStore } from '../stores';
 
 interface HourlyData {
     time: string;
@@ -58,6 +60,8 @@ export function TemperatureChart({
     cardBg,
     height = 160
 }: TemperatureChartProps) {
+    const settings = useSettingsStore(state => state.settings);
+    const language = settings.language;
     const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
 
     if (!data || data.length < 2) return null;
@@ -112,7 +116,7 @@ export function TemperatureChart({
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
             <Text style={[styles.title, { color: textColor }]}>
-                {selectedIndex !== null ? 'Detail' : 'Temperature Trend'}
+                {selectedIndex !== null ? 'Detail' : t('temp_trend', language)}
             </Text>
 
             <View>

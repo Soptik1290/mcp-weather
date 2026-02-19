@@ -259,9 +259,9 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 <Palette size={20} color="#3B82F6" strokeWidth={2} />
                             </View>
                             <View style={styles.settingContent}>
-                                <Text style={[styles.settingLabel, { color: textColor }]}>Widget Settings</Text>
+                                <Text style={[styles.settingLabel, { color: textColor }]}>{t('widget_settings', settings.language)}</Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    Customize appearance
+                                    {t('customize_appearance', settings.language)}
                                 </Text>
                             </View>
                             <ChevronRight size={16} color={subTextColor} />

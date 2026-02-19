@@ -85,7 +85,7 @@ async def get_current_weather(location_name: str, language: str = "en", confiden
         return json.dumps({"error": "No providers available"})
 
     # Search for location using first provider
-    locations = await providers[0].search_location(location_name)
+    locations = await providers[0].search_location(location_name, language=language)
     if not locations:
         return json.dumps({"error": f"Location '{location_name}' not found"})
     

@@ -16,7 +16,7 @@ import { Search, MapPin, X, Navigation, ChevronRight } from 'lucide-react-native
 import { weatherService } from '../services';
 import { useLocationStore } from '../stores';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { t } from '../utils';
+import { t, getLocalizedCity, getLocalizedCountry } from '../utils';
 
 interface SearchResult {
     name: string;
@@ -72,7 +72,7 @@ export function SearchScreen({
             setError(null);
 
             try {
-                const searchResults = await weatherService.searchLocation(text);
+                const searchResults = await weatherService.searchLocation(text, language);
                 setResults(searchResults);
             } catch (err) {
                 console.error('Search error:', err);
@@ -128,10 +128,10 @@ export function SearchScreen({
             </View>
             <View style={styles.resultContent}>
                 <Text style={[styles.resultName, { color: textColor }]}>
-                    {item.name}
+                    {getLocalizedCity(item.name, language)}
                 </Text>
                 <Text style={[styles.resultSubtitle, { color: subTextColor }]}>
-                    {[item.admin1, item.country].filter(Boolean).join(', ')}
+                    {[item.admin1, getLocalizedCountry(item.country, language)].filter(Boolean).join(', ')}
                 </Text>
             </View>
             <ChevronRight size={20} color={subTextColor} />

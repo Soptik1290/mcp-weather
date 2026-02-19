@@ -263,13 +263,11 @@ const translations: Record<Language, Record<string, string>> = {
 
         // AstroPack & Ultra
 
-        'explain_btn': 'Why? 🤔',
-        'thinking': 'Thinking...',
-        'ai_meteorologist': 'AI Meteorologist',
-        'explain_error': 'Could not generate explanation',
-        'analyzing_data': 'Analyzing data sources...',
         'analyzing_models': 'Comparing 6 weather models',
         'analyzed_sources': 'Analyzed Sources',
+        'temp_trend': 'Temperature Trend',
+        'widget_settings': 'Widget Settings',
+        'customize_appearance': 'Customize appearance',
     },
     cs: {
         // Weather cards
@@ -529,7 +527,9 @@ const translations: Record<Language, Record<string, string>> = {
         'thinking': 'Přemýšlím...',
         'ai_meteorologist': 'AI Meteorolog',
         'explain_error': 'Nepodařilo se vygenerovat vysvětlení',
-
+        'temp_trend': 'Vývoj teploty',
+        'widget_settings': 'Nastavení widgetů',
+        'customize_appearance': 'Přizpůsobit vzhled',
     },
 };
 

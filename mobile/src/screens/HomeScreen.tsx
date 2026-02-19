@@ -13,7 +13,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { Search, Settings } from 'lucide-react-native';
-import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode } from '../utils';
+import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode, getLocalizedCity, getLocalizedCountry } from '../utils';
 
 import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
@@ -233,11 +233,11 @@ export function HomeScreen() {
                         <View style={styles.header}>
                             <View style={styles.headerLeft}>
                                 <Text style={[styles.locationName, { color: textColor }]}>
-                                    {weather?.location.name}
+                                    {getLocalizedCity(weather?.location.name, lang)}
                                 </Text>
                                 {weather?.location.country && (
                                     <Text style={[styles.country, { color: subTextColor }]}>
-                                        {weather.location.country}
+                                        {getLocalizedCountry(weather.location.country, lang)}
                                     </Text>
                                 )}
                             </View>
