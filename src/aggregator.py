@@ -122,6 +122,7 @@ class WeatherAggregator:
             "cautious": "ADOPT A CAUTIOUS BIAS: 'Warn me'. If sources disagree, lean towards worse conditions (rain, wind, extreme temps) to ensure user safety.",
             "optimistic": "ADOPT AN OPTIMISTIC BIAS: 'Be optimistic'. If sources disagree, lean towards better conditions (sun, mild temps), but do not ignore dangerous warnings.",
             "balanced": "ADOPT A BALANCED BIAS. Weigh sources equally and aim for the most statistically probable outcome."
+        }.get(confidence_bias, "ADOPT A BALANCED BIAS.")
 
         language_instruction = ""
         if (language and language.lower() != "en"):
