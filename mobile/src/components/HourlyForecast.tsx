@@ -3,6 +3,7 @@ import {
     View,
     Text,
     StyleSheet,
+    FlatList,
     ScrollView,
 } from 'react-native';
 import { Droplets } from 'lucide-react-native';
@@ -27,24 +28,15 @@ interface HourlyForecastProps {
     timeFormat?: TimeFormat;
 }
 
-const formatHour = (timeString: string, index: number, lang: 'en' | 'cs' = 'cs', timeFmt: TimeFormat = '24h'): string => {
+const formatHour = (timeString: string, lang: 'en' | 'cs' = 'cs', timeFmt: TimeFormat = '24h'): string => {
     try {
         const date = new Date(timeString);
-        const now = new Date();
-        const isToday = date.toDateString() === now.toDateString();
-
-        // Only the first item should be "Now", and only if it's reasonably close (within last hour or next hour)
-        if (index === 0 && isToday && Math.abs(date.getTime() - now.getTime()) < 3600000 * 2) {
-            return t('now', lang);
-        }
-
         if (timeFmt === '12h') {
             const h = date.getHours();
             const period = h >= 12 ? 'PM' : 'AM';
             const hour = h % 12 || 12;
             return `${hour}${period}`;
         }
-
         return date.toLocaleTimeString('cs', {
             hour: '2-digit',
             minute: undefined,
@@ -52,6 +44,17 @@ const formatHour = (timeString: string, index: number, lang: 'en' | 'cs' = 'cs',
         }).replace(':00', '');
     } catch {
         return timeString;
+    }
+};
+
+const isCurrentHour = (timeString: string): boolean => {
+    try {
+        const date = new Date(timeString);
+        const now = new Date();
+        return date.getDate() === now.getDate() &&
+            date.getHours() === now.getHours();
+    } catch {
+        return false;
     }
 };
 
@@ -77,47 +80,93 @@ export function HourlyForecast({
 }: HourlyForecastProps) {
     if (!data || data.length === 0) return null;
 
-    // Get next 24 hours
-    const hourlyData = data.slice(0, 24);
+    // Find index of current hour
+    const nowIndex = React.useMemo(() => {
+        const now = new Date();
+        const currentHourStr = now.toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
+
+        // Find exact match or closest match
+        let idx = data.findIndex(h => h.time.startsWith(currentHourStr));
+
+        // Fallback: finding closest time
+        if (idx === -1) {
+            let minDiff = Infinity;
+            data.forEach((h, i) => {
+                const diff = Math.abs(new Date(h.time).getTime() - now.getTime());
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    idx = i;
+                }
+            });
+        }
+        return Math.max(0, idx);
+    }, [data]);
+
+    const renderItem = ({ item, index }: { item: HourlyData, index: number }) => {
+        const isNight = isNightTime(item.time);
+        const WeatherIcon = getWeatherIcon(item.weather_code, isNight);
+        const iconColor = getWeatherIconColor(item.weather_code, isDark);
+        const isCurrent = index === nowIndex;
+
+        return (
+            <View
+                style={[
+                    styles.hourItem,
+                    isCurrent && styles.currentItem,
+                    isCurrent && { borderColor: isDark ? 'rgba(255,255,255,0.3)' : 'rgba(0,0,0,0.1)' }
+                ]}
+            >
+                <Text style={[
+                    styles.hourTime,
+                    { color: isCurrent ? textColor : subTextColor },
+                    isCurrent && { fontWeight: '700' }
+                ]}>
+                    {isCurrent ? t('now', language) : formatHour(item.time, language, timeFormat)}
+                </Text>
+                <View style={styles.iconContainer}>
+                    <WeatherIcon size={28} color={iconColor} strokeWidth={1.5} />
+                </View>
+                <Text style={[
+                    styles.hourTemp,
+                    { color: textColor },
+                    isCurrent && { fontSize: 17 }
+                ]}>
+                    {formatTemperature(item.temperature)}
+                </Text>
+                {item.precipitation_probability !== undefined && item.precipitation_probability > 0 && (
+                    <View style={styles.rainRow}>
+                        <Droplets size={10} color="#4A90D9" strokeWidth={2} />
+                        <Text style={[styles.hourRain, { color: textColor }]}>
+                            {item.precipitation_probability}%
+                        </Text>
+                    </View>
+                )}
+            </View>
+        );
+    };
 
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
             <Text style={[styles.title, { color: textColor }]}>
                 {t('hourly_forecast', language)}
             </Text>
-            <ScrollView
+            <FlatList
                 horizontal
+                data={data}
+                renderItem={renderItem}
+                keyExtractor={(item) => item.time}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
-            >
-                {hourlyData.map((hour, index) => {
-                    const isNight = isNightTime(hour.time);
-                    const WeatherIcon = getWeatherIcon(hour.weather_code, isNight);
-                    const iconColor = getWeatherIconColor(hour.weather_code, isDark);
-
-                    return (
-                        <View key={`${hour.time}-${index}`} style={styles.hourItem}>
-                            <Text style={[styles.hourTime, { color: subTextColor }]}>
-                                {formatHour(hour.time, index, language, timeFormat)}
-                            </Text>
-                            <View style={styles.iconContainer}>
-                                <WeatherIcon size={28} color={iconColor} strokeWidth={1.5} />
-                            </View>
-                            <Text style={[styles.hourTemp, { color: textColor }]}>
-                                {formatTemperature(hour.temperature)}
-                            </Text>
-                            {hour.precipitation_probability !== undefined && hour.precipitation_probability > 0 && (
-                                <View style={styles.rainRow}>
-                                    <Droplets size={10} color="#4A90D9" strokeWidth={2} />
-                                    <Text style={[styles.hourRain, { color: textColor }]}>
-                                        {hour.precipitation_probability}%
-                                    </Text>
-                                </View>
-                            )}
-                        </View>
-                    );
+                getItemLayout={(data: HourlyData[] | null | undefined, index: number) => ({
+                    length: 64, // approximate width + gap 
+                    offset: 64 * index,
+                    index,
                 })}
-            </ScrollView>
+                initialScrollIndex={Math.max(0, nowIndex - 1)} // Start slightly before current so user sees context
+                onScrollToIndexFailed={(info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => {
+                    // Fallback if measurement isn't ready
+                }}
+            />
         </View>
     );
 }
@@ -134,13 +183,19 @@ const styles = StyleSheet.create({
         marginBottom: 16,
     },
     scrollContent: {
-        gap: 4,
+        gap: 0, // Handled by padding in items or manual spacing if needed
     },
     hourItem: {
         alignItems: 'center',
-        paddingHorizontal: 14,
-        paddingVertical: 8,
-        minWidth: 60,
+        paddingHorizontal: 8,
+        paddingVertical: 12,
+        minWidth: 64,
+        borderRadius: 16,
+        marginHorizontal: 2,
+    },
+    currentItem: {
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderWidth: 1,
     },
     hourTime: {
         fontSize: 13,

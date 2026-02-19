@@ -205,10 +205,11 @@ class OpenMeteoProvider(WeatherProvider):
         # Parse hourly forecast (next 24 hours from current time)
         hourly_forecast = []
         
-        # Get all available hours starting from current hour
-        times = all_times[current_idx:]
+        # Get all available hours starting from 6 hours before current time
+        start_idx = max(0, current_idx - 6)
+        times = all_times[start_idx:]
         for i, time in enumerate(times):
-            original_idx = current_idx + i
+            original_idx = start_idx + i
             weather_code = hourly_data.get("weather_code", [])[original_idx] if original_idx < len(hourly_data.get("weather_code", [])) else None
             hourly_forecast.append(HourlyForecast(
                 time=time,
