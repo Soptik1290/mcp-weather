@@ -27,13 +27,14 @@ interface HourlyForecastProps {
     timeFormat?: TimeFormat;
 }
 
-const formatHour = (timeString: string, lang: 'en' | 'cs' = 'cs', timeFmt: TimeFormat = '24h'): string => {
+const formatHour = (timeString: string, index: number, lang: 'en' | 'cs' = 'cs', timeFmt: TimeFormat = '24h'): string => {
     try {
         const date = new Date(timeString);
         const now = new Date();
         const isToday = date.toDateString() === now.toDateString();
 
-        if (isToday && Math.abs(date.getTime() - now.getTime()) < 3600000) {
+        // Only the first item should be "Now", and only if it's reasonably close (within last hour or next hour)
+        if (index === 0 && isToday && Math.abs(date.getTime() - now.getTime()) < 3600000 * 2) {
             return t('now', lang);
         }
 
@@ -97,7 +98,7 @@ export function HourlyForecast({
                     return (
                         <View key={`${hour.time}-${index}`} style={styles.hourItem}>
                             <Text style={[styles.hourTime, { color: subTextColor }]}>
-                                {formatHour(hour.time, language, timeFormat)}
+                                {formatHour(hour.time, index, language, timeFormat)}
                             </Text>
                             <View style={styles.iconContainer}>
                                 <WeatherIcon size={28} color={iconColor} strokeWidth={1.5} />
