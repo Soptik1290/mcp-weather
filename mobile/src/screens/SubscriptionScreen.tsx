@@ -4,7 +4,6 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
-    Alert,
     SafeAreaView,
     Animated,
     Dimensions,
@@ -16,6 +15,7 @@ import { Check, Star, Zap, Shield, ChevronLeft } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, SubscriptionTier } from '../stores';
 import { subscriptionService } from '../services/subscriptionService';
 import { t } from '../utils';
+import { CustomAlert, AlertType } from '../components/CustomAlert';
 import { PurchasesPackage } from 'react-native-purchases';
 
 const { width } = Dimensions.get('window');
@@ -28,6 +28,30 @@ export function SubscriptionScreen() {
     // State for RevenueCat packages
     const [packages, setPackages] = useState<PurchasesPackage[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+
+    // Custom Alert State
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertConfig, setAlertConfig] = useState({
+        title: '',
+        message: '',
+        type: 'info' as AlertType,
+        onClose: () => setAlertVisible(false),
+        buttons: undefined as any // For custom actions like "OK" on success
+    });
+
+    const showAlert = (title: string, message: string, type: AlertType = 'info', onOk?: () => void) => {
+        setAlertConfig({
+            title,
+            message,
+            type,
+            onClose: () => {
+                setAlertVisible(false);
+                if (onOk) onOk();
+            },
+            buttons: onOk ? [{ text: 'OK', onPress: () => { setAlertVisible(false); onOk(); } }] : undefined
+        });
+        setAlertVisible(true);
+    };
 
     // Animation refs for entry
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -72,8 +96,12 @@ export function SubscriptionScreen() {
         if (selectedTier === tier) return;
 
         if (selectedTier === SubscriptionTier.Free) {
-            // "Downgrade" to free is just symbolic here, real downgrade happens via store management
-            Alert.alert(t('info', settings.language), t('manage_subs_in_store', settings.language));
+            // "Downgrade" to free is just symbolic here
+            showAlert(
+                t('info', settings.language),
+                t('manage_subs_in_store', settings.language),
+                'info'
+            );
             return;
         }
 
@@ -81,30 +109,29 @@ export function SubscriptionScreen() {
 
         try {
             // Find package matching the tier
-            // Logic: Look for package identifier containing 'pro' or 'ultra' case-insensitive
             const pkg = packages.find(p =>
                 p.product.identifier.toLowerCase().includes(selectedTier) ||
                 p.identifier.toLowerCase().includes(selectedTier)
             );
 
             if (!pkg) {
-                // Fallback: if only one package exists and we selected Pro/Ultra, maybe that's it?
-                // But safer to alert error if not explicitly found
-                Alert.alert('Error', `Package for ${selectedTier} not found.`);
+                showAlert('Error', t('sub_error_pkg_not_found', settings.language), 'error');
                 setIsLoading(false);
                 return;
             }
 
             const success = await subscriptionService.purchasePackage(pkg);
             if (success) {
-                Alert.alert(
-                    'Success!',
-                    `Welcome to ${selectedTier.toUpperCase()}! Features unlocked.`,
-                    [{ text: 'OK', onPress: handleBack }]
+                showAlert(
+                    t('sub_success_title', settings.language),
+                    t('sub_success_msg', settings.language).replace('PREMIUM', selectedTier.toUpperCase()),
+                    'success',
+                    handleBack
                 );
             }
         } catch (error) {
             console.error('Purchase failed', error);
+            showAlert('Error', 'Purchase failed due to an unknown error.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -114,7 +141,13 @@ export function SubscriptionScreen() {
         setIsLoading(true);
         try {
             await subscriptionService.restorePurchases();
-            Alert.alert('Restored', 'Purchases restored successfully.');
+            showAlert(
+                t('sub_restored_title', settings.language),
+                t('sub_restored_msg', settings.language),
+                'success'
+            );
+        } catch (error) {
+            showAlert('Error', 'Failed to restore purchases.', 'error');
         } finally {
             setIsLoading(false);
         }
@@ -309,6 +342,16 @@ export function SubscriptionScreen() {
                             <ActivityIndicator size="large" color="#4ade80" />
                         </View>
                     )}
+
+                    {/* Custom Alert */}
+                    <CustomAlert
+                        visible={alertVisible}
+                        title={alertConfig.title}
+                        message={alertConfig.message}
+                        type={alertConfig.type}
+                        onClose={alertConfig.onClose}
+                        buttons={alertConfig.buttons}
+                    />
                 </SafeAreaView>
             </LinearGradient>
         </View>

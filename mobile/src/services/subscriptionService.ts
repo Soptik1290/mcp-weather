@@ -6,17 +6,7 @@ import Purchases, {
     CustomerInfo
 } from 'react-native-purchases';
 import { useSubscriptionStore, SubscriptionTier } from '../stores';
-
-// RevenueCat API Keys
-const API_KEY_ANDROID = 'test_dJhDWyiCZEjnhWHxzifjjnKTele'; // Provided by user
-const API_KEY_IOS = 'test_dJhDWyiCZEjnhWHxzifjjnKTele'; // Assuming same for now or placeholder
-
-// Entitlement Identifiers (from RevenueCat dashboard)
-const ENTITLEMENT_PRO = 'pro';
-const ENTITLEMENT_ULTRA = 'ultra';
-
-// Offering Identifier
-const OFFERING_DEFAULT = 'default';
+import { REVENUECAT_CONFIG } from '../config/revenueCat';
 
 class SubscriptionService {
 
@@ -29,9 +19,9 @@ class SubscriptionService {
         Purchases.setLogLevel(LOG_LEVEL.DEBUG);
 
         if (Platform.OS === 'android') {
-            await Purchases.configure({ apiKey: API_KEY_ANDROID });
+            await Purchases.configure({ apiKey: REVENUECAT_CONFIG.API_KEY_ANDROID });
         } else if (Platform.OS === 'ios') {
-            await Purchases.configure({ apiKey: API_KEY_IOS });
+            await Purchases.configure({ apiKey: REVENUECAT_CONFIG.API_KEY_IOS });
         }
 
         // Identify anonymous user or set ID if you have authentication
@@ -112,12 +102,12 @@ class SubscriptionService {
         const store = useSubscriptionStore.getState();
 
         // Priority: Ultra > Pro > Free
-        if (customerInfo.entitlements.active[ENTITLEMENT_ULTRA]) {
+        if (customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENTS.ULTRA]) {
             if (store.tier !== SubscriptionTier.Ultra) {
                 store.setTier(SubscriptionTier.Ultra);
                 console.log('[SubscriptionService] Tier updated to ULTRA');
             }
-        } else if (customerInfo.entitlements.active[ENTITLEMENT_PRO]) {
+        } else if (customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENTS.PRO]) {
             if (store.tier !== SubscriptionTier.Pro) {
                 store.setTier(SubscriptionTier.Pro);
                 console.log('[SubscriptionService] Tier updated to PRO');

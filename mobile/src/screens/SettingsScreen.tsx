@@ -219,10 +219,10 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             </View>
                             <View style={styles.settingContent}>
                                 <Text style={[styles.settingLabel, { color: textColor }]}>
-                                    Weatherly Premium
+                                    {t('weatherly_premium', lang)}
                                 </Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    Unlock 5-Mini, Widgets & More
+                                    {t('unlock_features', lang)}
                                 </Text>
                             </View>
                             <ChevronRight size={20} color="#F59E0B" />

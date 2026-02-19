@@ -184,8 +184,13 @@ const translations: Record<Language, Record<string, string>> = {
         'fahrenheit': '°F Fahrenheit',
 
         // Time format options
+        'settings_time_format': 'Time Format',
         'time_24h': '24h',
         'time_12h': '12h AM/PM',
+
+        // Subscription Button
+        'weatherly_premium': 'Weatherly Premium',
+        'unlock_features': 'Unlock 5-Mini, Widgets & More',
 
         // Detail modals
         'current': 'Current',
@@ -244,6 +249,17 @@ const translations: Record<Language, Record<string, string>> = {
         'ultra_feat_2': 'AstroPack (ISS, Meteor)',
         'ultra_feat_3': 'AI Explain Mode',
         'ultra_feat_4': 'Confidence Bias Setting',
+        'ultra_feat_5': 'AI Summary',
+
+        // Subscription Alerts
+        'sub_error_pkg_not_found': 'Package not found',
+        'sub_success_title': 'Success!',
+        'sub_success_msg': 'Welcome to PREMIUM! Features unlocked.',
+        'sub_restored_title': 'Restored',
+        'sub_restored_msg': 'Purchases restored successfully.',
+        'info': 'Info',
+        'manage_subs_in_store': 'Manage your subscription in the store settings.',
+        'restore': 'Restore',
 
         // AstroPack & Ultra
 
@@ -423,8 +439,13 @@ const translations: Record<Language, Record<string, string>> = {
         'fahrenheit': '°F Fahrenheit',
 
         // Time format options
+        'settings_time_format': 'Formát času',
         'time_24h': '24h',
         'time_12h': '12h AM/PM',
+
+        // Subscription Button
+        'weatherly_premium': 'Weatherly Premium',
+        'unlock_features': 'Odemkněte 5-Mini, Widgety a další',
 
         // Detail modals
         'current': 'Aktuální',
@@ -491,6 +512,16 @@ const translations: Record<Language, Record<string, string>> = {
         'ultra_feat_5': 'AI Vysvětlení a Shrnutí',
         'ultra_feat_6': 'Nastavení důvěry AI (Optimista/Varuj)',
         // 'ultra_feat_5': 'Předběžný přístup k novinkám', // Deprecated/Moved // Deprecated/Moved
+
+        // Subscription Alerts
+        'sub_error_pkg_not_found': 'Balíček nenalezen',
+        'sub_success_title': 'Úspěch!',
+        'sub_success_msg': 'Vítejte v PREMIUM! Funkce odemčeny.',
+        'sub_restored_title': 'Obnoveno',
+        'sub_restored_msg': 'Nákupy úspěšně obnoveny.',
+        'info': 'Info',
+        'manage_subs_in_store': 'Spravujte své předplatné v nastavení obchodu.',
+        'restore': 'Obnovit',
 
         // AstroPack & Ultra
 
