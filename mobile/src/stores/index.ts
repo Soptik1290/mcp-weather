@@ -57,7 +57,13 @@ export const useSettingsStore = create<SettingsState>()(
 
 // Subscription Store
 // Subscription Store
-export type SubscriptionTier = 'free' | 'pro' | 'ultra';
+export const SubscriptionTier = {
+    Free: 'free',
+    Pro: 'pro',
+    Ultra: 'ultra',
+} as const;
+
+export type SubscriptionTier = (typeof SubscriptionTier)[keyof typeof SubscriptionTier];
 
 interface SubscriptionState {
     tier: SubscriptionTier;

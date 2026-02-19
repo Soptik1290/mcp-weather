@@ -28,6 +28,7 @@
     "react-native-gesture-handler": "^2.30.0",
     "react-native-linear-gradient": "^2.8.3",
     "react-native-purchases": "^9.7.6",
+    "react-native-purchases-ui": "^9.10.1",
     "react-native-reanimated": "4.3.0-nightly-20260213-df89d775e",
     "react-native-safe-area-context": "^5.5.2",
     "react-native-screens": "^4.22.0",

@@ -1,53 +1,134 @@
+import { Platform } from 'react-native';
+import Purchases, {
+    PurchasesPackage,
+    PurchasesOffering,
+    LOG_LEVEL,
+    CustomerInfo
+} from 'react-native-purchases';
 import { useSubscriptionStore, SubscriptionTier } from '../stores';
 
-/**
- * Service to handle subscription purchases and status checks.
- * Currently a mock implementation that updates the local store.
- */
-class SubscriptionService {
+// RevenueCat API Keys
+const API_KEY_ANDROID = 'test_dJhDWyiCZEjnhWHxzifjjnKTele'; // Provided by user
+const API_KEY_IOS = 'test_dJhDWyiCZEjnhWHxzifjjnKTele'; // Assuming same for now or placeholder
 
-    // Mock prices
-    static PRICES = {
-        free: 'Free',
-        pro: '€4.99 / year',
-        ultra: '€9.99 / year'
-    };
+// Entitlement Identifiers (from RevenueCat dashboard)
+const ENTITLEMENT_PRO = 'pro';
+const ENTITLEMENT_ULTRA = 'ultra';
+
+// Offering Identifier
+const OFFERING_DEFAULT = 'default';
+
+class SubscriptionService {
 
     /**
      * Initialize the subscription service.
      */
     async initialize(): Promise<void> {
-        console.log('[SubscriptionService] Initializing...');
-        // In a real app, check for valid subscription here
-        await this.restorePurchases();
+        console.log('[SubscriptionService] Initializing RevenueCat...');
+
+        Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+
+        if (Platform.OS === 'android') {
+            await Purchases.configure({ apiKey: API_KEY_ANDROID });
+        } else if (Platform.OS === 'ios') {
+            await Purchases.configure({ apiKey: API_KEY_IOS });
+        }
+
+        // Identify anonymous user or set ID if you have authentication
+        // await Purchases.logIn(userId); 
+
+        // Initial check
+        await this.checkEntitlements();
+
+        // Listen for updates
+        Purchases.addCustomerInfoUpdateListener((info) => {
+            this.handleCustomerInfoUpdate(info);
+        });
     }
 
     /**
-     * Simulate a purchase flow.
-     * In a real app, this would integrate with RevenueCat or native IAP.
+     * Get available packages (products) from the default offering.
      */
-    async purchaseSubscription(tier: SubscriptionTier): Promise<boolean> {
-        console.log(`[SubscriptionService] Purchasing ${tier}...`);
+    async getPackages(): Promise<PurchasesPackage[]> {
+        try {
+            const offerings = await Purchases.getOfferings();
+            if (offerings.current !== null && offerings.current.availablePackages.length !== 0) {
+                return offerings.current.availablePackages;
+            }
+            return [];
+        } catch (e) {
+            console.error('[SubscriptionService] Error fetching offerings:', e);
+            return [];
+        }
+    }
 
-        // Simulate network delay
-        await new Promise(resolve => setTimeout(resolve, 1500));
+    /**
+     * Purchase a specific package.
+     */
+    async purchasePackage(pack: PurchasesPackage): Promise<boolean> {
+        try {
+            console.log(`[SubscriptionService] Purchasing package: ${pack.identifier}`);
+            const { customerInfo } = await Purchases.purchasePackage(pack);
 
-        // Update local store
-        const store = useSubscriptionStore.getState();
-        store.setTier(tier);
-
-        console.log(`[SubscriptionService] Purchase successful. New tier: ${tier}`);
-        return true;
+            this.handleCustomerInfoUpdate(customerInfo);
+            return true;
+        } catch (e: any) {
+            if (!e.userCancelled) {
+                console.error('[SubscriptionService] Purchase error:', e);
+            }
+            return false;
+        }
     }
 
     /**
      * Restore purchases.
      */
     async restorePurchases(): Promise<void> {
-        console.log('[SubscriptionService] Restoring purchases...');
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        // Mock restore: do nothing or set to a default for testing
-        console.log('[SubscriptionService] Restore complete.');
+        try {
+            console.log('[SubscriptionService] Restoring purchases...');
+            const customerInfo = await Purchases.restorePurchases();
+            this.handleCustomerInfoUpdate(customerInfo);
+        } catch (e) {
+            console.error('[SubscriptionService] Restore error:', e);
+        }
+    }
+
+    /**
+     * Check current entitlements and update store.
+     */
+    async checkEntitlements(): Promise<void> {
+        try {
+            const customerInfo = await Purchases.getCustomerInfo();
+            this.handleCustomerInfoUpdate(customerInfo);
+        } catch (e) {
+            console.error('[SubscriptionService] Check entitlements error:', e);
+        }
+    }
+
+    /**
+     * Handle CustomerInfo updates and map entitlements to SubscriptionTier.
+     */
+    private handleCustomerInfoUpdate(customerInfo: CustomerInfo) {
+        const store = useSubscriptionStore.getState();
+
+        // Priority: Ultra > Pro > Free
+        if (customerInfo.entitlements.active[ENTITLEMENT_ULTRA]) {
+            if (store.tier !== SubscriptionTier.Ultra) {
+                store.setTier(SubscriptionTier.Ultra);
+                console.log('[SubscriptionService] Tier updated to ULTRA');
+            }
+        } else if (customerInfo.entitlements.active[ENTITLEMENT_PRO]) {
+            if (store.tier !== SubscriptionTier.Pro) {
+                store.setTier(SubscriptionTier.Pro);
+                console.log('[SubscriptionService] Tier updated to PRO');
+            }
+        } else {
+            // No active paid entitlement
+            if (store.tier !== SubscriptionTier.Free) {
+                store.setTier(SubscriptionTier.Free);
+                console.log('[SubscriptionService] Tier updated to FREE');
+            }
+        }
     }
 
     /**

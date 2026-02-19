@@ -5,25 +5,24 @@ AI-powered weather app for iOS and Android with native widgets, built with React
 ## 📱 Features
 
 ### FREE Tier
-- **Current Weather Widget** (Resizable)
+- **Current Weather Widget** (Resizable, Transparent)
 - **Basic Weather App** (Current + 3-day forecast)
 - **1 Weather Provider** (Open-Meteo)
-- **AI Model**: GPT-4o-mini (Statistical summary)
+- **AI Model**: GPT-4o-mini (Basic Summary)
 - **Localization**: English, Czech (Auto-detect)
 
 ### PRO (€4.99/month)
 - **Advanced Widgets**:
     - **Daily Forecast** (3-5 days)
     - **Aurora Forecast** (Kp index, visibility probability)
-    - **Astro Widget** (Sun & Moon phasex)
+    - **Astro Widget** (Sun Rise/Set, Moon Phase, Zodiac)
 - **Widget Customization**:
-    - **Themes**: Auto, Light, Dark
+    - **Themes**: Auto, Light, Dark, Custom Colors
     - **Transparency**: Adjustable opacity (0-100%)
-    - **Colors**: Custom accent colors (Material Design)
 - **Interactive Widgets**: Tap to refresh or open specific screens
 - **6 Weather Providers** (OpenWeatherMap, WeatherAPI, etc.)
 - **AI Model**: GPT-5-mini (Smart Summary)
-- **Push Notifications**: Morning/Evening briefs + Aurora Alerts
+- **Push Notifications**: Morning/Evening briefs (AI)
 
 ### Ultra (€9.99/month)
 - **Everything in PRO**
@@ -34,6 +33,7 @@ AI-powered weather app for iOS and Android with native widgets, built with React
 - **Data Export**: Download history/forecast as CSV/JSON
 - **AI Explain Mode**: Deep analysis of weather sources & reasoning
 - **Personal Confidence Bias**: Adjust AI optimism (Cautious/Balanced/Optimistic)
+- **Aurora Alerts**: Real-time notifications for high activity
 
 ## 🚀 Getting Started
 
@@ -124,10 +124,13 @@ const REVENUECAT_API_KEY_ANDROID = 'your_android_api_key';
 | zustand | State management |
 | @tanstack/react-query | Data fetching |
 | react-native-purchases | RevenueCat (subscriptions) |
+| react-native-purchases-ui | RevenueCat Paywalls |
 | @react-native-firebase | Push notifications |
 | react-native-reanimated | Animations |
 | react-native-gesture-handler | Gestures |
 | lucide-react-native | Icons |
+| react-native-shared-group-preferences | Widget Data Sync |
+| react-native-background-fetch | Background Tasks |
 
 ## 🏗️ Building for Production
 
