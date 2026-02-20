@@ -161,7 +161,7 @@ export function HourlyForecast({
                 keyExtractor={(item) => item.time}
                 showsHorizontalScrollIndicator={false}
                 contentContainerStyle={styles.scrollContent}
-                getItemLayout={(data: HourlyData[] | null | undefined, index: number) => ({
+                getItemLayout={(_: any, index: number) => ({
                     length: 64, // approximate width + gap 
                     offset: 64 * index,
                     index,

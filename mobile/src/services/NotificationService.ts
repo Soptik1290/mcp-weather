@@ -40,7 +40,7 @@ class NotificationService {
                 pressAction: {
                     id: 'default',
                 },
-                style: { type: notifee.AndroidStyle.BIGTEXT, text: body }, // Expandable
+                style: { type: AndroidStyle.BIGTEXT, text: body }, // Expandable
             },
         });
     }

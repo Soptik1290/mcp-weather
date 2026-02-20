@@ -3,8 +3,8 @@
  * Ported from frontend/src/lib/settings.tsx to match PC version.
  */
 
-type Language = 'en' | 'cs';
-type TimeFormat = '24h' | '12h';
+export type Language = 'en' | 'cs';
+export type TimeFormat = '24h' | '12h';
 
 // Day names
 const dayNames: Record<Language, { short: string[]; long: string[] }> = {
@@ -545,7 +545,7 @@ const translations: Record<Language, Record<string, string>> = {
  * Get translation for a key in the given language.
  */
 export function t(key: string, lang: Language = 'cs'): string {
-    return translations[lang]?.[key] || translations['en']?.[key] || key;
+    return translations[lang]?.[key] || translations.en?.[key] || key;
 }
 
 /**

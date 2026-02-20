@@ -2,7 +2,7 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { Rocket, Star } from 'lucide-react-native';
-import { t } from '../utils';
+import { t, Language } from '../utils';
 
 interface AstroCardProps {
     data: any;
@@ -10,7 +10,7 @@ interface AstroCardProps {
     subTextColor: string;
     cardBg: string;
     isDark: boolean;
-    language: string;
+    language: Language;
 }
 
 export function AstroCard({ data, textColor, subTextColor, cardBg, isDark, language }: AstroCardProps) {
