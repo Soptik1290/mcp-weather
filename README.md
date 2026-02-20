@@ -194,8 +194,13 @@ mcp-weather/
 └── uv.lock              # Lock file
 ```
 
-## 🔮 Future Plans
+## 🔮 Future Plans (Planned Features)
 
+- **🗺️ Srážkový radar (Radar Map)** - Interactive precipitation radar (via RainViewer/Windy API). Pro/Ultra tiers can get extended radar forecasts.
+- **😷 Kvalita ovzduší a Pylová předpověď (AQI & Pollen)** - Adding smog and pollen data to the AI context to get personalized health & activity recommendations.
+- **⚠️ Oficiální výstrahy a varování (MeteoAlarm)** - Warning banners for severe weather (storms, ice) and Push Notifications for Ultra users.
+- **☔ Live Activities (iOS)** - Dynamic Island support with live countdowns like "Rain starting in 14 minutes".
+- **🏞️ Cestovní mód (Travel Mode)** - Special widget to compare home city weather vs. your vacation destination.
 - **NOAA Aviation Weather** - METARs, TAFs, aviation advisories
 - **NOAA Marine Weather** - Ocean/coastal forecasts
 - **NOAA Solar/Space** - Enhanced UV index and solar radiation data
