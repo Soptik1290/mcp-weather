@@ -53,7 +53,7 @@ class WidgetService {
             const groupName = ANDROID_PREFERENCES_NAME;
             const options = { useAndroidSharedPreferences: true };
 
-            /* eslint-disable @typescript-eslint/no-explicit-any */
+             
             const items: [string, any][] = [
                 ['temperature', String(Math.round(data.temperature))],
                 ['city', data.city],

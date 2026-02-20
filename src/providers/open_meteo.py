@@ -58,48 +58,58 @@ class OpenMeteoProvider(WeatherProvider):
     
     async def search_location(self, query: str, language: str = "en") -> list[Location]:
         """Search for locations by name using Open-Meteo geocoding."""
-        # Fetch localized names
-        response_loc = await self.client.get(
-            f"{self.GEOCODING_URL}/search",
-            params={"name": query, "count": 10, "language": language, "format": "json"}
-        )
-        response_loc.raise_for_status()
-        data_loc = response_loc.json().get("results", [])
+        try:
+            # Fetch localized names
+            response_loc = await self.client.get(
+                f"{self.GEOCODING_URL}/search",
+                params={"name": query, "count": 10, "language": language, "format": "json"}
+            )
+            response_loc.raise_for_status()
+            data_loc = response_loc.json().get("results", [])
 
-        # Fetch English names (as "original") if language is different
-        data_en = []
-        if language != "en":
-            try:
-                response_en = await self.client.get(
-                    f"{self.GEOCODING_URL}/search",
-                    params={"name": query, "count": 10, "language": "en", "format": "json"}
-                )
-                response_en.raise_for_status()
-                data_en = response_en.json().get("results", [])
-            except Exception:
-                pass # Ignore if secondary fetch fails
+            # Fetch English names (as "original") if language is different
+            data_en = []
+            if language != "en":
+                try:
+                    response_en = await self.client.get(
+                        f"{self.GEOCODING_URL}/search",
+                        params={"name": query, "count": 10, "language": "en", "format": "json"}
+                    )
+                    response_en.raise_for_status()
+                    data_en = response_en.json().get("results", [])
+                except Exception:
+                    pass  # Ignore if secondary fetch fails
 
-        locations = []
-        for i, result in enumerate(data_loc):
-            # Try to find matching English result (by ID or approximate coords)
-            # Simple heuristic: assuming same order or ID match
-            original_name = None
-            if data_en:
-                # Try to find by ID first
-                match = next((item for item in data_en if item.get("id") == result.get("id")), None)
-                if match and match.get("name") != result.get("name"):
-                    original_name = match.get("name")
-            
-            locations.append(Location(
-                name=result.get("name", ""),
-                original_name=original_name,
-                latitude=result["latitude"],
-                longitude=result["longitude"],
-                country=result.get("country"),
-                timezone=result.get("timezone")
-            ))
-        
-        return locations
+            locations = []
+            for i, result in enumerate(data_loc):
+                # Try to find matching English result (by ID or approximate coords)
+                # Simple heuristic: assuming same order or ID match
+                original_name = None
+                if data_en:
+                    # Try to find by ID first
+                    match = next((item for item in data_en if item.get("id") == result.get("id")), None)
+                    if match and match.get("name") != result.get("name"):
+                        original_name = match.get("name")
+
+                locations.append(Location(
+                    name=result.get("name", ""),
+                    original_name=original_name,
+                    latitude=result["latitude"],
+                    longitude=result["longitude"],
+                    country=result.get("country"),
+                    timezone=result.get("timezone")
+                ))
+
+            return locations
+        except httpx.HTTPStatusError as e:
+            print(f"[ERR] OpenMeteo search failed: HTTP {e.response.status_code}")
+            return []
+        except httpx.RequestError as e:
+            print(f"[ERR] OpenMeteo search failed: Request error - {e}")
+            return []
+        except Exception as e:
+            print(f"[ERR] OpenMeteo search failed: {e}")
+            return []
     
     async def get_weather(self, location: Location, days: int = 7, language: str = "en") -> WeatherData:
         """Fetch weather data from Open-Meteo API."""

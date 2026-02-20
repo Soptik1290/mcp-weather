@@ -64,8 +64,6 @@ print(f"Active providers: {[p[0] for p in providers]}")
 
 # Redis Cache
 import redis.asyncio as redis
-import json
-from datetime import timedelta
 
 REDIS_URL = os.getenv("REDIS_URL")
 redis_client = None
@@ -99,9 +97,9 @@ class RateLimiter:
 
     async def __call__(self, request: Request):
         if not redis_client:
-            return # Fail open if Redis is not connected
-            
-        client_ip = request.client.host
+            return  # Fail open if Redis is not connected
+
+        client_ip = request.client.host if request.client else "unknown"
         # Use path in key to allow different limits per endpoint
         key = f"ratelimit:{request.url.path}:{client_ip}"
         
@@ -529,7 +527,7 @@ async def explain_weather(request: WeatherRequest, response: Response):
             f"- {s['name']}: {s['temp']}°C, {s['desc']}, Wind {s['wind']}km/h"
             for s in sources_summary
         ])
-        
+
         # Prepare prompt
         prompt = f"""
 Act as an expert AI Meteorologist.
@@ -552,11 +550,12 @@ Format: Use these exact headers (in {request.language}):
 - "REASONING" (Why this choice)
 Do not use markdown symbols like ** or ##, just capitalized headers.
 """
-        
+
         # Call AI
         # aggregator is already imported from app_services globally
         explanation = "Omlouváme se, AI vysvětlení není momentálně dostupné." if request.language == "cs" else "Sorry, AI explanation is currently unavailable."
-        
+
+        ai_resp = None
         if aggregator.client:
             try:
                 # Primary model attempt
