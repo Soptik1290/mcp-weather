@@ -535,9 +535,11 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 <Info size={20} color="#4A90D9" strokeWidth={2} />
                             </View>
                             <View style={styles.settingContent}>
-                                <Text style={[styles.settingLabel, { color: textColor }]}>Weatherly AI</Text>
+                                <Text style={[styles.settingLabel, { color: textColor }]}>
+                                    Weatherly AI {(tier === 'pro' || tier === 'ultra') ? 'Premium' : ''}
+                                </Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    {t('about_desc', lang)}
+                                    {(tier === 'pro' || tier === 'ultra') ? t('about_desc_premium', lang) : t('about_desc', lang)}
                                 </Text>
                             </View>
                             <Text style={[styles.version, { color: subTextColor }]}>v1.0.0</Text>

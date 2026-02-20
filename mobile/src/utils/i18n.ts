@@ -111,7 +111,8 @@ const translations: Record<Language, Record<string, string>> = {
         'peak': 'Peak',
         'zhr': 'ZHR',
         'about': 'About',
-        'about_desc': 'Weather AI Aggregator',
+        'about_desc': 'AI Weather Aggregator (4 sources)',
+        'about_desc_premium': 'AI Weather Aggregator (7 premium sources)',
         'about_text': 'AI-powered weather aggregation from 4 sources with intelligent deduction.',
         'view_github': 'View on GitHub',
         'general': 'GENERAL',
@@ -364,6 +365,7 @@ const translations: Record<Language, Record<string, string>> = {
         'zhr': 'ZHR (Intenzita)',
         'about': 'O aplikaci',
         'about_desc': 'AI agregace počasí ze 4 zdrojů',
+        'about_desc_premium': 'AI agregace počasí ze 7 prémiových zdrojů',
         'about_text': 'AI agregace počasí ze 4 zdrojů s inteligentní dedukcí.',
         'view_github': 'Zobrazit na GitHubu',
         'general': 'OBECNÉ',
@@ -478,6 +480,9 @@ const translations: Record<Language, Record<string, string>> = {
         'retry': 'Zkusit znovu',
         'made_with': 'Made with ❤️ by Soptik1290',
         'view_source': 'Zobrazit zdrojový kód',
+        'made_with_love': 'Vytvořeno s ❤️ od Tomáš Stark',
+        'support_dev': 'Podpořit vývojáře',
+        'watch_ad': 'Zhlédnutím reklamy',
 
         // Subscription
         'premium_plans': 'Plány Předplatného',
