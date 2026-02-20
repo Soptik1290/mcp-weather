@@ -239,7 +239,7 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_feat_2': 'Interactive widgets (Tap & Swipe)',
         'pro_feat_3': 'Advanced widget customization',
         'pro_feat_4': 'More weather sources',
-        'pro_feat_5': 'Smarter AI model (GPT-5-mini)',
+        'pro_feat_5': 'Smarter AI (GPT-5-mini) for better forecasts',
         'pro_feat_6': 'AI Notifications & Aurora alerts',
         // 'No Ads' removed
         'ultra_tier': 'Ultra',
@@ -497,7 +497,7 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_feat_2': 'Interaktivní widgety (Tap & Swipe)',
         'pro_feat_3': 'Pokročilá úprava widgetů',
         'pro_feat_4': 'Více zdrojů počasí',
-        'pro_feat_5': 'Chytřejší AI model (GPT-5-mini)',
+        'pro_feat_5': 'Chytřejší AI (GPT-5-mini) pro lepší předpověď',
         'pro_feat_6': 'AI Notifikace a Aurora alerty',
 
         'ultra_tier': 'Ultra',

@@ -311,7 +311,8 @@ export function SubscriptionScreen() {
                                 t('pro_feat_1', settings.language),
                                 t('pro_feat_2', settings.language),
                                 t('pro_feat_3', settings.language),
-                                t('pro_feat_4', settings.language)
+                                t('pro_feat_4', settings.language),
+                                t('pro_feat_5', settings.language)
                             ]}
                         />
 
