@@ -83,7 +83,11 @@ export function HourlyForecast({
     // Find index of current hour
     const nowIndex = React.useMemo(() => {
         const now = new Date();
-        const currentHourStr = now.toISOString().slice(0, 13); // "YYYY-MM-DDTHH"
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentDay = String(now.getDate()).padStart(2, '0');
+        const currentHour = String(now.getHours()).padStart(2, '0');
+        const currentHourStr = `${currentYear}-${currentMonth}-${currentDay}T${currentHour}`;
 
         // Find exact match or closest match
         let idx = data.findIndex(h => h.time.startsWith(currentHourStr));
