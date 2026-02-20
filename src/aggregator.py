@@ -80,8 +80,9 @@ class WeatherAggregator:
         """
         Aggregate weather data from multiple providers.
         """
-        # ... (rest of the method remains similar, but calls _ai_aggregate with bias)
-        
+        if not weather_data:
+            raise ValueError("No weather data provided for aggregation")
+
         # Multiple sources - perform intelligent aggregation
         if self.has_ai:
             return await self._ai_aggregate(weather_data, user_language, model, confidence_bias)
@@ -180,18 +181,21 @@ Analyze these sources and deduce the most accurate current weather."""
                 raise ValueError("Empty response from AI model")
             
             result = json.loads(content)
-            
+
+            # Get base current weather (handle None case)
+            base_current = weather_data[0].current
+
             # Create aggregated weather with AI-deduced values
             aggregated_current = CurrentWeather(
-                temperature=result.get("temperature", weather_data[0].current.temperature),
+                temperature=result.get("temperature", base_current.temperature if base_current else 0),
                 feels_like=result.get("feels_like"),
                 humidity=result.get("humidity"),
                 wind_speed=result.get("wind_speed"),
-                weather_description=result.get("conditions", weather_data[0].current.weather_description),
-                weather_code=weather_data[0].current.weather_code,
-                uv_index=weather_data[0].current.uv_index,
-                pressure=weather_data[0].current.pressure,
-                cloud_cover=weather_data[0].current.cloud_cover,
+                weather_description=result.get("conditions", base_current.weather_description if base_current else "Unknown"),
+                weather_code=base_current.weather_code if base_current else None,
+                uv_index=base_current.uv_index if base_current else None,
+                pressure=base_current.pressure if base_current else None,
+                cloud_cover=base_current.cloud_cover if base_current else None,
             )
             
             return AggregatedForecast(
