@@ -106,6 +106,16 @@ def initialize_providers() -> List[tuple[str, object]]:
         except Exception as e:
             print(f"[WARN] Visual Crossing failed: {e}")
 
+    # 4.5 WeatherBit
+    if os.getenv("WEATHERBIT_API_KEY"):
+        try:
+            from src.providers.weatherbit import WeatherBitProvider
+            wb = WeatherBitProvider()
+            providers.append(("weatherbit", wb))
+            print("[OK] WeatherBit provider initialized")
+        except Exception as e:
+            print(f"[WARN] WeatherBit failed: {e}")
+
     # 5. MET Norway (Free)
     try:
         from src.providers.met_norway import METNorwayProvider
