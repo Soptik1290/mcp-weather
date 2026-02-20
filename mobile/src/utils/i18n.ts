@@ -165,7 +165,7 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_unavailable': 'Aurora data unavailable',
         'aurora_best_time': 'Best viewing',
         'aurora_setting': 'Aurora Forecast',
-        'aurora_setting_desc': 'Show aurora forecast card',
+        'aurora_setting_desc': 'When to show the Aurora activity widget',
         'aurora_auto': '🌌 Auto (when visible)',
         'aurora_always': '✅ Always show',
         'aurora_never': '❌ Never show',
@@ -217,6 +217,9 @@ const translations: Record<Language, Record<string, string>> = {
 
         'made_with': 'Made with ❤️ by Soptik1290',
         'view_source': 'View source code',
+        'made_with_love': 'Made with ❤️ by Tomáš Stark',
+        'support_dev': 'Support the Developer',
+        'watch_ad': 'Watch a short ad',
 
         // Subscription
         'premium_plans': 'Premium Plans',
@@ -418,7 +421,7 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_unavailable': 'Data o polární záři nedostupná',
         'aurora_best_time': 'Nejlepší čas',
         'aurora_setting': 'Polární záře',
-        'aurora_setting_desc': 'Zobrazit kartu polární záře',
+        'aurora_setting_desc': 'Kdy zobrazovat widget s aktivitou polární záře',
         'aurora_auto': '🌌 Auto (když je viditelná)',
         'aurora_always': '✅ Vždy zobrazit',
         'aurora_never': '❌ Nikdy nezobrazovat',

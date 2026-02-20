@@ -24,6 +24,7 @@ import {
     ChevronRight,
     Check,
     Github,
+    Heart,
     FileText,
     Layout,
     Rocket
@@ -542,20 +543,27 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             <Text style={[styles.version, { color: subTextColor }]}>v1.0.0</Text>
                         </View>
 
+
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         <TouchableOpacity
                             style={styles.settingRow}
-                            onPress={() => Linking.openURL('https://github.com/Soptik1290/mcp-weather')}
+                            onPress={() => {
+                                // Placeholder for watching an ad
+                                Alert.alert(
+                                    t('support_dev', lang),
+                                    "Na implementaci reklamního systému pomocí AdMob se pracuje. Děkujeme za ochotu! ❤️"
+                                );
+                            }}
                             activeOpacity={0.7}
                         >
-                            <View style={[styles.iconContainer, { backgroundColor: 'rgba(128,128,128,0.2)' }]}>
-                                <Github size={20} color={textColor} strokeWidth={2} />
+                            <View style={[styles.iconContainer, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
+                                <Heart size={20} color="#F472B6" strokeWidth={2} />
                             </View>
                             <View style={styles.settingContent}>
-                                <Text style={[styles.settingLabel, { color: textColor }]}>GitHub</Text>
+                                <Text style={[styles.settingLabel, { color: textColor }]}>{t('support_dev', lang)}</Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    {t('view_source', lang)}
+                                    {t('watch_ad', lang)}
                                 </Text>
                             </View>
                             <ChevronRight size={16} color={subTextColor} />
@@ -564,7 +572,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
 
                     <View style={styles.footer}>
                         <Text style={[styles.footerText, { color: subTextColor }]}>
-                            Made with ❤️ by Soptik1290
+                            {t('made_with_love', lang)}
                         </Text>
                     </View>
                 </ScrollView>
