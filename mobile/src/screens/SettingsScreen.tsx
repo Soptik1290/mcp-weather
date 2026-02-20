@@ -8,6 +8,7 @@ import {
     Switch,
     Linking,
     Dimensions,
+    ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -32,7 +33,7 @@ import {
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { t } from '../utils';
 import { notificationService } from '../services/NotificationService';
-import { weatherService, dataExportService } from '../services';
+import { weatherService, dataExportService, admobService } from '../services';
 import { Alert } from 'react-native';
 
 interface SettingsScreenProps {
@@ -63,6 +64,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const { settings, updateSettings } = useSettingsStore();
     const { tier } = useSubscriptionStore();
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
+    const [isAdLoading, setIsAdLoading] = useState(false);
     const lang = settings.language;
 
     const textColor = isDark ? '#fff' : '#1a1a1a';
@@ -550,22 +552,38 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
 
                         <TouchableOpacity
                             style={styles.settingRow}
-                            onPress={() => {
-                                // Placeholder for watching an ad
-                                Alert.alert(
-                                    t('support_dev', lang),
-                                    "Na implementaci reklamního systému pomocí AdMob se pracuje. Děkujeme za ochotu! ❤️"
-                                );
+                            onPress={async () => {
+                                if (isAdLoading) return;
+                                setIsAdLoading(true);
+                                const result = await admobService.showRewardedAd();
+                                setIsAdLoading(false);
+
+                                if (result.success && result.earnedReward) {
+                                    Alert.alert(
+                                        "Děkujeme! ❤️",
+                                        "Moc děkujeme za tvoji podporu, moc to pro vývoj aplikace znamená."
+                                    );
+                                } else if (!result.success) {
+                                    Alert.alert(
+                                        "Chyba",
+                                        "Reklamu se bohužel nepodařilo načíst k zobrazení. Zkuste to prosím později."
+                                    );
+                                }
                             }}
                             activeOpacity={0.7}
+                            disabled={isAdLoading}
                         >
                             <View style={[styles.iconContainer, { backgroundColor: 'rgba(244,114,182,0.2)' }]}>
-                                <Heart size={20} color="#F472B6" strokeWidth={2} />
+                                {isAdLoading ? (
+                                    <ActivityIndicator size="small" color="#F472B6" />
+                                ) : (
+                                    <Heart size={20} color="#F472B6" strokeWidth={2} />
+                                )}
                             </View>
                             <View style={styles.settingContent}>
                                 <Text style={[styles.settingLabel, { color: textColor }]}>{t('support_dev', lang)}</Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    {t('watch_ad', lang)}
+                                    {isAdLoading ? 'Načítám inzerát...' : t('watch_ad', lang)}
                                 </Text>
                             </View>
                             <ChevronRight size={16} color={subTextColor} />
