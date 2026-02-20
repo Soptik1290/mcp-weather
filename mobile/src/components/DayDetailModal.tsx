@@ -22,7 +22,7 @@ import {
     Sunrise,
     Sunset,
 } from 'lucide-react-native';
-import { t, formatTime as formatTimeUtil, getDayName } from '../utils';
+import { t, formatTime as formatTimeUtil, getDayName, getWeatherIcon, getWeatherIconColor } from '../utils';
 import type { TimeFormat } from '../types';
 
 interface DayDetailModalProps {
@@ -47,18 +47,7 @@ interface DayDetailModalProps {
     temperatureUnit?: 'celsius' | 'fahrenheit';
 }
 
-const getWeatherEmoji = (code?: number): string => {
-    if (!code) return '🌡️';
-    if (code === 0) return '☀️';
-    if (code <= 3) return '⛅';
-    if (code <= 48) return '🌫️';
-    if (code <= 67) return '🌧️';
-    if (code <= 77) return '🌨️';
-    if (code <= 82) return '🌧️';
-    if (code <= 86) return '❄️';
-    if (code >= 95) return '⛈️';
-    return '🌡️';
-};
+
 
 const getWeatherDescriptionKey = (code?: number): string => {
     if (code === undefined) return 'unknown';
@@ -85,12 +74,14 @@ function TemperatureRangeChart({
     min,
     max,
     textColor,
-    cardBg
+    cardBg,
+    title = 'Temperature'
 }: {
     min: number;
     max: number;
     textColor: string;
     cardBg: string;
+    title?: string;
 }) {
     const width = Dimensions.get('window').width - 80;
     const height = 80;
@@ -104,8 +95,7 @@ function TemperatureRangeChart({
     return (
         <View style={[styles.chartCard, { backgroundColor: cardBg }]}>
             <Text style={[styles.sectionTitle, { color: textColor }]}>
-                {/* Visual component, title handled by parent or removed? Keeping generic */}
-                Temperature
+                {title}
             </Text>
             <Svg width={width} height={height}>
                 <Defs>
@@ -291,9 +281,13 @@ export function DayDetailModal({
                     >
                         {/* Main Info */}
                         <View style={styles.mainInfo}>
-                            <Text style={styles.emoji}>
-                                {getWeatherEmoji(day.weather_code)}
-                            </Text>
+                            <View style={{ marginBottom: 12 }}>
+                                {(() => {
+                                    const WeatherIcon = getWeatherIcon(day.weather_code, false);
+                                    const iconColor = getWeatherIconColor(day.weather_code, isDark);
+                                    return <WeatherIcon size={72} color={iconColor} strokeWidth={1.5} />;
+                                })()}
+                            </View>
                             <Text style={[styles.date, { color: textColor }]}>
                                 {formatDate(day.date, language)}
                             </Text>
@@ -321,6 +315,7 @@ export function DayDetailModal({
                             max={day.temperature_max}
                             textColor={textColor}
                             cardBg={cardBg}
+                            title={t('temp_trend', language)}
                         />
 
                         {/* Details Grid - 2 columns */}
@@ -384,10 +379,6 @@ const styles = StyleSheet.create({
     mainInfo: {
         alignItems: 'center',
         marginBottom: 24,
-    },
-    emoji: {
-        fontSize: 72,
-        marginBottom: 12,
     },
     date: {
         fontSize: 22,
