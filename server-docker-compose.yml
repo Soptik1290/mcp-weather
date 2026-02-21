@@ -1,0 +1,38 @@
+services:
+  backend:
+    # Bude se stahovat z tvého GHCR po buildu
+    image: ghcr.io/soptik1290/mcp-weather-backend:latest
+    container_name: weather_backend
+    restart: always
+    # API klíče
+    env_file: .env
+    environment:
+      REDIS_URL: redis://weather_redis:6379
+    networks:
+      - weather_internal
+      - web_proxy # Nutné pro Traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web_proxy"
+      # URL, na které to poběží
+      - "traefik.http.routers.weather-api.rule=Host(`weather.zephyron.tech`)"
+      - "traefik.http.routers.weather-api.entrypoints=websecure"
+      - "traefik.http.routers.weather-api.tls.certresolver=myresolver"
+      # Náš backend na FastAPI používá uvnitř kontejneru port 8000
+      - "traefik.http.services.weather-api.loadbalancer.server.port=8000"
+
+  redis:
+    image: redis:alpine
+    container_name: weather_redis
+    restart: always
+    volumes:
+      - ./redis-data:/data
+    # Záměrně žádné labely a porty, Redis nesmí být na internetu
+    networks:
+      - weather_internal
+
+networks:
+  weather_internal:
+    driver: bridge
+  web_proxy:
+    external: true
