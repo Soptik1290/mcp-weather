@@ -21,8 +21,8 @@ const IssTracker = ({ data }: { data: any }) => {
             </View>
             {data ? (
                 <View>
-                    <Text style={styles.dataText}>Lat: {data.iss_position?.latitude}</Text>
-                    <Text style={styles.dataText}>Lon: {data.iss_position?.longitude}</Text>
+                    <Text style={styles.dataText}>Lat: {data.latitude?.toFixed(4)}</Text>
+                    <Text style={styles.dataText}>Lon: {data.longitude?.toFixed(4)}</Text>
                     <Text style={styles.subText}>{t('next_pass', settings.language)}: {t('calculating', settings.language)}</Text>
                 </View>
             ) : (

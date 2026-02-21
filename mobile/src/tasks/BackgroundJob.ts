@@ -3,6 +3,8 @@ import { notificationService } from '../services/NotificationService';
 import { weatherService } from '../services/WeatherService';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { widgetService } from '../services/widgetService';
+import { t } from '../utils/i18n';
 
 const STORAGE_KEY_LAST_BRIEF = 'last_daily_brief_date';
 const STORAGE_KEY_LAST_AURORA = 'last_aurora_alert_time';
@@ -115,6 +117,49 @@ const performBackgroundTask = async () => {
                         console.error('Failed to fetch aurora for background alert', e);
                     }
                 }
+            }
+        }
+
+        // 4. Update Widget Data
+        if (currentLocation) {
+            try {
+                const weatherData = await weatherService.getWeatherForecast(
+                    currentLocation.name,
+                    7,
+                    settings.language,
+                    tier,
+                    settings.confidence_bias || 'balanced'
+                );
+
+                if (weatherData && weatherData.current) {
+                    const weatherCode = weatherData.current.weather_code || 0;
+                    const localizedDesc = t(`wmo_${weatherCode}`, settings.language);
+                    const themeData = (weatherData as any).ambient_theme || { is_dark: false, gradient: ['#4facfe', '#00f2fe'] };
+
+                    await widgetService.updateWidget({
+                        temperature: Math.round(weatherData.current.temperature),
+                        weatherCode: weatherCode,
+                        city: currentLocation.name,
+                        description: localizedDesc,
+                        updatedAt: Date.now(),
+                        isNight: themeData.is_dark,
+                        gradientStart: themeData.gradient[0] || '#4facfe',
+                        gradientEnd: themeData.gradient[1] || '#00f2fe',
+                        hourly: weatherData.hourly_forecast?.slice(0, 4).map(h => ({
+                            time: new Date(h.time).getHours() + ':00',
+                            temperature: Math.round(h.temperature),
+                            weatherCode: h.weather_code || 0
+                        })),
+                        daily: weatherData.daily_forecast?.slice(0, 3).map(d => ({
+                            date: new Date(d.date).toLocaleDateString(settings.language, { weekday: 'short' }),
+                            maxTemp: Math.round(d.temperature_max),
+                            minTemp: Math.round(d.temperature_min),
+                            weatherCode: d.weather_code || 0
+                        }))
+                    });
+                }
+            } catch (e) {
+                console.error('Failed to update background widget', e);
             }
         }
 

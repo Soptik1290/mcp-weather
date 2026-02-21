@@ -9,6 +9,7 @@ import {
     Linking,
     Dimensions,
     ActivityIndicator,
+    Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -65,12 +66,14 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const { tier } = useSubscriptionStore();
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const [isAdLoading, setIsAdLoading] = useState(false);
+    const [showSupportModal, setShowSupportModal] = useState(false);
     const lang = settings.language;
 
     const textColor = isDark ? '#fff' : '#1a1a1a';
     const subTextColor = isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.5)';
     const cardBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
     const activeBg = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
+    const modalBg = isDark ? '#1e293b' : '#ffffff';
 
     const toggleSection = (key: string) => {
         setExpandedSection(expandedSection === key ? null : key);
@@ -379,7 +382,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                             {t('astro_pack', lang)}
                                         </Text>
                                         <Text style={{ color: subTextColor, fontSize: 13 }}>
-                                            ISS, Meteors & Best Viewing
+                                            {t('astro_pack_desc', lang) || 'ISS, Meteors & Best Viewing'}
                                         </Text>
                                     </View>
                                 </View>
@@ -407,8 +410,8 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                         <FileText size={20} color="#10B981" />
                                     </View>
                                     <View style={styles.settingContent}>
-                                        <Text style={[styles.settingLabel, { color: textColor }]}>Export JSON</Text>
-                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>Full weather data</Text>
+                                        <Text style={[styles.settingLabel, { color: textColor }]}>{t('export_json', lang) || 'Export JSON'}</Text>
+                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>{t('export_json_desc', lang) || 'Full weather data'}</Text>
                                     </View>
                                     <ChevronRight size={16} color={subTextColor} />
                                 </TouchableOpacity>
@@ -433,8 +436,8 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                         <FileText size={20} color="#3B82F6" />
                                     </View>
                                     <View style={styles.settingContent}>
-                                        <Text style={[styles.settingLabel, { color: textColor }]}>Export CSV</Text>
-                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>Forecast table</Text>
+                                        <Text style={[styles.settingLabel, { color: textColor }]}>{t('export_csv', lang) || 'Export CSV'}</Text>
+                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>{t('export_csv_desc', lang) || 'Forecast table'}</Text>
                                     </View>
                                     <ChevronRight size={16} color={subTextColor} />
                                 </TouchableOpacity>
@@ -559,10 +562,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 setIsAdLoading(false);
 
                                 if (result.success && result.earnedReward) {
-                                    Alert.alert(
-                                        "Děkujeme! ❤️",
-                                        "Moc děkujeme za tvoji podporu, moc to pro vývoj aplikace znamená."
-                                    );
+                                    setShowSupportModal(true);
                                 } else if (!result.success) {
                                     Alert.alert(
                                         "Chyba",
@@ -589,6 +589,36 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             <ChevronRight size={16} color={subTextColor} />
                         </TouchableOpacity>
                     </View>
+
+                    <Modal
+                        visible={showSupportModal}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={() => setShowSupportModal(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={[styles.modalContent, { backgroundColor: modalBg, shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.3, shadowRadius: 20, elevation: 10 }]}>
+                                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(244,114,182,0.1)' }]}>
+                                    <Heart size={32} color="#F472B6" strokeWidth={2} />
+                                </View>
+
+                                <Text style={[styles.modalTitle, { color: textColor }]}>
+                                    Děkujeme! ❤️
+                                </Text>
+
+                                <Text style={[styles.modalDescription, { color: subTextColor }]}>
+                                    Moc děkujeme za tvoji podporu, moc to pro vývoj aplikace znamená.
+                                </Text>
+
+                                <TouchableOpacity
+                                    style={styles.modalButton}
+                                    onPress={() => setShowSupportModal(false)}
+                                >
+                                    <Text style={styles.modalButtonText}>OK</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
 
                     <View style={styles.footer}>
                         <Text style={[styles.footerText, { color: subTextColor }]}>
@@ -723,6 +753,54 @@ const styles = StyleSheet.create({
         height: 1,
         backgroundColor: 'rgba(128,128,128,0.2)',
         marginVertical: 8,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 24,
+    },
+    modalContent: {
+        width: '100%',
+        borderRadius: 24,
+        padding: 32,
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.05)',
+    },
+    modalIconContainer: {
+        width: 64,
+        height: 64,
+        borderRadius: 32,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 16,
+    },
+    modalTitle: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 12,
+        textAlign: 'center',
+    },
+    modalDescription: {
+        fontSize: 16,
+        textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: 24,
+    },
+    modalButton: {
+        backgroundColor: '#F472B6',
+        paddingVertical: 12,
+        paddingHorizontal: 32,
+        borderRadius: 16,
+        width: '100%',
+    },
+    modalButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
+        textAlign: 'center',
     },
 });
 
