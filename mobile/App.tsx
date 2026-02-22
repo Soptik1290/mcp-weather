@@ -36,9 +36,28 @@ const queryClient = new QueryClient({
   },
 });
 
+import { useSubscriptionStore } from './src/stores';
+import { NativeModules, Platform } from 'react-native';
 import { initBackgroundFetch } from './src/tasks/BackgroundJob';
 
 function App(): React.JSX.Element {
+  const tier = useSubscriptionStore((state) => state.tier);
+
+  useEffect(() => {
+    // Dynamic Widget restrictions
+    if (Platform.OS === 'android' && NativeModules.WidgetModule) {
+      const isPro = tier === 'pro' || tier === 'ultra';
+      const isUltra = tier === 'ultra';
+
+      try {
+        NativeModules.WidgetModule.setWidgetEnabled("DailyWidget", isPro);
+        NativeModules.WidgetModule.setWidgetEnabled("AstroWidget", isUltra);
+      } catch (e) {
+        console.warn("Failed to set widget visibility", e);
+      }
+    }
+  }, [tier]);
+
   useEffect(() => {
     // Initialize services
     const initServices = async () => {

@@ -31,8 +31,21 @@ class WeatherWidget : AppWidgetProvider() {
         Log.d("WeatherWidget", "onReceive called with action: ${intent.action}")
         super.onReceive(context, intent)
         
-        if (intent.action == "com.weatherly.ai.FORCE_UPDATE" || intent.action == "com.weatherly.ai.TOGGLE_VIEW") {
-            // ... (keep logic)
+        if (intent.action == "com.weatherly.ai.FORCE_UPDATE") {
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val thisAppWidget = ComponentName(context.packageName, WeatherWidget::class.java.name)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget)
+            onUpdate(context, appWidgetManager, appWidgetIds)
+        } else if (intent.action == "com.weatherly.ai.TOGGLE_VIEW") {
+            val prefs = context.getSharedPreferences("WeatherlyWidgetPrefs", Context.MODE_PRIVATE)
+            val currentMode = prefs.getString("view_mode", "current")
+            val newMode = if (currentMode == "current") "hourly" else "current"
+            prefs.edit().putString("view_mode", newMode).apply()
+            
+            val appWidgetManager = AppWidgetManager.getInstance(context)
+            val thisAppWidget = ComponentName(context.packageName, WeatherWidget::class.java.name)
+            val appWidgetIds = appWidgetManager.getAppWidgetIds(thisAppWidget)
+            onUpdate(context, appWidgetManager, appWidgetIds)
         }
     }
 

@@ -44,4 +44,20 @@ class WidgetModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
             android.util.Log.d("WidgetModule", "Sent update to ${cls.simpleName} (${ids.size} widgets)")
         }
     }
+
+    @ReactMethod
+    fun setWidgetEnabled(widgetName: String, enabled: Boolean) {
+        val context = reactApplicationContext
+        val pm = context.packageManager
+        val cls = when(widgetName) {
+            "AstroWidget" -> AstroWidget::class.java
+            "DailyWidget" -> DailyWidget::class.java
+            "AuroraWidget" -> AuroraWidget::class.java
+            "WeatherWidget" -> WeatherWidget::class.java
+            else -> return
+        }
+        val compName = ComponentName(context, cls)
+        val state = if (enabled) android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_ENABLED else android.content.pm.PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        pm.setComponentEnabledSetting(compName, state, android.content.pm.PackageManager.DONT_KILL_APP)
+    }
 }

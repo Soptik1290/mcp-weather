@@ -2,7 +2,7 @@ import type { WeatherData, Location, AmbientTheme, AstroPackData } from '../type
 
 // API Base URL - adjust for production
 const API_BASE_URL = __DEV__
-    ? 'http://10.0.2.2:8000'  // Android emulator localhost
+    ? 'https://weather.zephyron.tech'  // Android emulator localhost
     : 'https://api.weatherly.ai';
 
 // For iOS simulator, use: 'http://localhost:8000'

@@ -204,6 +204,7 @@ mcp-weather/
 - **NOAA Aviation Weather** - METARs, TAFs, aviation advisories
 - **NOAA Marine Weather** - Ocean/coastal forecasts
 - **NOAA Solar/Space** - Enhanced UV index and solar radiation data
+- **📅 Kalendář událostí (Calendar Export)** - Export extrémních výstrah nebo astro událostí přímo do vašeho lokálního kalendáře. (Plánovaná Pro funkce)
 
 ## License
 
