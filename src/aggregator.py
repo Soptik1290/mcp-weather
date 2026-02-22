@@ -125,9 +125,7 @@ class WeatherAggregator:
             "balanced": "ADOPT A BALANCED BIAS. Weigh sources equally and aim for the most statistically probable outcome."
         }.get(confidence_bias, "ADOPT A BALANCED BIAS.")
 
-        language_instruction = ""
-        if (language and language.lower() != "en"):
-             language_instruction = f"The 'reasoning' and 'conditions' fields MUST be in {language} language. All other JSON keys must remain in English."
+        language_instruction = f"The 'reasoning' and 'conditions' fields MUST be strictly in the '{language.upper()}' language code (e.g. 'EN' for English, 'CS' for Czech). All other JSON keys must remain in English."
 
         system_prompt = f"""You are a friendly personal weather assistant. Your goal is to provide a helpful, human-like weather summary based on data from multiple sources.
 
@@ -146,7 +144,7 @@ Your task:
 Formatting Instructions:
 - The "reasoning" field MUST be a natural language summary.
 - Do NOT list sources or statistical deviations in the summary unless critical.
-- If the language is Czech, use natural, casual Czech (e.g., "Vypadá to na déšť...", "Bude krásně...").
+- If the language is 'CS' (Czech), use natural, casual Czech (e.g., "Vypadá to na déšť...", "Bude krásně..."). If it is 'EN' (English), use natural English.
 - Keep it concise (max 2-3 sentences).
 
 Return a JSON object with:
