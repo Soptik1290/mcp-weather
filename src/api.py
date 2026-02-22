@@ -141,6 +141,13 @@ class WeatherRequest(BaseModel):
     confidence_bias: str = Field("balanced", pattern=r"^(cautious|balanced|optimistic)$")
 
 
+class ExplainRequest(BaseModel):
+    location_name: str = Field(..., min_length=2, max_length=100)
+    language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
+    tier: str = Field("free", pattern=r"^(free|pro|ultra)$")
+    confidence_bias: str = Field("balanced", pattern=r"^(cautious|balanced|optimistic)$")
+
+
 class CoordinatesRequest(BaseModel):
     latitude: float = Field(..., ge=-90, le=90)
     longitude: float = Field(..., ge=-180, le=180)
@@ -482,7 +489,7 @@ async def get_astro_pack(request: AstroRequest, response: Response):
 
 
 @app.post("/weather/explain", dependencies=[Depends(RateLimiter(requests_per_minute=20))])
-async def explain_weather(request: WeatherRequest, response: Response):
+async def explain_weather(request: ExplainRequest, response: Response):
     """Explain weather conditions using AI (Ultra)."""
     if request.tier != "ultra":
         raise HTTPException(status_code=403, detail="Explain Mode requires Ultra subscription")
