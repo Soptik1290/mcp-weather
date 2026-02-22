@@ -1,6 +1,11 @@
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    useWindowDimensions
+} from 'react-native';
 import { Rocket, Star } from 'lucide-react-native';
 import { t, Language } from '../utils';
 
@@ -13,13 +18,23 @@ interface AstroCardProps {
     language: Language;
 }
 
-export function AstroCard({ data, textColor, subTextColor, cardBg, isDark, language }: AstroCardProps) {
+export function AstroCard({ data, textColor, subTextColor, cardBg, isDark, language = 'cs' }: AstroCardProps) {
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
+
     if (!data) return null;
 
     const { iss, meteors } = data;
 
     return (
-        <View style={[styles.card, { backgroundColor: cardBg }]}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                padding: isTablet ? 24 : 16,
+                borderRadius: isTablet ? 24 : 20
+            }
+        ]}>
             <View style={styles.header}>
                 <Rocket size={20} color="#A78BFA" />
                 <Text style={[styles.title, { color: textColor }]}>{t('astro_pack', language)}</Text>
@@ -57,10 +72,7 @@ export function AstroCard({ data, textColor, subTextColor, cardBg, isDark, langu
 }
 
 const styles = StyleSheet.create({
-    card: {
-        borderRadius: 16,
-        padding: 16,
-        marginBottom: 20,
+    container: {
     },
     header: {
         flexDirection: 'row',

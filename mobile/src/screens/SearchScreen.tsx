@@ -8,6 +8,7 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     StatusBar,
+    Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -46,6 +47,9 @@ export function SearchScreen({
 
     const { setCurrentLocation } = useLocationStore();
     const { getCurrentPosition, loading: geoLoading } = useGeolocation();
+
+    const { width } = Dimensions.get('window');
+    const isTablet = width >= 768;
 
     const textColor = isDark ? '#fff' : '#1a1a1a';
     const subTextColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
@@ -152,111 +156,113 @@ export function SearchScreen({
                 end={{ x: 1, y: 1 }}
             >
                 <SafeAreaView style={styles.container}>
-                    {/* Header */}
-                    <View style={styles.header}>
-                        <Text style={[styles.title, { color: textColor }]}>
-                            {t('search_title', language)}
-                        </Text>
-                        <TouchableOpacity
-                            onPress={onClose}
-                            style={[styles.closeButton, { backgroundColor: cardBg }]}
-                        >
-                            <X size={22} color={textColor} strokeWidth={2} />
-                        </TouchableOpacity>
-                    </View>
-
-                    {/* Search Input */}
-                    <View style={[styles.searchContainer, { backgroundColor: inputBg }]}>
-                        <Search size={20} color={subTextColor} />
-                        <TextInput
-                            style={[styles.searchInput, { color: textColor }]}
-                            placeholder={t('search_city', language)}
-                            placeholderTextColor={subTextColor}
-                            value={query}
-                            onChangeText={handleSearch}
-                            autoFocus
-                            autoCapitalize="words"
-                            autoCorrect={false}
-                        />
-                        {query.length > 0 && (
-                            <TouchableOpacity onPress={() => handleSearch('')}>
-                                <X size={18} color={subTextColor} />
+                    <View style={[isTablet && { maxWidth: 800, alignSelf: 'center', width: '100%', flex: 1 }]}>
+                        {/* Header */}
+                        <View style={styles.header}>
+                            <Text style={[styles.title, { color: textColor }]}>
+                                {t('search_title', language)}
+                            </Text>
+                            <TouchableOpacity
+                                onPress={onClose}
+                                style={[styles.closeButton, { backgroundColor: cardBg }]}
+                            >
+                                <X size={22} color={textColor} strokeWidth={2} />
                             </TouchableOpacity>
-                        )}
-                    </View>
+                        </View>
 
-                    {/* Current Location Button */}
-                    <TouchableOpacity
-                        style={[styles.geoButton, { backgroundColor: cardBg }]}
-                        onPress={handleUseCurrentLocation}
-                        disabled={geoLoading}
-                        activeOpacity={0.7}
-                    >
-                        <View style={styles.geoIconContainer}>
-                            {geoLoading ? (
-                                <ActivityIndicator size="small" color={textColor} />
-                            ) : (
-                                <Navigation size={20} color={textColor} />
+                        {/* Search Input */}
+                        <View style={[styles.searchContainer, { backgroundColor: inputBg }]}>
+                            <Search size={20} color={subTextColor} />
+                            <TextInput
+                                style={[styles.searchInput, { color: textColor }]}
+                                placeholder={t('search_city', language)}
+                                placeholderTextColor={subTextColor}
+                                value={query}
+                                onChangeText={handleSearch}
+                                autoFocus
+                                autoCapitalize="words"
+                                autoCorrect={false}
+                            />
+                            {query.length > 0 && (
+                                <TouchableOpacity onPress={() => handleSearch('')}>
+                                    <X size={18} color={subTextColor} />
+                                </TouchableOpacity>
                             )}
                         </View>
-                        <View style={styles.geoContent}>
-                            <Text style={[styles.geoTitle, { color: textColor }]}>
-                                {geoLoading ? t('detecting_location', language) : t('use_my_location', language)}
-                            </Text>
-                            <Text style={[styles.geoSubtitle, { color: subTextColor }]}>
-                                {t('auto_detect', language)}
-                            </Text>
-                        </View>
-                        <ChevronRight size={20} color={subTextColor} />
-                    </TouchableOpacity>
 
-                    {/* Divider */}
-                    {results.length > 0 && (
-                        <View style={styles.divider}>
-                            <Text style={[styles.dividerText, { color: subTextColor }]}>
-                                {t('search_results', language)}
-                            </Text>
-                        </View>
-                    )}
+                        {/* Current Location Button */}
+                        <TouchableOpacity
+                            style={[styles.geoButton, { backgroundColor: cardBg }]}
+                            onPress={handleUseCurrentLocation}
+                            disabled={geoLoading}
+                            activeOpacity={0.7}
+                        >
+                            <View style={styles.geoIconContainer}>
+                                {geoLoading ? (
+                                    <ActivityIndicator size="small" color={textColor} />
+                                ) : (
+                                    <Navigation size={20} color={textColor} />
+                                )}
+                            </View>
+                            <View style={styles.geoContent}>
+                                <Text style={[styles.geoTitle, { color: textColor }]}>
+                                    {geoLoading ? t('detecting_location', language) : t('use_my_location', language)}
+                                </Text>
+                                <Text style={[styles.geoSubtitle, { color: subTextColor }]}>
+                                    {t('auto_detect', language)}
+                                </Text>
+                            </View>
+                            <ChevronRight size={20} color={subTextColor} />
+                        </TouchableOpacity>
 
-                    {/* Error */}
-                    {error && (
-                        <View style={[styles.errorContainer, { backgroundColor: 'rgba(255,100,100,0.15)' }]}>
-                            <Text style={styles.errorText}>{error}</Text>
-                        </View>
-                    )}
+                        {/* Divider */}
+                        {results.length > 0 && (
+                            <View style={styles.divider}>
+                                <Text style={[styles.dividerText, { color: subTextColor }]}>
+                                    {t('search_results', language)}
+                                </Text>
+                            </View>
+                        )}
 
-                    {/* Loading */}
-                    {loading && (
-                        <View style={styles.loadingContainer}>
-                            <ActivityIndicator size="large" color={textColor} />
-                            <Text style={[styles.loadingText, { color: subTextColor }]}>
-                                {t('searching', language)}
-                            </Text>
-                        </View>
-                    )}
+                        {/* Error */}
+                        {error && (
+                            <View style={[styles.errorContainer, { backgroundColor: 'rgba(255,100,100,0.15)' }]}>
+                                <Text style={styles.errorText}>{error}</Text>
+                            </View>
+                        )}
 
-                    {/* Results */}
-                    <FlatList
-                        data={results}
-                        keyExtractor={(item, index) => `${item.latitude}-${item.longitude}-${index}`}
-                        renderItem={renderResultItem}
-                        contentContainerStyle={styles.listContent}
-                        showsVerticalScrollIndicator={false}
-                        ListEmptyComponent={
-                            query.length >= 2 && !loading ? (
-                                <View style={styles.emptyContainer}>
-                                    <MapPin size={48} color={subTextColor} strokeWidth={1} />
-                                    <Text style={[styles.emptyText, { color: subTextColor }]}>
-                                        {t('no_results', language)} "{query}"
-                                    </Text>
-                                    <Text style={[styles.emptyHint, { color: subTextColor }]}>
-                                        {t('try_another_city', language)}
-                                    </Text>
-                                </View>
-                            ) : null
-                        }
-                    />
+                        {/* Loading */}
+                        {loading && (
+                            <View style={styles.loadingContainer}>
+                                <ActivityIndicator size="large" color={textColor} />
+                                <Text style={[styles.loadingText, { color: subTextColor }]}>
+                                    {t('searching', language)}
+                                </Text>
+                            </View>
+                        )}
+
+                        {/* Results */}
+                        <FlatList
+                            data={results}
+                            keyExtractor={(item, index) => `${item.latitude}-${item.longitude}-${index}`}
+                            renderItem={renderResultItem}
+                            contentContainerStyle={styles.listContent}
+                            showsVerticalScrollIndicator={false}
+                            ListEmptyComponent={
+                                query.length >= 2 && !loading ? (
+                                    <View style={styles.emptyContainer}>
+                                        <MapPin size={48} color={subTextColor} strokeWidth={1} />
+                                        <Text style={[styles.emptyText, { color: subTextColor }]}>
+                                            {t('no_results', language)} "{query}"
+                                        </Text>
+                                        <Text style={[styles.emptyHint, { color: subTextColor }]}>
+                                            {t('try_another_city', language)}
+                                        </Text>
+                                    </View>
+                                ) : null
+                            }
+                        />
+                    </View>
                 </SafeAreaView>
             </LinearGradient>
         </>

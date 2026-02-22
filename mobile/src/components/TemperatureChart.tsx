@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, useWindowDimensions } from 'react-native';
 import Svg, {
     Path,
     Defs,
@@ -63,13 +63,16 @@ export function TemperatureChart({
     const settings = useSettingsStore(state => state.settings);
     const language = settings.language;
     const [selectedIndex, setSelectedIndex] = React.useState<number | null>(null);
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
+
+    // We will measure the actual container width instead of assuming full screen width
+    const [chartWidth, setChartWidth] = React.useState(Dimensions.get('window').width - 72);
 
     if (!data || data.length < 2) return null;
 
     // Take 12 hours for the chart
     const chartData = data.slice(0, 12);
-    const screenWidth = Dimensions.get('window').width;
-    const chartWidth = screenWidth - 72;
     const chartHeight = height;
     const paddingTop = 30;
     const paddingBottom = 45;
@@ -114,7 +117,22 @@ export function TemperatureChart({
     const selectedPoint = selectedIndex !== null ? points[selectedIndex] : null;
 
     return (
-        <View style={[styles.container, { backgroundColor: cardBg }]}>
+        <View
+            style={[
+                styles.container,
+                {
+                    backgroundColor: cardBg,
+                    padding: isTablet ? 24 : 16,
+                    paddingBottom: isTablet ? 16 : 8,
+                    borderRadius: isTablet ? 24 : 20
+                }
+            ]}
+            onLayout={(e) => {
+                const layoutWidth = e.nativeEvent.layout.width;
+                // Subtract the padding we applied above (either 24*2 or 16*2)
+                setChartWidth(layoutWidth - (isTablet ? 48 : 32));
+            }}
+        >
             <Text style={[styles.title, { color: textColor }]}>
                 {selectedIndex !== null ? 'Detail' : t('temp_trend', language)}
             </Text>
@@ -215,10 +233,6 @@ export function TemperatureChart({
 
 const styles = StyleSheet.create({
     container: {
-        borderRadius: 20,
-        padding: 16,
-        paddingBottom: 8,
-        marginBottom: 16,
     },
     title: {
         fontSize: 17,

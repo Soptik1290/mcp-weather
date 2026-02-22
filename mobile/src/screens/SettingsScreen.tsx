@@ -64,6 +64,8 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { settings, updateSettings } = useSettingsStore();
     const { tier } = useSubscriptionStore();
+    const { width } = Dimensions.get('window');
+    const isTablet = width >= 768;
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const [isAdLoading, setIsAdLoading] = useState(false);
     const [showSupportModal, setShowSupportModal] = useState(false);
@@ -210,7 +212,14 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                 </View>
 
                 <ScrollView
-                    contentContainerStyle={styles.content}
+                    contentContainerStyle={[
+                        styles.content,
+                        isTablet && {
+                            maxWidth: 800,
+                            alignSelf: 'center',
+                            width: '100%'
+                        }
+                    ]}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Premium Settings */}

@@ -34,6 +34,7 @@ interface WeatherDetailsProps {
     formatTemperature?: (temp: number) => string;
     language?: 'en' | 'cs';
     timeFormat?: TimeFormat;
+    hideTitle?: boolean;
 }
 
 interface DetailItemProps {
@@ -87,6 +88,7 @@ export function WeatherDetails({
     formatTemperature = (t) => `${Math.round(t)}°`,
     language = 'cs',
     timeFormat = '24h',
+    hideTitle = false,
 }: WeatherDetailsProps) {
     const iconColor = subTextColor;
     const iconSize = 22;
@@ -117,7 +119,7 @@ export function WeatherDetails({
         },
         pressure !== undefined && pressure !== null && {
             icon: <Gauge size={iconSize} color={iconColor} strokeWidth={strokeWidth} />,
-            label: 'Tlak',
+            label: t('pressure', language),
             value: `${Math.round(pressure)} hPa`,
         },
         precipitation !== undefined && precipitation > 0 && {
@@ -141,9 +143,11 @@ export function WeatherDetails({
 
     return (
         <View style={[styles.container, { backgroundColor: cardBg }]}>
-            <Text style={[styles.title, { color: textColor }]}>
-                {t('current', language)}
-            </Text>
+            {!hideTitle && (
+                <Text style={[styles.title, { color: textColor }]}>
+                    {t('current', language)}
+                </Text>
+            )}
             <View style={styles.grid}>
                 {details.map((detail, index) => (
                     <DetailItem
@@ -164,7 +168,6 @@ const styles = StyleSheet.create({
     container: {
         borderRadius: 20,
         padding: 16,
-        marginBottom: 16,
     },
     title: {
         fontSize: 17,

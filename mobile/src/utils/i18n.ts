@@ -24,6 +24,7 @@ const translations: Record<Language, Record<string, string>> = {
         // Weather cards
         'wind': 'Wind',
         'humidity': 'Humidity',
+        'pressure': 'Pressure',
         'uv_index': 'UV Index',
         'rain': 'Rain',
         'snow': 'Snow',
@@ -273,6 +274,10 @@ const translations: Record<Language, Record<string, string>> = {
 
         // AstroPack & Ultra
 
+        'explain_btn': 'Why? 🤔',
+        'thinking': 'Thinking...',
+        'ai_meteorologist': 'AI Meteorologist',
+        'explain_error': 'Failed to generate explanation',
         'analyzing_models': 'Comparing 6 weather models',
         'analyzed_sources': 'Analyzed Sources',
         'temp_trend': 'Temperature Trend',
@@ -283,6 +288,7 @@ const translations: Record<Language, Record<string, string>> = {
         // Weather cards
         'wind': 'Vítr',
         'humidity': 'Vlhkost',
+        'pressure': 'Tlak',
         'uv_index': 'UV Index',
         'rain': 'Déšť',
         'snow': 'Sníh',

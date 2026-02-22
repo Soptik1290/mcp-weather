@@ -3,6 +3,7 @@ import {
     View,
     Text,
     StyleSheet,
+    useWindowDimensions,
 } from 'react-native';
 import {
     Sparkles,
@@ -88,9 +89,19 @@ export function AuroraCard({
     language = 'cs',
     timeFormat = '24h',
 }: AuroraCardProps) {
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
+
     if (!data || data.error) {
         return (
-            <View style={[styles.container, { backgroundColor: cardBg }]}>
+            <View style={[
+                styles.container,
+                {
+                    backgroundColor: cardBg,
+                    padding: isTablet ? 24 : 16,
+                    borderRadius: isTablet ? 24 : 20
+                }
+            ]}>
                 <View style={styles.header}>
                     <Sparkles size={16} color={subTextColor} strokeWidth={2} />
                     <Text style={[styles.headerText, { color: subTextColor }]}>
@@ -110,7 +121,14 @@ export function AuroraCard({
     const kpColor = getKpColor(currentKp);
 
     return (
-        <View style={[styles.container, { backgroundColor: cardBg }]}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                padding: isTablet ? 24 : 16,
+                borderRadius: isTablet ? 24 : 20
+            }
+        ]}>
             {/* Header */}
             <View style={styles.header}>
                 <Sparkles size={16} color={isStorm ? '#A855F7' : subTextColor} strokeWidth={2} />
@@ -216,9 +234,6 @@ export function AuroraCard({
 
 const styles = StyleSheet.create({
     container: {
-        borderRadius: 20,
-        padding: 16,
-        marginBottom: 16,
     },
     header: {
         flexDirection: 'row',

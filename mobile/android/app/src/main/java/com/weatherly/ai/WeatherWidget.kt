@@ -4,6 +4,7 @@ import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
 import android.content.Context
 import android.content.Intent
+import android.content.ComponentName
 import android.widget.RemoteViews
 import android.content.SharedPreferences
 import android.util.Log // Added Log

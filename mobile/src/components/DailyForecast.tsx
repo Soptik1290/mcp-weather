@@ -4,6 +4,7 @@ import {
     Text,
     StyleSheet,
     TouchableOpacity,
+    useWindowDimensions,
 } from 'react-native';
 import { ChevronRight, Droplets } from 'lucide-react-native';
 import { getWeatherIcon, getWeatherIconColor, t, getDayName } from '../utils';
@@ -52,6 +53,9 @@ export function DailyForecast({
     onDayPress,
     language = 'cs',
 }: DailyForecastProps) {
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
+
     if (!data || data.length === 0) return null;
 
     // Show 7 days
@@ -64,7 +68,14 @@ export function DailyForecast({
     const tempRange = globalMax - globalMin || 1;
 
     return (
-        <View style={[styles.container, { backgroundColor: cardBg }]}>
+        <View style={[
+            styles.container,
+            {
+                backgroundColor: cardBg,
+                padding: isTablet ? 24 : 16,
+                borderRadius: isTablet ? 24 : 20
+            }
+        ]}>
             <Text style={[styles.title, { color: textColor }]}>
                 {t('daily_forecast', language)}
             </Text>
@@ -148,9 +159,6 @@ export function DailyForecast({
 
 const styles = StyleSheet.create({
     container: {
-        borderRadius: 20,
-        padding: 16,
-        marginBottom: 16,
     },
     title: {
         fontSize: 17,
