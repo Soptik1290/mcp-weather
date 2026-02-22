@@ -639,119 +639,122 @@ export function HomeScreen() {
                                     </View>
                                 )}
 
-                                {/* Hourly Forecast */}
-                                {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
-                                    <HourlyForecast
-                                        data={weather.hourly_forecast}
-                                        textColor={textColor}
-                                        subTextColor={subTextColor}
-                                        cardBg={cardBg}
-                                        isDark={isDark}
-                                        formatTemperature={formatTemperature}
-                                        language={lang}
-                                        timeFormat={settings.time_format}
-                                    />
-                                )}
+                                <View style={{ gap: 16 }}>
 
-                                {/* Temperature Chart */}
-                                {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
-                                    <TemperatureChart
-                                        data={weather.hourly_forecast}
-                                        textColor={textColor}
-                                        cardBg={cardBg}
-                                    />
-                                )}
-
-                                {/* Weather Details */}
-                                {current && (
-                                    <WeatherDetails
-                                        humidity={current.humidity}
-                                        windSpeed={current.wind_speed}
-                                        visibility={current.visibility}
-                                        pressure={current.pressure}
-                                        feelsLike={current.feels_like}
-                                        sunrise={weather?.astronomy?.sunrise}
-                                        sunset={weather?.astronomy?.sunset}
-                                        textColor={textColor}
-                                        subTextColor={subTextColor}
-                                        cardBg={cardBg}
-                                        formatTemperature={formatTemperature}
-                                        language={lang}
-                                        timeFormat={settings.time_format}
-                                    />
-                                )}
-
-                                {/* AI Summary */}
-                                {weather?.ai_summary && (
-                                    <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
-                                        <Text style={styles.aiIcon}>🤖</Text>
-                                        <View style={styles.aiContent}>
-                                            <Text style={[styles.aiTitle, { color: textColor }]}>
-                                                {t('ai_summary', lang)}
-                                            </Text>
-                                            <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                {weather.ai_summary}
-                                            </Text>
-                                        </View>
-                                    </View>
-                                )}
-
-                                {/* Daily Forecast */}
-                                {weather?.daily_forecast && weather.daily_forecast.length > 0 && (
-                                    <DailyForecast
-                                        data={weather.daily_forecast}
-                                        textColor={textColor}
-                                        subTextColor={subTextColor}
-                                        cardBg={cardBg}
-                                        isDark={isDark}
-                                        onDayPress={(day) => setSelectedDay(day)}
-                                        language={lang}
-                                    />
-                                )}
-
-                                {/* Aurora Card */}
-                                {shouldShowAurora(
-                                    settings.aurora_display,
-                                    auroraData?.visibility_probability
-                                ) && (
-                                        <AuroraCard
-                                            data={auroraData}
+                                    {/* Hourly Forecast */}
+                                    {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
+                                        <HourlyForecast
+                                            data={weather.hourly_forecast}
                                             textColor={textColor}
                                             subTextColor={subTextColor}
                                             cardBg={cardBg}
                                             isDark={isDark}
-                                            locationName={weather?.location.name}
+                                            formatTemperature={formatTemperature}
                                             language={lang}
                                             timeFormat={settings.time_format}
                                         />
                                     )}
 
-                                {/* AstroPack Card (Ultra) */}
-                                {tier === 'ultra' && astroData && (
-                                    <AstroCard
-                                        data={astroData}
-                                        textColor={textColor}
-                                        subTextColor={subTextColor}
-                                        cardBg={cardBg}
-                                        isDark={isDark}
-                                        language={lang}
-                                    />
-                                )}
+                                    {/* Temperature Chart */}
+                                    {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
+                                        <TemperatureChart
+                                            data={weather.hourly_forecast}
+                                            textColor={textColor}
+                                            cardBg={cardBg}
+                                        />
+                                    )}
 
-                                {/* Confidence Score */}
-                                {weather?.confidence_score !== undefined && (
-                                    <View style={styles.confidenceContainer}>
-                                        <Text style={[styles.confidenceText, { color: subTextColor }]}>
-                                            {t('reliability', lang)}: {Math.round(weather.confidence_score * 100)}%
-                                            ({weather.sources_used?.length || 0} {t('sources', lang)})
-                                        </Text>
-                                    </View>
-                                )}
+                                    {/* Weather Details */}
+                                    {current && (
+                                        <WeatherDetails
+                                            humidity={current.humidity}
+                                            windSpeed={current.wind_speed}
+                                            visibility={current.visibility}
+                                            pressure={current.pressure}
+                                            feelsLike={current.feels_like}
+                                            sunrise={weather?.astronomy?.sunrise}
+                                            sunset={weather?.astronomy?.sunset}
+                                            textColor={textColor}
+                                            subTextColor={subTextColor}
+                                            cardBg={cardBg}
+                                            formatTemperature={formatTemperature}
+                                            language={lang}
+                                            timeFormat={settings.time_format}
+                                        />
+                                    )}
+
+                                    {/* AI Summary */}
+                                    {weather?.ai_summary && (
+                                        <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
+                                            <Text style={styles.aiIcon}>🤖</Text>
+                                            <View style={styles.aiContent}>
+                                                <Text style={[styles.aiTitle, { color: textColor }]}>
+                                                    {t('ai_summary', lang)}
+                                                </Text>
+                                                <Text style={[styles.aiSummary, { color: subTextColor }]}>
+                                                    {weather.ai_summary}
+                                                </Text>
+                                            </View>
+                                        </View>
+                                    )}
+
+                                    {/* Daily Forecast */}
+                                    {weather?.daily_forecast && weather.daily_forecast.length > 0 && (
+                                        <DailyForecast
+                                            data={weather.daily_forecast}
+                                            textColor={textColor}
+                                            subTextColor={subTextColor}
+                                            cardBg={cardBg}
+                                            isDark={isDark}
+                                            onDayPress={(day) => setSelectedDay(day)}
+                                            language={lang}
+                                        />
+                                    )}
+
+                                    {/* Aurora Card */}
+                                    {shouldShowAurora(
+                                        settings.aurora_display,
+                                        auroraData?.visibility_probability
+                                    ) && (
+                                            <AuroraCard
+                                                data={auroraData}
+                                                textColor={textColor}
+                                                subTextColor={subTextColor}
+                                                cardBg={cardBg}
+                                                isDark={isDark}
+                                                locationName={weather?.location.name}
+                                                language={lang}
+                                                timeFormat={settings.time_format}
+                                            />
+                                        )}
+
+                                    {/* AstroPack Card (Ultra) */}
+                                    {tier === 'ultra' && astroData && (
+                                        <AstroCard
+                                            data={astroData}
+                                            textColor={textColor}
+                                            subTextColor={subTextColor}
+                                            cardBg={cardBg}
+                                            isDark={isDark}
+                                            language={lang}
+                                        />
+                                    )}
+
+                                    {/* Confidence Score */}
+                                    {weather?.confidence_score !== undefined && (
+                                        <View style={styles.confidenceContainer}>
+                                            <Text style={[styles.confidenceText, { color: subTextColor }]}>
+                                                {t('reliability', lang)}: {Math.round(weather.confidence_score * 100)}%
+                                                ({weather.sources_used?.length || 0} {t('sources', lang)})
+                                            </Text>
+                                        </View>
+                                    )}
+                                </View>
                             </>
                         )}
                     </ScrollView>
                 </SafeAreaView>
-            </LinearGradient >
+            </LinearGradient>
 
             {/* Search Modal */}
             < Modal
