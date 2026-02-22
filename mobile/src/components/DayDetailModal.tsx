@@ -6,7 +6,7 @@ import {
     Modal,
     TouchableOpacity,
     ScrollView,
-    Dimensions,
+    useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -83,7 +83,8 @@ function TemperatureRangeChart({
     cardBg: string;
     title?: string;
 }) {
-    const width = Dimensions.get('window').width - 80;
+    const { width: windowWidth } = useWindowDimensions();
+    const width = Math.min(windowWidth, 800) - 80;
     const height = 80;
     const padding = 20;
 
@@ -192,6 +193,9 @@ export function DayDetailModal({
 }: DayDetailModalProps) {
     if (!day) return null;
 
+    const { width: windowWidth } = useWindowDimensions();
+    const isTablet = windowWidth >= 768;
+
     const textColor = isDark ? '#fff' : '#1a1a1a';
     const subTextColor = isDark ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
     const cardBg = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.06)';
@@ -276,7 +280,14 @@ export function DayDetailModal({
                     </View>
 
                     <ScrollView
-                        contentContainerStyle={styles.content}
+                        contentContainerStyle={[
+                            styles.content,
+                            isTablet && {
+                                maxWidth: 800,
+                                alignSelf: 'center',
+                                width: '100%'
+                            }
+                        ]}
                         showsVerticalScrollIndicator={false}
                     >
                         {/* Main Info */}
@@ -345,8 +356,6 @@ export function DayDetailModal({
         </Modal>
     );
 }
-
-const { width } = Dimensions.get('window');
 
 const styles = StyleSheet.create({
     gradient: {
@@ -426,7 +435,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     detailItem: {
-        width: (width - 72) / 2,
+        width: '48%',
         alignItems: 'center',
         paddingVertical: 16,
         marginBottom: 8,
