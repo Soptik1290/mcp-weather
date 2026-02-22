@@ -264,30 +264,28 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             t('language_desc', lang)
                         )}
 
-                        <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                        {tier !== 'free' && (
+                            <>
+                                <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
-                        <TouchableOpacity
-                            style={styles.settingRow}
-                            onPress={() => {
-                                if (tier === 'free') {
-                                    setPremiumModalVisible(true);
-                                } else {
-                                    (navigation as any).navigate('WidgetConfig');
-                                }
-                            }}
-                            activeOpacity={0.7}
-                        >
-                            <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
-                                <Palette size={20} color="#3B82F6" strokeWidth={2} />
-                            </View>
-                            <View style={styles.settingContent}>
-                                <Text style={[styles.settingLabel, { color: textColor }]}>{t('widget_settings', settings.language)}</Text>
-                                <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    {t('customize_appearance', settings.language)}
-                                </Text>
-                            </View>
-                            <ChevronRight size={16} color={subTextColor} />
-                        </TouchableOpacity>
+                                <TouchableOpacity
+                                    style={styles.settingRow}
+                                    onPress={() => (navigation as any).navigate('WidgetConfig')}
+                                    activeOpacity={0.7}
+                                >
+                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                                        <Palette size={20} color="#3B82F6" strokeWidth={2} />
+                                    </View>
+                                    <View style={styles.settingContent}>
+                                        <Text style={[styles.settingLabel, { color: textColor }]}>{t('widget_settings', settings.language)}</Text>
+                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>
+                                            {t('customize_appearance', settings.language)}
+                                        </Text>
+                                    </View>
+                                    <ChevronRight size={16} color={subTextColor} />
+                                </TouchableOpacity>
+                            </>
+                        )}
 
                         <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
