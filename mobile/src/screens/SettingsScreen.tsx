@@ -69,6 +69,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const [isAdLoading, setIsAdLoading] = useState(false);
     const [showSupportModal, setShowSupportModal] = useState(false);
+    const [premiumModalVisible, setPremiumModalVisible] = useState(false);
     const lang = settings.language;
 
     const textColor = isDark ? '#fff' : '#1a1a1a';
@@ -267,7 +268,13 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
 
                         <TouchableOpacity
                             style={styles.settingRow}
-                            onPress={() => (navigation as any).navigate('WidgetConfig')}
+                            onPress={() => {
+                                if (tier === 'free') {
+                                    setPremiumModalVisible(true);
+                                } else {
+                                    (navigation as any).navigate('WidgetConfig');
+                                }
+                            }}
                             activeOpacity={0.7}
                         >
                             <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
@@ -624,6 +631,49 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     onPress={() => setShowSupportModal(false)}
                                 >
                                     <Text style={styles.modalButtonText}>OK</Text>
+                                </TouchableOpacity>
+                            </View>
+                        </View>
+                    </Modal>
+
+                    {/* Premium Teaser Modal */}
+                    <Modal
+                        visible={premiumModalVisible}
+                        transparent={true}
+                        animationType="fade"
+                        onRequestClose={() => setPremiumModalVisible(false)}
+                    >
+                        <View style={styles.modalOverlay}>
+                            <View style={[styles.modalContent, { backgroundColor: modalBg }]}>
+                                <View style={[styles.modalIconContainer, { backgroundColor: 'rgba(245, 158, 11, 0.1)' }]}>
+                                    <Sparkles size={32} color="#F59E0B" fill="#F59E0B" />
+                                </View>
+                                <Text style={[styles.modalTitle, { color: textColor }]}>
+                                    {t('premium_feature', lang) || "Premium Funkce"}
+                                </Text>
+                                <Text style={[styles.modalDescription, { color: subTextColor }]}>
+                                    {t('premium_widget_desc', lang) || "Přizpůsobení barvy a průhlednosti widgetů je dostupné pouze pro Premium uživatele."}
+                                </Text>
+
+                                <TouchableOpacity
+                                    style={[styles.closeButton, { backgroundColor: '#F59E0B', width: '100%', marginBottom: 12 }]}
+                                    onPress={() => {
+                                        setPremiumModalVisible(false);
+                                        (navigation as any).navigate('Subscription');
+                                    }}
+                                >
+                                    <Text style={{ color: '#fff', fontSize: 16, fontWeight: 'bold', paddingVertical: 4, textAlign: 'center' }}>
+                                        {t('weatherly_premium', lang) || "Odemknout Premium"}
+                                    </Text>
+                                </TouchableOpacity>
+
+                                <TouchableOpacity
+                                    style={{ padding: 12 }}
+                                    onPress={() => setPremiumModalVisible(false)}
+                                >
+                                    <Text style={{ color: subTextColor, fontSize: 16 }}>
+                                        {t('close', lang) || "Zavřít"}
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
