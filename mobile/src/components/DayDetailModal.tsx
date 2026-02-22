@@ -132,7 +132,7 @@ function TemperatureRangeChart({
                     fill="#fff"
                     textAnchor="middle"
                 >
-                    {Math.round(min)}°
+                    {`${Math.round(min)}°`}
                 </SvgText>
 
                 {/* Max point */}
@@ -145,7 +145,7 @@ function TemperatureRangeChart({
                     fill="#fff"
                     textAnchor="middle"
                 >
-                    {Math.round(max)}°
+                    {`${Math.round(max)}°`}
                 </SvgText>
 
                 {/* Labels */}
@@ -307,13 +307,13 @@ export function DayDetailModal({
                             </Text>
                             <View style={styles.tempRange}>
                                 <Text style={[styles.tempMax, { color: textColor }]}>
-                                    {Math.round(day.temperature_max)}°
+                                    {`${Math.round(day.temperature_max)}°`}
                                 </Text>
                                 <Text style={[styles.tempSeparator, { color: subTextColor }]}>
                                     /
                                 </Text>
                                 <Text style={[styles.tempMin, { color: subTextColor }]}>
-                                    {Math.round(day.temperature_min)}°
+                                    {`${Math.round(day.temperature_min)}°`}
                                 </Text>
                             </View>
                         </View>
