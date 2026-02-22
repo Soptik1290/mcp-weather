@@ -175,19 +175,20 @@ const styles = StyleSheet.create({
         borderBottomColor: 'rgba(128,128,128,0.2)',
     },
     dayName: {
-        width: 50,
+        width: 70,
         fontSize: 15,
         fontWeight: '500',
     },
     iconContainer: {
-        width: 36,
+        width: 32,
         height: 28,
+        marginRight: 4,
         alignItems: 'center',
         justifyContent: 'center',
     },
     rainContainer: {
-        width: 48,
-        alignItems: 'center',
+        width: 40,
+        alignItems: 'flex-start',
     },
     rainRow: {
         flexDirection: 'row',
