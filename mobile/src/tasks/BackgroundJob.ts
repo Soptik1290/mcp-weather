@@ -1,6 +1,6 @@
 import BackgroundFetch from 'react-native-background-fetch';
 import { notificationService } from '../services/NotificationService';
-import { weatherService } from '../services/WeatherService';
+import { weatherService } from '../services/weatherService';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { widgetService } from '../services/widgetService';
