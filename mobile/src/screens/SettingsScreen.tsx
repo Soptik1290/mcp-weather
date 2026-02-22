@@ -7,7 +7,7 @@ import {
     TouchableOpacity,
     Switch,
     Linking,
-    Dimensions,
+    useWindowDimensions,
     ActivityIndicator,
     Modal,
 } from 'react-native';
@@ -64,7 +64,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
     const { settings, updateSettings } = useSettingsStore();
     const { tier } = useSubscriptionStore();
-    const { width } = Dimensions.get('window');
+    const { width } = useWindowDimensions();
     const isTablet = width >= 768;
     const [expandedSection, setExpandedSection] = useState<string | null>(null);
     const [isAdLoading, setIsAdLoading] = useState(false);

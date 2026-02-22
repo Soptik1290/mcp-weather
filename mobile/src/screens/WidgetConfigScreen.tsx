@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     SafeAreaView,
     ScrollView,
+    useWindowDimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ChevronLeft } from 'lucide-react-native';
@@ -27,6 +28,8 @@ export function WidgetConfigScreen() {
     const settings = useSettingsStore(state => state.settings);
     const { tier } = useSubscriptionStore();
     const isDark = settings.theme_mode === 'dark';
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
 
     // State for widget config
     const [opacity, setOpacity] = useState(255); // 0-255
@@ -62,7 +65,14 @@ export function WidgetConfigScreen() {
                         <View style={{ width: 28 }} />
                     </View>
 
-                    <ScrollView contentContainerStyle={styles.content}>
+                    <ScrollView contentContainerStyle={[
+                        styles.content,
+                        isTablet && {
+                            maxWidth: 800,
+                            alignSelf: 'center',
+                            width: '100%'
+                        }
+                    ]}>
                         {/* Preview (Mock) */}
                         <View style={styles.previewContainer}>
                             <Text style={styles.sectionTitle}>{t('widget_preview')}</Text>

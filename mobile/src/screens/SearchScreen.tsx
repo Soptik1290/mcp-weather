@@ -8,7 +8,7 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     StatusBar,
-    Dimensions,
+    useWindowDimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -48,7 +48,7 @@ export function SearchScreen({
     const { setCurrentLocation } = useLocationStore();
     const { getCurrentPosition, loading: geoLoading } = useGeolocation();
 
-    const { width } = Dimensions.get('window');
+    const { width } = useWindowDimensions();
     const isTablet = width >= 768;
 
     const textColor = isDark ? '#fff' : '#1a1a1a';
