@@ -115,7 +115,7 @@ export function DailyForecast({
                                 <View style={styles.rainRow}>
                                     <Droplets size={10} color="#4A90D9" strokeWidth={2} />
                                     <Text style={[styles.rainText, { color: textColor }]}>
-                                        {day.precipitation_probability}%
+                                        {`${day.precipitation_probability}%`}
                                     </Text>
                                 </View>
                             )}
@@ -124,7 +124,7 @@ export function DailyForecast({
                         {/* Temperature bar */}
                         <View style={styles.tempBarContainer}>
                             <Text style={[styles.tempMin, { color: subTextColor }]}>
-                                {Math.round(day.temperature_min)}°
+                                {`${Math.round(day.temperature_min)}°`}
                             </Text>
                             <View style={styles.barWrapper}>
                                 <View
@@ -138,7 +138,7 @@ export function DailyForecast({
                                 />
                             </View>
                             <Text style={[styles.tempMax, { color: textColor }]}>
-                                {Math.round(day.temperature_max)}°
+                                {`${Math.round(day.temperature_max)}°`}
                             </Text>
                         </View>
 
