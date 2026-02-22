@@ -6,7 +6,7 @@ import {
     TouchableOpacity,
     SafeAreaView,
     Animated,
-    Dimensions,
+    useWindowDimensions,
     ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -18,12 +18,12 @@ import { t } from '../utils';
 import { CustomAlert, AlertType } from '../components/CustomAlert';
 import { PurchasesPackage } from 'react-native-purchases';
 
-const { width } = Dimensions.get('window');
-
 export function SubscriptionScreen() {
     const navigation = useNavigation();
     const settings = useSettingsStore(state => state.settings);
     const { tier } = useSubscriptionStore();
+    const { width } = useWindowDimensions();
+    const isTablet = width >= 768;
 
     // State for RevenueCat packages
     const [packages, setPackages] = useState<PurchasesPackage[]>([]);
@@ -283,7 +283,14 @@ export function SubscriptionScreen() {
                     </View>
 
                     <Animated.ScrollView
-                        contentContainerStyle={styles.scrollContent}
+                        contentContainerStyle={[
+                            styles.scrollContent,
+                            isTablet && {
+                                maxWidth: 800,
+                                alignSelf: 'center',
+                                width: '100%'
+                            }
+                        ]}
                         style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
                     >
                         <Text style={styles.subtitle}>{t('unlock_subtitle', settings.language)}</Text>
