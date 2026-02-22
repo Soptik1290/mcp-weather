@@ -300,10 +300,10 @@ export function DayDetailModal({
                                 })()}
                             </View>
                             <Text style={[styles.date, { color: textColor }]}>
-                                {formatDate(day.date, language)}
+                                {`${formatDate(day.date, language)}`}
                             </Text>
                             <Text style={[styles.description, { color: subTextColor }]}>
-                                {t(getWeatherDescriptionKey(day.weather_code), language)}
+                                {`${t(getWeatherDescriptionKey(day.weather_code), language)}`}
                             </Text>
                             <View style={styles.tempRange}>
                                 <Text style={[styles.tempMax, { color: textColor }]}>
@@ -319,7 +319,7 @@ export function DayDetailModal({
                         </View>
 
                         <Text style={[styles.sectionTitle, { color: textColor, marginBottom: 16, marginTop: 8 }]}>
-                            {t('temperature_range', language)}
+                            {`${t('temperature_range', language)}`}
                         </Text>
                         <TemperatureRangeChart
                             min={day.temperature_min}
@@ -332,7 +332,7 @@ export function DayDetailModal({
                         {/* Details Grid - 2 columns */}
                         <View style={[styles.detailsCard, { backgroundColor: cardBg }]}>
                             <Text style={[styles.sectionTitle, { color: textColor }]}>
-                                {t('details', language)}
+                                {`${t('details', language)}`}
                             </Text>
                             <View style={styles.detailsGrid}>
                                 {details.map((detail, index) => (
@@ -341,10 +341,10 @@ export function DayDetailModal({
                                             <detail.Icon size={24} color={detail.color} strokeWidth={2} />
                                         </View>
                                         <Text style={[styles.detailValue, { color: textColor }]}>
-                                            {detail.value}
+                                            {`${detail.value}`}
                                         </Text>
                                         <Text style={[styles.detailLabel, { color: subTextColor }]}>
-                                            {detail.label}
+                                            {`${detail.label}`}
                                         </Text>
                                     </View>
                                 ))}
