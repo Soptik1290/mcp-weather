@@ -48,6 +48,7 @@ jobs:
           STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
         run: |
           cd android
+          chmod +x ./gradlew
           ./gradlew bundleRelease -PANDROID_KEY_ALIAS="$KEY_ALIAS" -PANDROID_KEY_PASSWORD="$KEY_PASSWORD" -PANDROID_STORE_PASSWORD="$STORE_PASSWORD" -PANDROID_KEYSTORE_FILE="upload-keystore.jks"
 
       - name: Upload Artifact
