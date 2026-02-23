@@ -12,7 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { ChevronLeft } from 'lucide-react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useSettingsStore, useSubscriptionStore } from '../stores';
-import { widgetService } from '../services/widgetService';
+import { widgetService } from '../services/WidgetService';
 import { t } from '../utils';
 
 // Simple color presets
