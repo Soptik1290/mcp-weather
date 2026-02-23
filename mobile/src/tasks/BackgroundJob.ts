@@ -3,7 +3,7 @@ import { notificationService } from '../services/NotificationService';
 import { weatherService } from '../services/weatherService';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { widgetService } from '../services/widgetService';
+import { widgetService } from '../services/WidgetService';
 import { t } from '../utils/i18n';
 
 const STORAGE_KEY_LAST_BRIEF = 'last_daily_brief_date';
