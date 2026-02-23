@@ -1,5 +1,5 @@
 export const REVENUECAT_CONFIG = {
-    API_KEY_ANDROID: 'test_dJhDWyiCZEjnhWHxzifjjnKTele', // TODO: Replace with production key eventually
+    API_KEY_ANDROID: 'goog_EOVaueqidCKLxmUxHOPXRHsCJXt', // Production Google Play key
     API_KEY_IOS: 'test_dJhDWyiCZEjnhWHxzifjjnKTele', // TODO: Replace with specific iOS key if different
 
     ENTITLEMENTS: {
