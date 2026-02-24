@@ -20,7 +20,7 @@ import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal, AnimatedCard, AnimatedPressable } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 import { useColorScheme, Alert, useWindowDimensions } from 'react-native';
 
@@ -658,72 +658,82 @@ export function HomeScreen() {
 
                                     {/* Hourly Forecast */}
                                     {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
-                                        <HourlyForecast
-                                            data={weather.hourly_forecast}
-                                            textColor={textColor}
-                                            subTextColor={subTextColor}
-                                            cardBg={cardBg}
-                                            isDark={isDark}
-                                            formatTemperature={formatTemperature}
-                                            language={lang}
-                                            timeFormat={settings.time_format}
-                                        />
+                                        <AnimatedCard index={0}>
+                                            <HourlyForecast
+                                                data={weather.hourly_forecast}
+                                                textColor={textColor}
+                                                subTextColor={subTextColor}
+                                                cardBg={cardBg}
+                                                isDark={isDark}
+                                                formatTemperature={formatTemperature}
+                                                language={lang}
+                                                timeFormat={settings.time_format}
+                                            />
+                                        </AnimatedCard>
                                     )}
 
                                     {/* Temperature Chart */}
                                     {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
-                                        <TemperatureChart
-                                            data={weather.hourly_forecast}
-                                            textColor={textColor}
-                                            cardBg={cardBg}
-                                        />
+                                        <AnimatedCard index={1}>
+                                            <TemperatureChart
+                                                data={weather.hourly_forecast}
+                                                textColor={textColor}
+                                                cardBg={cardBg}
+                                            />
+                                        </AnimatedCard>
                                     )}
 
                                     {/* Weather Details */}
                                     {current && (
-                                        <WeatherDetails
-                                            humidity={current.humidity}
-                                            windSpeed={current.wind_speed}
-                                            visibility={current.visibility}
-                                            pressure={current.pressure}
-                                            feelsLike={current.feels_like}
-                                            sunrise={weather?.astronomy?.sunrise}
-                                            sunset={weather?.astronomy?.sunset}
-                                            textColor={textColor}
-                                            subTextColor={subTextColor}
-                                            cardBg={cardBg}
-                                            formatTemperature={formatTemperature}
-                                            language={lang}
-                                            timeFormat={settings.time_format}
-                                        />
+                                        <AnimatedCard index={2}>
+                                            <WeatherDetails
+                                                humidity={current.humidity}
+                                                windSpeed={current.wind_speed}
+                                                visibility={current.visibility}
+                                                pressure={current.pressure}
+                                                feelsLike={current.feels_like}
+                                                sunrise={weather?.astronomy?.sunrise}
+                                                sunset={weather?.astronomy?.sunset}
+                                                textColor={textColor}
+                                                subTextColor={subTextColor}
+                                                cardBg={cardBg}
+                                                formatTemperature={formatTemperature}
+                                                language={lang}
+                                                timeFormat={settings.time_format}
+                                            />
+                                        </AnimatedCard>
                                     )}
 
                                     {/* AI Summary */}
                                     {weather?.ai_summary && (
-                                        <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
-                                            <Text style={styles.aiIcon}>🤖</Text>
-                                            <View style={styles.aiContent}>
-                                                <Text style={[styles.aiTitle, { color: textColor }]}>
-                                                    {t('ai_summary', lang)}
-                                                </Text>
-                                                <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                    {weather.ai_summary}
-                                                </Text>
+                                        <AnimatedCard index={3}>
+                                            <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
+                                                <Text style={styles.aiIcon}>🤖</Text>
+                                                <View style={styles.aiContent}>
+                                                    <Text style={[styles.aiTitle, { color: textColor }]}>
+                                                        {t('ai_summary', lang)}
+                                                    </Text>
+                                                    <Text style={[styles.aiSummary, { color: subTextColor }]}>
+                                                        {weather.ai_summary}
+                                                    </Text>
+                                                </View>
                                             </View>
-                                        </View>
+                                        </AnimatedCard>
                                     )}
 
                                     {/* Daily Forecast */}
                                     {weather?.daily_forecast && weather.daily_forecast.length > 0 && (
-                                        <DailyForecast
-                                            data={weather.daily_forecast}
-                                            textColor={textColor}
-                                            subTextColor={subTextColor}
-                                            cardBg={cardBg}
-                                            isDark={isDark}
-                                            onDayPress={(day) => setSelectedDay(day)}
-                                            language={lang}
-                                        />
+                                        <AnimatedCard index={4}>
+                                            <DailyForecast
+                                                data={weather.daily_forecast}
+                                                textColor={textColor}
+                                                subTextColor={subTextColor}
+                                                cardBg={cardBg}
+                                                isDark={isDark}
+                                                onDayPress={(day) => setSelectedDay(day)}
+                                                language={lang}
+                                            />
+                                        </AnimatedCard>
                                     )}
 
                                     {/* Aurora Card */}
@@ -731,28 +741,32 @@ export function HomeScreen() {
                                         settings.aurora_display,
                                         auroraData?.visibility_probability
                                     ) && (
-                                            <AuroraCard
-                                                data={auroraData}
-                                                textColor={textColor}
-                                                subTextColor={subTextColor}
-                                                cardBg={cardBg}
-                                                isDark={isDark}
-                                                locationName={weather?.location.name}
-                                                language={lang}
-                                                timeFormat={settings.time_format}
-                                            />
+                                            <AnimatedCard index={5}>
+                                                <AuroraCard
+                                                    data={auroraData}
+                                                    textColor={textColor}
+                                                    subTextColor={subTextColor}
+                                                    cardBg={cardBg}
+                                                    isDark={isDark}
+                                                    locationName={weather?.location.name}
+                                                    language={lang}
+                                                    timeFormat={settings.time_format}
+                                                />
+                                            </AnimatedCard>
                                         )}
 
                                     {/* AstroPack Card (Ultra) */}
                                     {tier === 'ultra' && astroData && (
-                                        <AstroCard
-                                            data={astroData}
-                                            textColor={textColor}
-                                            subTextColor={subTextColor}
-                                            cardBg={cardBg}
-                                            isDark={isDark}
-                                            language={lang}
-                                        />
+                                        <AnimatedCard index={6}>
+                                            <AstroCard
+                                                data={astroData}
+                                                textColor={textColor}
+                                                subTextColor={subTextColor}
+                                                cardBg={cardBg}
+                                                isDark={isDark}
+                                                language={lang}
+                                            />
+                                        </AnimatedCard>
                                     )}
 
                                     {/* Confidence Score */}
