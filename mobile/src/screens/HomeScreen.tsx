@@ -203,7 +203,7 @@ export function HomeScreen() {
     }
 
     const current = weather?.current;
-    const isDark = shouldUseDarkMode(settings.theme_mode, theme.name, systemColorScheme === 'dark');
+    const isDark = shouldUseDarkMode(settings.theme_mode, theme.name, systemColorScheme === 'dark', theme.is_dark);
     const textColor = isDark ? '#fff' : '#1a1a1a';
     const subTextColor = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)';
     const cardBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';

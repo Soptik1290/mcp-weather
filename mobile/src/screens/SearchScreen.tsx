@@ -76,7 +76,7 @@ export function SearchScreen({
             setError(null);
 
             try {
-                const searchResults = await weatherService.searchLocation(text, language);
+                const searchResults = await weatherService.searchLocation(text.trim(), language);
                 setResults(searchResults);
             } catch (err) {
                 console.error('Search error:', err);
@@ -101,24 +101,28 @@ export function SearchScreen({
 
     const handleUseCurrentLocation = async () => {
         const position = await getCurrentPosition();
-        if (position) {
-            try {
-                const weatherData = await weatherService.getWeatherByCoordinates(
-                    position.latitude,
-                    position.longitude,
-                    1
-                );
-                setCurrentLocation({
-                    name: weatherData.location.name,
-                    latitude: position.latitude,
-                    longitude: position.longitude,
-                    country: weatherData.location.country,
-                });
-                onClose();
-            } catch (err) {
-                console.error('Geolocation weather error:', err);
-                setError(t('error_load', language));
-            }
+        if (!position) {
+            // Geolocation failed (timeout, denied, etc.) — already handled inside the hook
+            // but make sure UI isn't stuck
+            setError(t('error_load', language));
+            return;
+        }
+        try {
+            const weatherData = await weatherService.getWeatherByCoordinates(
+                position.latitude,
+                position.longitude,
+                1
+            );
+            setCurrentLocation({
+                name: weatherData.location.name,
+                latitude: position.latitude,
+                longitude: position.longitude,
+                country: weatherData.location.country,
+            });
+            onClose();
+        } catch (err) {
+            console.error('Geolocation weather error:', err);
+            setError(t('error_load', language));
         }
     };
 

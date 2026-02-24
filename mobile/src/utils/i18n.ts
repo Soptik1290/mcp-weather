@@ -623,12 +623,14 @@ export function shouldShowAurora(
 }
 
 /**
- * Determine dark mode based on theme_mode setting, theme name, and system preference.
+ * Determine dark mode based on theme_mode setting, theme name, system preference,
+ * and the backend-calculated is_dark flag from gradient luminance analysis.
  */
 export function shouldUseDarkMode(
     themeMode: 'auto' | 'system' | 'dark' | 'light',
     themeName: string,
     systemPrefersDark: boolean = false,
+    themeIsDark?: boolean,
 ): boolean {
     const darkThemes = ['storm', 'clear_night', 'cloudy_night', 'sunset'];
     switch (themeMode) {
@@ -640,6 +642,10 @@ export function shouldUseDarkMode(
             return systemPrefersDark;
         case 'auto':
         default:
+            // Prefer the backend's luminance-based flag if available
+            if (themeIsDark !== undefined) {
+                return themeIsDark;
+            }
             return darkThemes.includes(themeName);
     }
 }
