@@ -7,7 +7,7 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import { ChevronRight, Droplets } from 'lucide-react-native';
-import { getWeatherIcon, getWeatherIconColor, t, getDayName } from '../utils';
+import { getWeatherIcon, getWeatherIconColor, t, getDayName, triggerHaptic } from '../utils';
 
 interface DailyData {
     date: string;
@@ -96,7 +96,10 @@ export function DailyForecast({
                             styles.dayRow,
                             index < dailyData.length - 1 && styles.dayRowBorder
                         ]}
-                        onPress={onDayPress ? () => onDayPress(day) : undefined}
+                        onPress={onDayPress ? () => {
+                            triggerHaptic('selection');
+                            onDayPress(day);
+                        } : undefined}
                         activeOpacity={0.7}
                     >
                         {/* Day name */}

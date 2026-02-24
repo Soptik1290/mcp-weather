@@ -241,13 +241,19 @@ export function HomeScreen() {
                                 <View style={styles.headerButtons}>
                                     <TouchableOpacity
                                         style={[styles.searchButton, { backgroundColor: cardBg }]}
-                                        onPress={() => setShowSettings(true)}
+                                        onPress={() => {
+                                            triggerHaptic('impactLight');
+                                            setShowSettings(true);
+                                        }}
                                     >
                                         <Settings size={22} color={textColor} />
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[styles.searchButton, { backgroundColor: cardBg }]}
-                                        onPress={() => setShowSearch(true)}
+                                        onPress={() => {
+                                            triggerHaptic('impactLight');
+                                            setShowSearch(true);
+                                        }}
                                     >
                                         <Search size={22} color={textColor} />
                                     </TouchableOpacity>
@@ -268,13 +274,19 @@ export function HomeScreen() {
                                 <View style={styles.headerButtons}>
                                     <TouchableOpacity
                                         style={[styles.searchButton, { backgroundColor: cardBg }]}
-                                        onPress={() => setShowSettings(true)}
+                                        onPress={() => {
+                                            triggerHaptic('impactLight');
+                                            setShowSettings(true);
+                                        }}
                                     >
                                         <Settings size={22} color={textColor} />
                                     </TouchableOpacity>
                                     <TouchableOpacity
                                         style={[styles.searchButton, { backgroundColor: cardBg }]}
-                                        onPress={() => setShowSearch(true)}
+                                        onPress={() => {
+                                            triggerHaptic('impactLight');
+                                            setShowSearch(true);
+                                        }}
                                     >
                                         <Search size={22} color={textColor} />
                                     </TouchableOpacity>
@@ -946,7 +958,6 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         borderRadius: 16,
         padding: 16,
-        marginBottom: 20,
         alignItems: 'flex-start',
     },
     aiIcon: {

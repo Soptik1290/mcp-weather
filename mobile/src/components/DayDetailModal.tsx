@@ -22,7 +22,7 @@ import {
     Sunrise,
     Sunset,
 } from 'lucide-react-native';
-import { t, formatTime as formatTimeUtil, getDayName, getWeatherIcon, getWeatherIconColor } from '../utils';
+import { t, formatTime as formatTimeUtil, getDayName, getWeatherIcon, getWeatherIconColor, triggerHaptic } from '../utils';
 import type { TimeFormat } from '../types';
 
 interface DayDetailModalProps {
@@ -272,7 +272,10 @@ export function DayDetailModal({
                             {t('detail_modal', language)}
                         </Text>
                         <TouchableOpacity
-                            onPress={onClose}
+                            onPress={() => {
+                                triggerHaptic('impactLight');
+                                onClose();
+                            }}
                             style={[styles.closeButton, { backgroundColor: cardBg }]}
                         >
                             <X size={22} color={textColor} strokeWidth={2} />
