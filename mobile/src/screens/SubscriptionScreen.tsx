@@ -14,7 +14,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { Check, Star, Zap, Shield, ChevronLeft } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, SubscriptionTier } from '../stores';
 import { subscriptionService } from '../services/subscriptionService';
-import { t } from '../utils';
+import { t, triggerHaptic } from '../utils';
 import { CustomAlert, AlertType } from '../components/CustomAlert';
 import { PurchasesPackage } from 'react-native-purchases';
 
@@ -93,6 +93,7 @@ export function SubscriptionScreen() {
     };
 
     const handlePurchase = async (selectedTier: SubscriptionTier) => {
+        triggerHaptic('impactMedium');
         if (selectedTier === tier) return;
 
         if (selectedTier === SubscriptionTier.Free) {

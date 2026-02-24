@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, G, Polygon, Defs, ClipPath, Path, Rect, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
 import { Search, Settings } from 'lucide-react-native';
-import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode, getLocalizedCity, getLocalizedCountry } from '../utils';
+import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode, getLocalizedCity, getLocalizedCountry, triggerHaptic } from '../utils';
 
 import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
@@ -227,7 +227,10 @@ export function HomeScreen() {
                         refreshControl={
                             <RefreshControl
                                 refreshing={refreshing}
-                                onRefresh={() => fetchWeather(true)}
+                                onRefresh={() => {
+                                    triggerHaptic('impactLight');
+                                    fetchWeather(true);
+                                }}
                                 tintColor={textColor}
                             />
                         }

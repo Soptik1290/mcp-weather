@@ -463,8 +463,8 @@ async def get_astro_pack(request: AstroRequest, response: Response):
     try:
         from src.services.astro import astro_service
         
-        # Short cache for ISS (moves fast)
-        cache_key = "astro:pack" 
+        # Short cache for ISS (moves fast), include lat/lon for next_pass localization
+        cache_key = f"astro:pack:{round(request.latitude, 1)}:{round(request.longitude, 1)}" 
         cached = await get_cached_weather(cache_key)
         
         # Only use cache if it's very fresh (< 10s) because ISS moves fast. 

@@ -32,7 +32,7 @@ import {
     Rocket
 } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
-import { t } from '../utils';
+import { t, triggerHaptic } from '../utils';
 import { notificationService } from '../services/NotificationService';
 import { weatherService, dataExportService, admobService } from '../services';
 import { Alert } from 'react-native';
@@ -79,6 +79,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const modalBg = isDark ? '#1e293b' : '#ffffff';
 
     const toggleSection = (key: string) => {
+        triggerHaptic('impactLight');
         setExpandedSection(expandedSection === key ? null : key);
     };
 
@@ -127,7 +128,10 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             <TouchableOpacity
                                 key={String(option.value)}
                                 style={styles.optionRow}
-                                onPress={() => onSelect(option.value)}
+                                onPress={() => {
+                                    triggerHaptic('impactLight');
+                                    onSelect(option.value);
+                                }}
                                 activeOpacity={0.7}
                             >
                                 <Text style={[
@@ -157,6 +161,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
         description?: string
     ) => {
         const handleToggle = async (newValue: boolean) => {
+            triggerHaptic('impactLight');
             if (newValue) {
                 const granted = await notificationService.requestPermission();
                 if (granted) {

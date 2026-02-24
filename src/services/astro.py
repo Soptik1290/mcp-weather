@@ -15,11 +15,35 @@ class AstroService:
     
     def __init__(self):
         self.iss_url = "http://api.open-notify.org/iss-now.json"
+        self._tle = None
+        self._tle_time = 0
         
-    async def get_iss_position(self) -> Dict[str, Any]:
+    async def _get_iss_tle(self):
+        now = datetime.now().timestamp()
+        # Cache TLE for 24h
+        if self._tle and (now - self._tle_time) < 86400:
+            return self._tle
+            
+        try:
+            async with httpx.AsyncClient() as client:
+                res = await client.get("https://celestrak.org/NORAD/elements/stations.txt", timeout=5.0)
+                res.raise_for_status()
+                lines = res.text.strip().split('\n')
+                for i in range(len(lines)):
+                    if "ISS (ZARYA)" in lines[i]:
+                        self._tle = (lines[i].strip(), lines[i+1].strip(), lines[i+2].strip())
+                        self._tle_time = now
+                        return self._tle
+        except Exception as e:
+            print("TLE fetch error:", e)
+        return None
+        
+    async def get_iss_position(self, lat: float = None, lon: float = None) -> Dict[str, Any]:
         """
         Get current ISS position.
         """
+        result = {"latitude": 0.0, "longitude": 0.0, "timestamp": 0, "next_pass": None}
+        
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(self.iss_url, timeout=5.0)
@@ -28,15 +52,31 @@ class AstroService:
                 
                 if data.get("message") == "success":
                     pos = data.get("iss_position", {})
-                    return {
-                        "latitude": float(pos.get("latitude", 0)),
-                        "longitude": float(pos.get("longitude", 0)),
-                        "timestamp": data.get("timestamp")
-                    }
-                return {"latitude": 0.0, "longitude": 0.0, "timestamp": 0}
+                    result["latitude"] = float(pos.get("latitude", 0))
+                    result["longitude"] = float(pos.get("longitude", 0))
+                    result["timestamp"] = data.get("timestamp")
         except Exception as e:
             print(f"ISS fetch error: {e}")
-            return {"latitude": 0.0, "longitude": 0.0, "timestamp": 0}
+            
+        if ephem and lat is not None and lon is not None:
+            tle = await self._get_iss_tle()
+            if tle:
+                try:
+                    observer = ephem.Observer()
+                    observer.lat = str(lat)
+                    observer.lon = str(lon)
+                    observer.elevation = 0
+                    observer.date = datetime.utcnow()
+                    
+                    iss = ephem.readtle(tle[0], tle[1], tle[2])
+                    info = observer.next_pass(iss)
+                    
+                    if info and info[0]:
+                        result["next_pass"] = ephem.localtime(info[0]).isoformat()
+                except Exception as e:
+                    print(f"ISS next pass calc error: {e}")
+                    
+        return result
 
     def get_meteor_showers(self, today: date = None) -> List[Dict[str, Any]]:
         """
@@ -82,7 +122,7 @@ class AstroService:
         """
         Get comprehensive AstroPack data (ISS + Meteors).
         """
-        iss_data = await self.get_iss_position()
+        iss_data = await self.get_iss_position(lat, lon)
         
         if not ephem:
              return {

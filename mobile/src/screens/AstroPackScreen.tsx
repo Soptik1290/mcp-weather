@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
 import { ChevronLeft, Rocket, Star, Eye } from 'lucide-react-native';
-import { useSettingsStore, useSubscriptionStore } from '../stores';
+import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { weatherService } from '../services';
 import { t } from '../utils';
 
@@ -23,7 +23,11 @@ const IssTracker = ({ data }: { data: any }) => {
                 <View>
                     <Text style={styles.dataText}>Lat: {data.latitude?.toFixed(4)}</Text>
                     <Text style={styles.dataText}>Lon: {data.longitude?.toFixed(4)}</Text>
-                    <Text style={styles.subText}>{t('next_pass', settings.language)}: {t('calculating', settings.language)}</Text>
+                    {data.next_pass ? (
+                        <Text style={styles.subText}>{t('next_pass', settings.language)}: {new Date(data.next_pass).toLocaleString(settings.language)}</Text>
+                    ) : (
+                        <Text style={styles.subText}>{t('next_pass', settings.language)}: {t('calculating', settings.language)}</Text>
+                    )}
                 </View>
             ) : (
                 <ActivityIndicator color="#FFD700" />
@@ -59,8 +63,12 @@ export const AstroPackScreen = () => {
     const navigation = useNavigation();
     const settings = useSettingsStore(state => state.settings);
     const { tier } = useSubscriptionStore();
+    const { currentLocation } = useLocationStore();
     const [loading, setLoading] = useState(true);
     const [astroData, setAstroData] = useState<any>(null);
+
+    const lat = currentLocation?.latitude || 50.0755;
+    const lon = currentLocation?.longitude || 14.4378;
 
     useEffect(() => {
         loadData();
@@ -69,10 +77,6 @@ export const AstroPackScreen = () => {
     const loadData = async () => {
         try {
             setLoading(true);
-            // Default to Prague if no location, or last known
-            const lat = 50.0755;
-            const lon = 14.4378;
-
             const data = await weatherService.getAstroPack(lat, lon, settings.language);
             setAstroData(data);
         } catch (error) {
@@ -88,8 +92,6 @@ export const AstroPackScreen = () => {
             // Only update if we already have data (silent update)
             if (astroData) {
                 try {
-                    const lat = 50.0755;
-                    const lon = 14.4378;
                     const newData = await weatherService.getAstroPack(lat, lon, settings.language);
                     setAstroData((prev: any) => ({
                         ...prev,
@@ -99,7 +101,7 @@ export const AstroPackScreen = () => {
             }
         }, 10000);
         return () => clearInterval(interval);
-    }, [astroData]);
+    }, [astroData, lat, lon]);
 
     if (tier !== 'ultra') {
         return (

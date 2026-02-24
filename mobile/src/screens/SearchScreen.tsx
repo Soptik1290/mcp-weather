@@ -17,7 +17,7 @@ import { Search, MapPin, X, Navigation, ChevronRight } from 'lucide-react-native
 import { weatherService } from '../services';
 import { useLocationStore } from '../stores';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { t, getLocalizedCity, getLocalizedCountry } from '../utils';
+import { t, triggerHaptic, type Language, getLocalizedCity, getLocalizedCountry } from '../utils';
 
 interface SearchResult {
     name: string;
@@ -89,6 +89,7 @@ export function SearchScreen({
     }, [language]);
 
     const handleSelectLocation = (location: SearchResult) => {
+        triggerHaptic('selection');
         setCurrentLocation({
             name: location.name,
             latitude: location.latitude,
@@ -184,7 +185,10 @@ export function SearchScreen({
                                 autoCorrect={false}
                             />
                             {query.length > 0 && (
-                                <TouchableOpacity onPress={() => handleSearch('')}>
+                                <TouchableOpacity onPress={() => {
+                                    triggerHaptic('impactLight');
+                                    handleSearch('');
+                                }}>
                                     <X size={18} color={subTextColor} />
                                 </TouchableOpacity>
                             )}
@@ -193,7 +197,10 @@ export function SearchScreen({
                         {/* Current Location Button */}
                         <TouchableOpacity
                             style={[styles.geoButton, { backgroundColor: cardBg }]}
-                            onPress={handleUseCurrentLocation}
+                            onPress={() => {
+                                triggerHaptic('selection');
+                                handleUseCurrentLocation();
+                            }}
                             disabled={geoLoading}
                             activeOpacity={0.7}
                         >
