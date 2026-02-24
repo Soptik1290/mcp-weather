@@ -623,16 +623,60 @@ export function shouldShowAurora(
 }
 
 /**
- * Determine dark mode based on theme_mode setting, theme name, system preference,
- * and the backend-calculated is_dark flag from gradient luminance analysis.
+ * Parse a hex color string to RGB components (0-255).
+ */
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+    const cleaned = hex.replace('#', '');
+    if (cleaned.length !== 6) return null;
+    return {
+        r: parseInt(cleaned.substring(0, 2), 16),
+        g: parseInt(cleaned.substring(2, 4), 16),
+        b: parseInt(cleaned.substring(4, 6), 16),
+    };
+}
+
+/**
+ * Calculate relative luminance of a color using the BT.709 standard.
+ * Returns a value between 0 (black) and 1 (white).
+ */
+function relativeLuminance(r: number, g: number, b: number): number {
+    const sR = r / 255;
+    const sG = g / 255;
+    const sB = b / 255;
+    return 0.2126 * sR + 0.7152 * sG + 0.0722 * sB;
+}
+
+/**
+ * Determine if a gradient is "dark" based on the average luminance of its colors.
+ * Returns true if the gradient is dark (needs white text), false if light (needs dark text).
+ */
+function isGradientDark(gradient: string[]): boolean {
+    if (!gradient || gradient.length === 0) return true;
+
+    let totalLuminance = 0;
+    let count = 0;
+    for (const hex of gradient) {
+        const rgb = hexToRgb(hex);
+        if (rgb) {
+            totalLuminance += relativeLuminance(rgb.r, rgb.g, rgb.b);
+            count++;
+        }
+    }
+    // Threshold: below 0.45 average luminance = dark gradient → use white text
+    return count > 0 ? (totalLuminance / count) < 0.45 : true;
+}
+
+/**
+ * Determine dark mode based on theme_mode setting and gradient luminance.
+ * In 'auto' mode, directly analyzes the gradient colors to decide text color.
  */
 export function shouldUseDarkMode(
     themeMode: 'auto' | 'system' | 'dark' | 'light',
     themeName: string,
     systemPrefersDark: boolean = false,
     themeIsDark?: boolean,
+    gradient?: string[],
 ): boolean {
-    const darkThemes = ['storm', 'clear_night', 'cloudy_night', 'sunset'];
     switch (themeMode) {
         case 'dark':
             return true;
@@ -642,10 +686,17 @@ export function shouldUseDarkMode(
             return systemPrefersDark;
         case 'auto':
         default:
-            // Prefer the backend's luminance-based flag if available
+            // Primary: calculate from actual gradient colors
+            if (gradient && gradient.length > 0) {
+                return isGradientDark(gradient);
+            }
+            // Fallback: use backend is_dark flag if available
             if (themeIsDark !== undefined) {
                 return themeIsDark;
             }
+            // Last resort: hardcoded dark theme names
+            const darkThemes = ['storm', 'clear_night', 'cloudy_night', 'sunset'];
             return darkThemes.includes(themeName);
     }
 }
+

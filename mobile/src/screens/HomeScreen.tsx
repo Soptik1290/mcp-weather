@@ -65,23 +65,21 @@ export function HomeScreen() {
         try {
             const locationName = currentLocation?.name || 'Prague';
 
-            const [weatherData, themeData, aurora] = await Promise.all([
+            const [weatherData, themeData, aurora, astro] = await Promise.all([
                 weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias),
                 weatherService.getAmbientTheme(locationName),
                 weatherService.getAuroraForecast(
                     currentLocation?.latitude || 50.0,
                     settings.language
                 ).catch(() => null),
+                // Fetch AstroPack in parallel (Ultra only, otherwise null)
+                (tier === 'ultra' && currentLocation)
+                    ? weatherService.getAstroPack(currentLocation.latitude, currentLocation.longitude, settings.language)
+                        .catch(e => { console.log('Astro fetch failed', e); return null; })
+                    : Promise.resolve(null),
             ]);
 
-            // Fetch AstroPack if Ultra
-            if (tier === 'ultra' && currentLocation) {
-                weatherService.getAstroPack(currentLocation.latitude, currentLocation.longitude, settings.language)
-                    .then(res => setAstroData(res))
-                    .catch(e => console.log('Astro fetch failed', e));
-            } else {
-                setAstroData(null);
-            }
+            setAstroData(astro);
 
             setWeather({
                 location: weatherData.location,
@@ -203,7 +201,7 @@ export function HomeScreen() {
     }
 
     const current = weather?.current;
-    const isDark = shouldUseDarkMode(settings.theme_mode, theme.name, systemColorScheme === 'dark', theme.is_dark);
+    const isDark = shouldUseDarkMode(settings.theme_mode, theme.name, systemColorScheme === 'dark', theme.is_dark, theme.gradient);
     const textColor = isDark ? '#fff' : '#1a1a1a';
     const subTextColor = isDark ? 'rgba(255,255,255,0.8)' : 'rgba(0,0,0,0.6)';
     const cardBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
