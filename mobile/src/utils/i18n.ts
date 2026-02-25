@@ -656,14 +656,17 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
 }
 
 /**
- * Calculate relative luminance of a color using the BT.709 standard.
+ * Calculate relative luminance of a color using WCAG 2.0 formula.
+ * Includes proper sRGB gamma linearization.
  * Returns a value between 0 (black) and 1 (white).
  */
 function relativeLuminance(r: number, g: number, b: number): number {
-    const sR = r / 255;
-    const sG = g / 255;
-    const sB = b / 255;
-    return 0.2126 * sR + 0.7152 * sG + 0.0722 * sB;
+    // sRGB linearization (gamma correction)
+    const linearize = (c: number) => {
+        const s = c / 255;
+        return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    return 0.2126 * linearize(r) + 0.7152 * linearize(g) + 0.0722 * linearize(b);
 }
 
 /**
@@ -682,8 +685,10 @@ function isGradientDark(gradient: string[]): boolean {
             count++;
         }
     }
-    // Threshold: below 0.45 average luminance = dark gradient → use white text
-    return count > 0 ? (totalLuminance / count) < 0.45 : true;
+    // Threshold: below 0.35 average luminance = dark gradient → use white text
+    // This is lower than the typical 0.5 to account for weather gradients which
+    // tend to be medium-bright pastels that need dark text for readability.
+    return count > 0 ? (totalLuminance / count) < 0.35 : true;
 }
 
 /**
