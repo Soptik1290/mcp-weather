@@ -19,7 +19,7 @@ import { MapPin, Search, ChevronRight, Navigation } from 'lucide-react-native';
 import { useSettingsStore, useLocationStore } from '../stores';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { weatherService } from '../services';
-import { t, triggerHaptic, type Language } from '../utils';
+import { t, triggerHaptic, getLocalizedCity, getLocalizedCountry, type Language } from '../utils';
 
 interface SearchResult {
     name: string;
@@ -33,7 +33,7 @@ interface OnboardingScreenProps {
     navigation: any;
 }
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
 export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     const { settings, updateSettings } = useSettingsStore();
@@ -69,14 +69,13 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     const continueBtnScale = useRef(new Animated.Value(1)).current;
     const gpsBtnScale = useRef(new Animated.Value(1)).current;
 
-    // Floating icon bounce
+    // Floating icon
     const iconFloat = useRef(new Animated.Value(0)).current;
 
     const lang = selectedLang;
 
     // === Entrance animation ===
     useEffect(() => {
-        // Staggered fade-in
         const stagger = (anims: Animated.Value[], delay: number = 120) => {
             anims.forEach((anim, i) => {
                 Animated.timing(anim, {
@@ -125,7 +124,6 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     const animateToStep = (nextStep: number) => {
         triggerHaptic('impactMedium');
 
-        // Slide to step 2
         Animated.spring(slideAnim, {
             toValue: -nextStep * SCREEN_WIDTH,
             useNativeDriver: true,
@@ -134,7 +132,6 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
         }).start();
         setStep(nextStep);
 
-        // Stagger step 2 elements
         [step2Icon, step2Title, step2Gps, step2Search].forEach((anim, i) => {
             Animated.timing(anim, {
                 toValue: 1,
@@ -166,22 +163,33 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
         setTimeout(() => animateToStep(1), 100);
     };
 
-    const handleSearch = useCallback(async (query: string) => {
-        setSearchQuery(query);
-        if (query.length < 2) {
+    // Debounced search (matches SearchScreen pattern)
+    const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const handleSearch = useCallback((text: string) => {
+        setSearchQuery(text);
+
+        if (searchTimeout.current) {
+            clearTimeout(searchTimeout.current);
+        }
+
+        if (text.length < 2) {
             setSearchResults([]);
             return;
         }
-        setSearching(true);
-        try {
-            const results = await weatherService.searchLocation(query);
-            setSearchResults(results.slice(0, 6));
-        } catch {
-            setSearchResults([]);
-        } finally {
-            setSearching(false);
-        }
-    }, []);
+
+        searchTimeout.current = setTimeout(async () => {
+            setSearching(true);
+            try {
+                const results = await weatherService.searchLocation(text.trim(), selectedLang);
+                setSearchResults(results.slice(0, 6));
+            } catch {
+                setSearchResults([]);
+            } finally {
+                setSearching(false);
+            }
+        }, 300);
+    }, [selectedLang]);
 
     const handleSelectLocation = (location: SearchResult) => {
         triggerHaptic('notificationSuccess');
@@ -241,22 +249,27 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
         });
     };
 
+    // Result item — matches SearchScreen's renderResultItem pattern
     const renderSearchItem = ({ item }: { item: SearchResult }) => (
         <TouchableOpacity
-            style={styles.searchItem}
+            style={styles.resultCard}
             onPress={() => handleSelectLocation(item)}
             activeOpacity={0.7}
         >
-            <MapPin size={18} color="rgba(255,255,255,0.6)" />
-            <View style={styles.searchItemText}>
-                <Text style={styles.searchItemName}>{item.name}</Text>
+            <View style={styles.resultIconContainer}>
+                <MapPin size={22} color="#fff" strokeWidth={1.5} />
+            </View>
+            <View style={styles.resultContent}>
+                <Text style={styles.resultName}>
+                    {getLocalizedCity(item.name, lang)}
+                </Text>
                 {(item.country || item.admin1) && (
-                    <Text style={styles.searchItemSub}>
-                        {[item.admin1, item.country].filter(Boolean).join(', ')}
+                    <Text style={styles.resultSubtitle}>
+                        {[item.admin1, getLocalizedCountry(item.country, lang)].filter(Boolean).join(', ')}
                     </Text>
                 )}
             </View>
-            <ChevronRight size={16} color="rgba(255,255,255,0.4)" />
+            <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
         </TouchableOpacity>
     );
 
@@ -269,16 +282,11 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
         <>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
             <LinearGradient
-                colors={['#0f0c29', '#302b63', '#24243e']}
+                colors={['#2a5298', '#4A90D9', '#67B8DE']}
                 style={styles.gradient}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                end={{ x: 0.6, y: 1 }}
             >
-                {/* Decorative circles */}
-                <View style={styles.decorCircle1} />
-                <View style={styles.decorCircle2} />
-                <View style={styles.decorCircle3} />
-
                 <KeyboardAvoidingView
                     style={styles.container}
                     behavior={Platform.OS === 'ios' ? 'padding' : undefined}
@@ -359,19 +367,12 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                 <TouchableOpacity
                                     style={styles.continueBtn}
                                     onPress={handleContinue}
-                                    activeOpacity={1}
+                                    activeOpacity={0.8}
                                 >
-                                    <LinearGradient
-                                        colors={['rgba(255,255,255,0.15)', 'rgba(255,255,255,0.05)']}
-                                        style={styles.continueBtnGradient}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 1 }}
-                                    >
-                                        <Text style={styles.continueBtnText}>
-                                            {t('continue_btn', lang)}
-                                        </Text>
-                                        <ChevronRight size={20} color="#fff" />
-                                    </LinearGradient>
+                                    <Text style={styles.continueBtnText}>
+                                        {t('continue_btn', lang)}
+                                    </Text>
+                                    <ChevronRight size={20} color="#fff" />
                                 </TouchableOpacity>
                             </Animated.View>
                         </View>
@@ -389,36 +390,32 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                     {t('choose_location_subtitle', lang)}
                                 </Animated.Text>
 
-                                {/* GPS button */}
+                                {/* GPS button — matches SearchScreen's geoButton pattern */}
                                 <Animated.View style={[{ width: '100%', transform: [{ scale: gpsBtnScale }] }, fadeStyle(step2Gps)]}>
                                     <TouchableOpacity
-                                        style={styles.gpsButton}
+                                        style={styles.geoButton}
                                         onPress={handleUseGPS}
                                         disabled={locating || geoLoading}
-                                        activeOpacity={1}
+                                        activeOpacity={0.7}
                                     >
-                                        <LinearGradient
-                                            colors={['rgba(80,160,255,0.4)', 'rgba(80,120,255,0.25)']}
-                                            style={styles.gpsBtnGradient}
-                                            start={{ x: 0, y: 0 }}
-                                            end={{ x: 1, y: 1 }}
-                                        >
+                                        <View style={styles.geoIconContainer}>
                                             {locating || geoLoading ? (
-                                                <>
-                                                    <ActivityIndicator color="#fff" size="small" />
-                                                    <Text style={styles.gpsBtnText}>
-                                                        {t('detecting_location', lang)}
-                                                    </Text>
-                                                </>
+                                                <ActivityIndicator size="small" color="#fff" />
                                             ) : (
-                                                <>
-                                                    <Navigation size={20} color="#fff" />
-                                                    <Text style={styles.gpsBtnText}>
-                                                        {t('use_my_location', lang)}
-                                                    </Text>
-                                                </>
+                                                <Navigation size={20} color="#fff" />
                                             )}
-                                        </LinearGradient>
+                                        </View>
+                                        <View style={styles.geoContent}>
+                                            <Text style={styles.geoTitle}>
+                                                {locating || geoLoading
+                                                    ? t('detecting_location', lang)
+                                                    : t('use_my_location', lang)}
+                                            </Text>
+                                            <Text style={styles.geoSubtitle}>
+                                                {lang === 'cs' ? 'Automatická detekce polohy' : 'Automatic location detection'}
+                                            </Text>
+                                        </View>
+                                        <ChevronRight size={20} color="rgba(255,255,255,0.5)" />
                                     </TouchableOpacity>
                                 </Animated.View>
 
@@ -431,13 +428,13 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                     <View style={styles.dividerLine} />
                                 </Animated.View>
 
-                                {/* Search */}
+                                {/* Search — matches SearchScreen's searchContainer */}
                                 <Animated.View style={[styles.searchContainer, fadeStyle(step2Search)]}>
-                                    <Search size={18} color="rgba(255,255,255,0.5)" />
+                                    <Search size={20} color="rgba(255,255,255,0.6)" />
                                     <TextInput
                                         style={styles.searchInput}
                                         placeholder={t('search_city', lang)}
-                                        placeholderTextColor="rgba(255,255,255,0.35)"
+                                        placeholderTextColor="rgba(255,255,255,0.4)"
                                         value={searchQuery}
                                         onChangeText={handleSearch}
                                         autoCapitalize="words"
@@ -451,15 +448,19 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                 {/* Search results */}
                                 <FlatList
                                     data={searchResults}
-                                    keyExtractor={(item) => `${item.name}-${item.latitude}-${item.longitude}`}
+                                    keyExtractor={(item, index) => `${item.latitude}-${item.longitude}-${index}`}
                                     renderItem={renderSearchItem}
                                     style={styles.searchList}
                                     keyboardShouldPersistTaps="handled"
+                                    showsVerticalScrollIndicator={false}
                                     ListEmptyComponent={
                                         searchQuery.length >= 2 && !searching ? (
-                                            <Text style={styles.emptyText}>
-                                                {lang === 'cs' ? 'Nic nenalezeno' : 'No results'}
-                                            </Text>
+                                            <View style={styles.emptyContainer}>
+                                                <MapPin size={40} color="rgba(255,255,255,0.3)" strokeWidth={1} />
+                                                <Text style={styles.emptyText}>
+                                                    {lang === 'cs' ? 'Nic nenalezeno' : 'No results'}
+                                                </Text>
+                                            </View>
                                         ) : null
                                     }
                                 />
@@ -480,34 +481,6 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingTop: 60,
     },
-    // Decorative background circles
-    decorCircle1: {
-        position: 'absolute',
-        width: 300,
-        height: 300,
-        borderRadius: 150,
-        backgroundColor: 'rgba(100,100,255,0.06)',
-        top: -80,
-        right: -100,
-    },
-    decorCircle2: {
-        position: 'absolute',
-        width: 200,
-        height: 200,
-        borderRadius: 100,
-        backgroundColor: 'rgba(200,100,255,0.05)',
-        bottom: 100,
-        left: -60,
-    },
-    decorCircle3: {
-        position: 'absolute',
-        width: 150,
-        height: 150,
-        borderRadius: 75,
-        backgroundColor: 'rgba(100,200,255,0.04)',
-        top: SCREEN_HEIGHT * 0.4,
-        right: -30,
-    },
     progressContainer: {
         flexDirection: 'row',
         justifyContent: 'center',
@@ -518,8 +491,7 @@ const styles = StyleSheet.create({
         width: 8,
         height: 8,
         borderRadius: 4,
-        backgroundColor: 'rgba(255,255,255,0.2)',
-        transition: 'all 0.3s',
+        backgroundColor: 'rgba(255,255,255,0.25)',
     },
     dotActive: {
         backgroundColor: '#fff',
@@ -532,9 +504,9 @@ const styles = StyleSheet.create({
     },
     stepPage: {
         width: SCREEN_WIDTH,
-        paddingHorizontal: 28,
+        paddingHorizontal: 20,
         justifyContent: 'space-between',
-        paddingBottom: 44,
+        paddingBottom: 40,
     },
     stepContent: {
         flex: 1,
@@ -551,8 +523,8 @@ const styles = StyleSheet.create({
         marginTop: 24,
     },
     welcomeTitle: {
-        fontSize: 30,
-        fontWeight: '800',
+        fontSize: 28,
+        fontWeight: '700',
         color: '#fff',
         textAlign: 'center',
         marginBottom: 8,
@@ -560,17 +532,16 @@ const styles = StyleSheet.create({
     },
     welcomeSubtitle: {
         fontSize: 16,
-        color: 'rgba(255,255,255,0.55)',
+        color: 'rgba(255,255,255,0.7)',
         textAlign: 'center',
-        marginBottom: 40,
+        marginBottom: 36,
         lineHeight: 22,
     },
     sectionTitle: {
         fontSize: 17,
         fontWeight: '600',
-        color: 'rgba(255,255,255,0.8)',
+        color: 'rgba(255,255,255,0.85)',
         marginBottom: 20,
-        letterSpacing: 0.3,
     },
     langCards: {
         flexDirection: 'row',
@@ -578,8 +549,8 @@ const styles = StyleSheet.create({
         width: '100%',
     },
     langCard: {
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        borderRadius: 20,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 16,
         paddingVertical: 28,
         alignItems: 'center',
         gap: 12,
@@ -587,17 +558,16 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(255,255,255,0.08)',
     },
     langCardSelected: {
-        borderColor: 'rgba(150,170,255,0.5)',
-        backgroundColor: 'rgba(120,140,255,0.12)',
+        borderColor: 'rgba(255,255,255,0.35)',
+        backgroundColor: 'rgba(255,255,255,0.15)',
     },
     langFlag: {
         fontSize: 40,
     },
     langName: {
         fontSize: 16,
-        fontWeight: '700',
+        fontWeight: '600',
         color: '#fff',
-        letterSpacing: 0.3,
     },
     langCheck: {
         position: 'absolute',
@@ -611,116 +581,133 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
     },
     continueBtn: {
-        borderRadius: 18,
-        overflow: 'hidden',
-    },
-    continueBtnGradient: {
         flexDirection: 'row',
-        paddingVertical: 18,
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        borderRadius: 16,
+        paddingVertical: 16,
         alignItems: 'center',
         justifyContent: 'center',
         gap: 8,
-        borderRadius: 18,
         borderWidth: 1,
         borderColor: 'rgba(255,255,255,0.12)',
     },
     continueBtnText: {
         fontSize: 17,
-        fontWeight: '700',
+        fontWeight: '600',
         color: '#fff',
-        letterSpacing: 0.3,
     },
-    gpsButton: {
-        borderRadius: 18,
-        overflow: 'hidden',
-    },
-    gpsBtnGradient: {
+    // GPS button — mirrors SearchScreen.geoButton
+    geoButton: {
         flexDirection: 'row',
-        paddingVertical: 18,
-        paddingHorizontal: 24,
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.12)',
+        borderRadius: 16,
+        padding: 16,
+        gap: 12,
+    },
+    geoIconContainer: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: 'rgba(74,144,217,0.3)',
         alignItems: 'center',
         justifyContent: 'center',
-        gap: 10,
-        borderRadius: 18,
-        borderWidth: 1,
-        borderColor: 'rgba(80,160,255,0.3)',
     },
-    gpsBtnText: {
+    geoContent: {
+        flex: 1,
+    },
+    geoTitle: {
         fontSize: 16,
-        fontWeight: '700',
+        fontWeight: '600',
         color: '#fff',
+    },
+    geoSubtitle: {
+        fontSize: 13,
+        color: 'rgba(255,255,255,0.6)',
+        marginTop: 2,
     },
     dividerRow: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 14,
-        marginVertical: 22,
+        marginVertical: 20,
         width: '100%',
     },
     dividerLine: {
         flex: 1,
         height: StyleSheet.hairlineWidth,
-        backgroundColor: 'rgba(255,255,255,0.15)',
+        backgroundColor: 'rgba(255,255,255,0.2)',
     },
     dividerText: {
         fontSize: 13,
-        color: 'rgba(255,255,255,0.35)',
+        color: 'rgba(255,255,255,0.45)',
         textTransform: 'uppercase',
         fontWeight: '600',
-        letterSpacing: 1,
+        letterSpacing: 0.5,
     },
+    // Search — mirrors SearchScreen.searchContainer
     searchContainer: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.06)',
+        backgroundColor: 'rgba(255,255,255,0.12)',
         borderRadius: 16,
-        paddingHorizontal: 14,
-        gap: 10,
+        paddingHorizontal: 16,
+        paddingVertical: 14,
+        gap: 12,
         width: '100%',
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.08)',
     },
     searchInput: {
         flex: 1,
-        height: 50,
+        fontSize: 17,
+        fontWeight: '400',
         color: '#fff',
-        fontSize: 15,
     },
     searchList: {
         width: '100%',
         marginTop: 10,
         maxHeight: 280,
     },
-    searchItem: {
+    // Result card — mirrors SearchScreen.resultCard
+    resultCard: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: 'rgba(255,255,255,0.06)',
-        borderRadius: 14,
-        paddingVertical: 15,
-        paddingHorizontal: 14,
-        marginBottom: 6,
+        backgroundColor: 'rgba(255,255,255,0.1)',
+        borderRadius: 16,
+        padding: 16,
+        marginBottom: 10,
         gap: 12,
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.05)',
     },
-    searchItemText: {
+    resultIconContainer: {
+        width: 44,
+        height: 44,
+        borderRadius: 22,
+        backgroundColor: 'rgba(255,255,255,0.08)',
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    resultContent: {
         flex: 1,
     },
-    searchItemName: {
-        fontSize: 15,
-        fontWeight: '700',
+    resultName: {
+        fontSize: 17,
+        fontWeight: '600',
         color: '#fff',
     },
-    searchItemSub: {
-        fontSize: 12,
-        color: 'rgba(255,255,255,0.45)',
+    resultSubtitle: {
+        fontSize: 14,
+        color: 'rgba(255,255,255,0.6)',
         marginTop: 2,
     },
+    emptyContainer: {
+        alignItems: 'center',
+        paddingVertical: 40,
+        gap: 12,
+    },
     emptyText: {
-        color: 'rgba(255,255,255,0.35)',
+        color: 'rgba(255,255,255,0.4)',
         textAlign: 'center',
-        marginTop: 24,
-        fontSize: 14,
+        fontSize: 16,
+        fontWeight: '500',
     },
 });
 
