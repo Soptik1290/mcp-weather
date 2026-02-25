@@ -414,12 +414,41 @@ Analyze these sources and deduce the most accurate current weather."""
             # Compute model agreement
             agreement = self._compute_model_agreement(weather_data, language)
 
+            # Calculate complete astronomy data using ephem (same as _statistical_aggregate)
+            astro_data = get_astronomy_data(location.latitude, location.longitude)
+            base_astro = weather_data[0].astronomy
+            if base_astro:
+                astronomy = Astronomy(
+                    sunrise=base_astro.sunrise or astro_data.get("sunrise"),
+                    sunset=base_astro.sunset or astro_data.get("sunset"),
+                    moonrise=astro_data.get("moonrise"),
+                    moonset=astro_data.get("moonset"),
+                    moon_phase=astro_data.get("moon_phase"),
+                    moon_phase_name=base_astro.moon_phase_name,
+                    moon_illumination=astro_data.get("moon_illumination"),
+                    daylight_duration=astro_data.get("daylight_duration"),
+                    moon_distance=astro_data.get("moon_distance"),
+                    next_full_moon=astro_data.get("next_full_moon")
+                )
+            else:
+                astronomy = Astronomy(
+                    sunrise=astro_data.get("sunrise"),
+                    sunset=astro_data.get("sunset"),
+                    moonrise=astro_data.get("moonrise"),
+                    moonset=astro_data.get("moonset"),
+                    moon_phase=astro_data.get("moon_phase"),
+                    moon_illumination=astro_data.get("moon_illumination"),
+                    daylight_duration=astro_data.get("daylight_duration"),
+                    moon_distance=astro_data.get("moon_distance"),
+                    next_full_moon=astro_data.get("next_full_moon")
+                )
+
             return AggregatedForecast(
                 location=location,
                 current=aggregated_current,
                 daily_forecast=agg_daily,
                 hourly_forecast=agg_hourly,
-                astronomy=weather_data[0].astronomy,
+                astronomy=astronomy,
                 ai_summary=result.get("reasoning", "AI aggregation complete"),
                 confidence_score=result.get("confidence", 0.85),
                 sources_used=sources,
@@ -469,12 +498,41 @@ Analyze these sources and deduce the most accurate current weather."""
                     agg_daily, agg_hourly = self._aggregate_forecasts(weather_data)
                     agreement = self._compute_model_agreement(weather_data, language)
 
+                    # Calculate complete astronomy data using ephem
+                    astro_data_backup = get_astronomy_data(location.latitude, location.longitude)
+                    base_astro_backup = weather_data[0].astronomy
+                    if base_astro_backup:
+                        astronomy_backup = Astronomy(
+                            sunrise=base_astro_backup.sunrise or astro_data_backup.get("sunrise"),
+                            sunset=base_astro_backup.sunset or astro_data_backup.get("sunset"),
+                            moonrise=astro_data_backup.get("moonrise"),
+                            moonset=astro_data_backup.get("moonset"),
+                            moon_phase=astro_data_backup.get("moon_phase"),
+                            moon_phase_name=base_astro_backup.moon_phase_name,
+                            moon_illumination=astro_data_backup.get("moon_illumination"),
+                            daylight_duration=astro_data_backup.get("daylight_duration"),
+                            moon_distance=astro_data_backup.get("moon_distance"),
+                            next_full_moon=astro_data_backup.get("next_full_moon")
+                        )
+                    else:
+                        astronomy_backup = Astronomy(
+                            sunrise=astro_data_backup.get("sunrise"),
+                            sunset=astro_data_backup.get("sunset"),
+                            moonrise=astro_data_backup.get("moonrise"),
+                            moonset=astro_data_backup.get("moonset"),
+                            moon_phase=astro_data_backup.get("moon_phase"),
+                            moon_illumination=astro_data_backup.get("moon_illumination"),
+                            daylight_duration=astro_data_backup.get("daylight_duration"),
+                            moon_distance=astro_data_backup.get("moon_distance"),
+                            next_full_moon=astro_data_backup.get("next_full_moon")
+                        )
+
                     return AggregatedForecast(
                         location=location,
                         current=aggregated_current,
                         daily_forecast=agg_daily,
                         hourly_forecast=agg_hourly,
-                        astronomy=weather_data[0].astronomy,
+                        astronomy=astronomy_backup,
                         ai_summary=result.get("reasoning", "AI aggregation complete (backup)"),
                         confidence_score=result.get("confidence", 0.80),
                         sources_used=sources,
