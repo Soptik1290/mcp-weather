@@ -10,7 +10,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { HomeScreen, SubscriptionScreen, WidgetConfigScreen, AstroPackScreen } from './src/screens';
+import { HomeScreen, SubscriptionScreen, WidgetConfigScreen, AstroPackScreen, OnboardingScreen } from './src/screens';
 import { subscriptionService, admobService } from './src/services';
 
 // Navigation types
@@ -21,6 +21,7 @@ export type RootStackParamList = {
   Subscription: undefined;
   WidgetConfig: undefined;
   AstroPack: undefined;
+  Onboarding: undefined;
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,12 +37,13 @@ const queryClient = new QueryClient({
   },
 });
 
-import { useSubscriptionStore } from './src/stores';
+import { useSubscriptionStore, useSettingsStore } from './src/stores';
 import { NativeModules, Platform } from 'react-native';
 import { initBackgroundFetch } from './src/tasks/BackgroundJob';
 
 function App(): React.JSX.Element {
   const tier = useSubscriptionStore((state) => state.tier);
+  const hasCompletedOnboarding = useSettingsStore((state) => state.settings.hasCompletedOnboarding);
 
   useEffect(() => {
     // Dynamic Widget restrictions
@@ -79,12 +81,17 @@ function App(): React.JSX.Element {
         <SafeAreaProvider>
           <NavigationContainer>
             <Stack.Navigator
-              initialRouteName="Home"
+              initialRouteName={hasCompletedOnboarding ? "Home" : "Onboarding"}
               screenOptions={{
                 headerShown: false,
                 animation: 'slide_from_right',
               }}
             >
+              <Stack.Screen
+                name="Onboarding"
+                component={OnboardingScreen}
+                options={{ headerShown: false, gestureEnabled: false }}
+              />
               <Stack.Screen
                 name="Home"
                 component={HomeScreen}

@@ -140,6 +140,7 @@ export interface UserSettings {
     haptic_enabled: boolean;
     aurora_notifications: boolean;
     daily_brief: boolean;
+    hasCompletedOnboarding: boolean;
 }
 
 // AstroPack types

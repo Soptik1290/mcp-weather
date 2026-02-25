@@ -282,6 +282,18 @@ const translations: Record<Language, Record<string, string>> = {
         // Model Agreement
         'models_diverge': 'Models diverge',
 
+        // Onboarding
+        'welcome_title': 'Welcome to Weatherly',
+        'welcome_subtitle': 'AI-powered weather, just for you',
+        'choose_language': 'Choose your language',
+        'choose_location': 'Where are you?',
+        'choose_location_subtitle': 'Set your default weather location',
+        'use_my_location': 'Use my location',
+        'search_city': 'Search city...',
+        'continue_btn': 'Continue',
+        'lets_go': "Let's go!",
+        'detecting_location': 'Detecting location...',
+
         // AstroPack & Ultra
 
         'explain_btn': 'Why? 🤔',
@@ -566,6 +578,18 @@ const translations: Record<Language, Record<string, string>> = {
 
         // Model Agreement
         'models_diverge': 'Modely se rozcházejí',
+
+        // Onboarding
+        'welcome_title': 'Vítejte ve Weatherly',
+        'welcome_subtitle': 'Počasí poháněné AI, jen pro vás',
+        'choose_language': 'Vyberte jazyk',
+        'choose_location': 'Kde se nacházíte?',
+        'choose_location_subtitle': 'Nastavte výchozí lokaci pro počasí',
+        'use_my_location': 'Použít moji polohu',
+        'search_city': 'Vyhledat město...',
+        'continue_btn': 'Pokračovat',
+        'lets_go': 'Pojďme na to!',
+        'detecting_location': 'Zjišťuji polohu...',
 
         // AstroPack & Ultra
 

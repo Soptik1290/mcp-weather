@@ -63,7 +63,7 @@ export function HomeScreen() {
         setError(null);
 
         try {
-            const locationName = currentLocation?.name || 'Prague';
+            const locationName = currentLocation?.name || '';
 
             const [weatherData, themeData, aurora, astro] = await Promise.all([
                 weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias),

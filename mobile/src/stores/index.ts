@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Platform, NativeModules } from 'react-native';
 import type {
     UserSettings,
     SubscriptionInfo,
@@ -15,8 +16,25 @@ interface SettingsState {
     resetSettings: () => void;
 }
 
+// Auto-detect device language
+function getDeviceLanguage(): 'cs' | 'en' {
+    try {
+        let locale = '';
+        if (Platform.OS === 'ios') {
+            locale = NativeModules.SettingsManager?.settings?.AppleLocale
+                || NativeModules.SettingsManager?.settings?.AppleLanguages?.[0]
+                || 'en';
+        } else {
+            locale = NativeModules.I18nManager?.localeIdentifier || 'en';
+        }
+        return locale.toLowerCase().startsWith('cs') ? 'cs' : 'en';
+    } catch {
+        return 'en';
+    }
+}
+
 const defaultSettings: UserSettings = {
-    language: 'cs',
+    language: getDeviceLanguage(),
     temperature_unit: 'celsius',
     time_format: '24h',
     confidence_bias: 'balanced',
@@ -28,6 +46,7 @@ const defaultSettings: UserSettings = {
     haptic_enabled: true,
     aurora_notifications: false,
     daily_brief: false,
+    hasCompletedOnboarding: false,
 };
 
 export const useSettingsStore = create<SettingsState>()(
