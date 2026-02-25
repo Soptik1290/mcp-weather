@@ -60,6 +60,20 @@ export interface Astronomy {
     next_full_moon?: string;
 }
 
+export interface ModelAgreementField {
+    spread: number;
+    agreement: 'high' | 'moderate' | 'low';
+    outlier_removed?: string;
+}
+
+export interface ModelAgreement {
+    overall: 'high' | 'moderate' | 'low';
+    alert?: string;
+    temperature?: ModelAgreementField;
+    precipitation?: ModelAgreementField;
+    wind?: ModelAgreementField;
+}
+
 export interface WeatherData {
     location: Location;
     current?: CurrentWeather;
@@ -70,6 +84,7 @@ export interface WeatherData {
     confidence_score: number;
     sources_used: string[];
     ambient_theme?: AmbientTheme;
+    model_agreement?: ModelAgreement;
 }
 
 export interface AmbientTheme {

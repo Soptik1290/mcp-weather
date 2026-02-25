@@ -4,6 +4,7 @@ Analyzes data from multiple weather APIs and deduces the most accurate forecast.
 """
 
 import os
+import statistics
 from typing import Optional
 from datetime import datetime
 from src.models import (
@@ -11,6 +12,7 @@ from src.models import (
     CurrentWeather, DailyForecast, HourlyForecast, Astronomy
 )
 from src.astro_calc import get_astronomy_data
+from src.filters import KalmanFilter1D
 import json
 
 
@@ -69,6 +71,195 @@ class WeatherAggregator:
                 self.has_ai = False
         else:
                 print("! No OPENAI_API_KEY - using statistical aggregation only")
+
+    # ── Multi-source forecast aggregation ─────────────────────────────
+
+    def _iqr_filter(self, values: list[float]) -> list[float]:
+        """Remove outliers using IQR method. Returns filtered list."""
+        if len(values) < 3:
+            return values
+        sorted_v = sorted(values)
+        q1 = sorted_v[len(sorted_v) // 4]
+        q3 = sorted_v[3 * len(sorted_v) // 4]
+        iqr = q3 - q1
+        lower = q1 - 1.5 * iqr
+        upper = q3 + 1.5 * iqr
+        return [v for v in values if lower <= v <= upper]
+
+    def _kalman_fuse(self, values: list[float]) -> float:
+        """Fuse multiple measurements using Kalman filter."""
+        if not values:
+            return 0.0
+        kf = KalmanFilter1D(process_variance=1e-4, measurement_variance=1.0)
+        return kf.fuse(values)
+
+    def _aggregate_forecasts(
+        self,
+        weather_data: list[WeatherData]
+    ) -> tuple[list[DailyForecast], list[HourlyForecast]]:
+        """
+        Aggregate daily and hourly forecasts from ALL providers using
+        Kalman fusion for temperatures, weighted average for precipitation,
+        and IQR outlier filtering for wind.
+        """
+        if len(weather_data) <= 1:
+            return (
+                weather_data[0].daily_forecast if weather_data else [],
+                weather_data[0].hourly_forecast if weather_data else []
+            )
+
+        # ── Daily Forecast Aggregation ──
+        # Group by date
+        daily_by_date: dict[str, list[DailyForecast]] = {}
+        for w in weather_data:
+            for d in w.daily_forecast:
+                daily_by_date.setdefault(d.date, []).append(d)
+
+        aggregated_daily: list[DailyForecast] = []
+        for date_str in sorted(daily_by_date.keys()):
+            entries = daily_by_date[date_str]
+            if len(entries) == 1:
+                aggregated_daily.append(entries[0])
+                continue
+
+            # Collect values
+            max_temps = [e.temperature_max for e in entries if e.temperature_max is not None]
+            min_temps = [e.temperature_min for e in entries if e.temperature_min is not None]
+            precip_probs = [e.precipitation_probability for e in entries if e.precipitation_probability is not None]
+            precip_sums = [e.precipitation_sum for e in entries if e.precipitation_sum is not None]
+            wind_maxes = [e.wind_speed_max for e in entries if e.wind_speed_max is not None]
+            uv_maxes = [e.uv_index_max for e in entries if e.uv_index_max is not None]
+
+            # Wind: IQR filter then median
+            filtered_wind = self._iqr_filter(wind_maxes) if wind_maxes else []
+
+            aggregated_daily.append(DailyForecast(
+                date=date_str,
+                temperature_max=round(self._kalman_fuse(max_temps), 1) if max_temps else entries[0].temperature_max,
+                temperature_min=round(self._kalman_fuse(min_temps), 1) if min_temps else entries[0].temperature_min,
+                weather_code=entries[0].weather_code,
+                weather_description=entries[0].weather_description,
+                precipitation_probability=round(statistics.mean(precip_probs)) if precip_probs else entries[0].precipitation_probability,
+                precipitation_sum=round(statistics.median(precip_sums), 1) if precip_sums else entries[0].precipitation_sum,
+                snowfall_sum=entries[0].snowfall_sum,
+                wind_speed_max=round(statistics.median(filtered_wind), 1) if filtered_wind else entries[0].wind_speed_max,
+                uv_index_max=round(statistics.mean(uv_maxes), 1) if uv_maxes else entries[0].uv_index_max,
+                sunrise=entries[0].sunrise,
+                sunset=entries[0].sunset,
+            ))
+
+        # ── Hourly Forecast Aggregation ──
+        hourly_by_time: dict[str, list[HourlyForecast]] = {}
+        for w in weather_data:
+            for h in w.hourly_forecast:
+                hourly_by_time.setdefault(h.time, []).append(h)
+
+        aggregated_hourly: list[HourlyForecast] = []
+        for time_str in sorted(hourly_by_time.keys()):
+            entries = hourly_by_time[time_str]
+            if len(entries) == 1:
+                aggregated_hourly.append(entries[0])
+                continue
+
+            temps = [e.temperature for e in entries if e.temperature is not None]
+            precip_probs = [e.precipitation_probability for e in entries if e.precipitation_probability is not None]
+            winds = [e.wind_speed for e in entries if e.wind_speed is not None]
+            humidities = [e.humidity for e in entries if e.humidity is not None]
+
+            # Wind: IQR filter then median
+            filtered_wind = self._iqr_filter(winds) if winds else []
+
+            aggregated_hourly.append(HourlyForecast(
+                time=time_str,
+                temperature=round(self._kalman_fuse(temps), 1) if temps else entries[0].temperature,
+                weather_code=entries[0].weather_code,
+                weather_description=entries[0].weather_description,
+                precipitation_probability=round(statistics.mean(precip_probs)) if precip_probs else entries[0].precipitation_probability,
+                wind_speed=round(statistics.median(filtered_wind), 1) if filtered_wind else entries[0].wind_speed,
+                humidity=round(statistics.mean(humidities)) if humidities else entries[0].humidity,
+            ))
+
+        return aggregated_daily, aggregated_hourly
+
+    def _composite_feels_like(self, weather_data: list[WeatherData]) -> Optional[float]:
+        """Fuse feels_like temperature from multiple sources using Kalman filter."""
+        feels = [w.current.feels_like for w in weather_data if w.current and w.current.feels_like is not None]
+        if not feels:
+            return None
+        if len(feels) == 1:
+            return feels[0]
+        return round(self._kalman_fuse(feels), 1)
+
+    def _compute_model_agreement(
+        self,
+        weather_data: list[WeatherData],
+        language: str = "en"
+    ) -> dict:
+        """
+        Compute per-field model agreement and generate divergence alerts.
+        """
+        if len(weather_data) <= 1:
+            return {"overall": "high"}
+
+        result = {}
+
+        # Temperature spread
+        temps = [w.current.temperature for w in weather_data if w.current and w.current.temperature is not None]
+        if len(temps) >= 2:
+            spread = max(temps) - min(temps)
+            agreement = "high" if spread < 3 else ("moderate" if spread < 6 else "low")
+            result["temperature"] = {"spread": round(spread, 1), "agreement": agreement}
+
+        # Precipitation spread (probability)
+        precips = []
+        for w in weather_data:
+            if w.daily_forecast and w.daily_forecast[0].precipitation_probability is not None:
+                precips.append(w.daily_forecast[0].precipitation_probability)
+        if len(precips) >= 2:
+            spread = max(precips) - min(precips)
+            agreement = "high" if spread < 20 else ("moderate" if spread < 40 else "low")
+            result["precipitation"] = {"spread": round(spread, 1), "agreement": agreement}
+
+        # Wind spread + outlier info
+        winds = [w.current.wind_speed for w in weather_data if w.current and w.current.wind_speed is not None]
+        if len(winds) >= 2:
+            spread = max(winds) - min(winds)
+            agreement = "high" if spread < 10 else ("moderate" if spread < 20 else "low")
+            wind_info = {"spread": round(spread, 1), "agreement": agreement}
+            # Check for outlier
+            filtered = self._iqr_filter(winds)
+            if len(filtered) < len(winds):
+                outlier_providers = []
+                for w in weather_data:
+                    if w.current and w.current.wind_speed is not None and w.current.wind_speed not in filtered:
+                        outlier_providers.append(w.provider)
+                if outlier_providers:
+                    wind_info["outlier_removed"] = ", ".join(outlier_providers)
+            result["wind"] = wind_info
+
+        # Overall agreement
+        agreements = [v.get("agreement", "high") for v in result.values()]
+        if "low" in agreements:
+            overall = "low"
+        elif agreements.count("moderate") >= 2:
+            overall = "moderate"
+        elif "moderate" in agreements:
+            overall = "moderate"
+        else:
+            overall = "high"
+        result["overall"] = overall
+
+        # Alert text
+        if overall == "low":
+            # Find which field diverges most
+            low_fields = [k for k, v in result.items() if isinstance(v, dict) and v.get("agreement") == "low"]
+            fields_str = ", ".join(low_fields)
+            if language == "cs":
+                result["alert"] = f"⚠️ Modely se rozcházejí u: {fields_str} — sledujte aktualizace"
+            else:
+                result["alert"] = f"⚠️ Models diverge on: {fields_str} — check for updates"
+
+        return result
     
     async def aggregate(
         self,
@@ -99,7 +290,7 @@ class WeatherAggregator:
         print(f"DEBUG: _ai_aggregate called with language='{language}', model='{model}', confidence_bias='{confidence_bias}'")
         # ...
         
-        # Prepare context for AI
+        # Prepare context for AI — include precipitation, pressure, UV, visibility
         sources = [w.provider for w in weather_data]
         location = weather_data[0].location
         safe_location_name = self._sanitize_prompt_input(location.name)
@@ -109,10 +300,25 @@ class WeatherAggregator:
             if w.current:
                 context_parts.append(f"Source: {w.provider}")
                 context_parts.append(f"Temperature: {w.current.temperature}°C")
+                if w.current.feels_like is not None:
+                    context_parts.append(f"Feels like: {w.current.feels_like}°C")
                 context_parts.append(f"Conditions: {w.current.weather_description}")
                 context_parts.append(f"Wind: {w.current.wind_speed} km/h")
                 context_parts.append(f"Humidity: {w.current.humidity}%")
-                context_parts.append("---")
+                if w.current.pressure is not None:
+                    context_parts.append(f"Pressure: {w.current.pressure} hPa")
+                if w.current.uv_index is not None:
+                    context_parts.append(f"UV Index: {w.current.uv_index}")
+                if w.current.visibility is not None:
+                    context_parts.append(f"Visibility: {w.current.visibility} m")
+            # Add today's precipitation from daily forecast
+            if w.daily_forecast:
+                d0 = w.daily_forecast[0]
+                if d0.precipitation_probability is not None:
+                    context_parts.append(f"Precip probability today: {d0.precipitation_probability}%")
+                if d0.precipitation_sum is not None:
+                    context_parts.append(f"Precip sum today: {d0.precipitation_sum} mm")
+            context_parts.append("---")
         
         if not context_parts:
             raise ValueError("No valid weather data available from any provider")
@@ -149,10 +355,13 @@ Formatting Instructions:
 
 Return a JSON object with:
 - "temperature": your deduced temperature in °C
-- "feels_like": feels like temperature
+- "feels_like": feels like temperature (consider wind chill and humidity from all sources)
 - "humidity": humidity percentage
-- "wind_speed": wind speed in km/h
+- "wind_speed": wind speed in km/h (ignore obvious outliers)
+- "pressure": pressure in hPa (if available from sources)
+- "uv_index": UV index (if available)
 - "conditions": weather description (in target language)
+- "precipitation_confidence": 0-100 how confident you are about precipitation today
 - "confidence": 0-1 score
 - "reasoning": your friendly, actionable advice (in target language)"""
 
@@ -183,28 +392,38 @@ Analyze these sources and deduce the most accurate current weather."""
             # Get base current weather (handle None case)
             base_current = weather_data[0].current
 
+            # Composite feels_like from all sources via Kalman fusion
+            composite_fl = self._composite_feels_like(weather_data)
+
             # Create aggregated weather with AI-deduced values
             aggregated_current = CurrentWeather(
                 temperature=result.get("temperature", base_current.temperature if base_current else 0),
-                feels_like=result.get("feels_like"),
+                feels_like=result.get("feels_like", composite_fl),
                 humidity=result.get("humidity"),
                 wind_speed=result.get("wind_speed"),
                 weather_description=result.get("conditions", base_current.weather_description if base_current else "Unknown"),
                 weather_code=base_current.weather_code if base_current else None,
-                uv_index=base_current.uv_index if base_current else None,
-                pressure=base_current.pressure if base_current else None,
+                uv_index=result.get("uv_index", base_current.uv_index if base_current else None),
+                pressure=result.get("pressure", base_current.pressure if base_current else None),
                 cloud_cover=base_current.cloud_cover if base_current else None,
             )
-            
+
+            # Aggregate daily/hourly from ALL providers (not just first)
+            agg_daily, agg_hourly = self._aggregate_forecasts(weather_data)
+
+            # Compute model agreement
+            agreement = self._compute_model_agreement(weather_data, language)
+
             return AggregatedForecast(
                 location=location,
                 current=aggregated_current,
-                daily_forecast=weather_data[0].daily_forecast,
-                hourly_forecast=weather_data[0].hourly_forecast,
+                daily_forecast=agg_daily,
+                hourly_forecast=agg_hourly,
                 astronomy=weather_data[0].astronomy,
                 ai_summary=result.get("reasoning", "AI aggregation complete"),
                 confidence_score=result.get("confidence", 0.85),
-                sources_used=sources
+                sources_used=sources,
+                model_agreement=agreement
             )
             
         except Exception as e:
@@ -231,28 +450,35 @@ Analyze these sources and deduce the most accurate current weather."""
                     
                     result = json.loads(content)
                     
+                    # Composite feels_like from all sources
+                    composite_fl = self._composite_feels_like(weather_data)
+
                     # Create aggregated weather with AI-deduced values
                     aggregated_current = CurrentWeather(
                         temperature=result.get("temperature", weather_data[0].current.temperature),
-                        feels_like=result.get("feels_like"),
+                        feels_like=result.get("feels_like", composite_fl),
                         humidity=result.get("humidity"),
                         wind_speed=result.get("wind_speed"),
                         weather_description=result.get("conditions", weather_data[0].current.weather_description),
                         weather_code=weather_data[0].current.weather_code,
-                        uv_index=weather_data[0].current.uv_index,
-                        pressure=weather_data[0].current.pressure,
+                        uv_index=result.get("uv_index", weather_data[0].current.uv_index),
+                        pressure=result.get("pressure", weather_data[0].current.pressure),
                         cloud_cover=weather_data[0].current.cloud_cover,
                     )
-                    
+
+                    agg_daily, agg_hourly = self._aggregate_forecasts(weather_data)
+                    agreement = self._compute_model_agreement(weather_data, language)
+
                     return AggregatedForecast(
                         location=location,
                         current=aggregated_current,
-                        daily_forecast=weather_data[0].daily_forecast,
-                        hourly_forecast=weather_data[0].hourly_forecast,
+                        daily_forecast=agg_daily,
+                        hourly_forecast=agg_hourly,
                         astronomy=weather_data[0].astronomy,
                         ai_summary=result.get("reasoning", "AI aggregation complete (backup)"),
                         confidence_score=result.get("confidence", 0.80),
-                        sources_used=sources
+                        sources_used=sources,
+                        model_agreement=agreement
                     )
                 except Exception as e2:
                     print(f"[ERR] Backup AI model failed: {e2}")
@@ -308,20 +534,38 @@ Analyze these sources and deduce the most accurate current weather."""
                 pressure_sum += w.current.pressure
                 valid_pressure += 1
                 
+        # Composite feels_like via Kalman fusion
+        composite_fl = self._composite_feels_like(weather_data)
+
+        # Wind: use IQR-filtered median instead of simple average
+        wind_values = [w.current.wind_speed for w in weather_data if w.current and w.current.wind_speed is not None]
+        filtered_winds = self._iqr_filter(wind_values) if wind_values else []
+        avg_wind = round(statistics.median(filtered_winds), 1) if filtered_winds else (round(wind_sum / valid_winds, 1) if valid_winds > 0 else None)
+
+        # Temperature: Kalman fusion
+        temp_values = [w.current.temperature for w in weather_data if w.current and w.current.temperature is not None]
+        avg_temp = round(self._kalman_fuse(temp_values), 1) if temp_values else (round(temp_sum / valid_temps, 1) if valid_temps > 0 else None)
+
         # Create averaged current weather
         avg_current = CurrentWeather(
-            temperature=round(temp_sum / valid_temps, 1) if valid_temps > 0 else None,
-            wind_speed=round(wind_sum / valid_winds, 1) if valid_winds > 0 else None,
+            temperature=avg_temp,
+            wind_speed=avg_wind,
             humidity=round(humidity_sum / valid_humidity) if valid_humidity > 0 else None,
             pressure=round(pressure_sum / valid_pressure) if valid_pressure > 0 else None,
             weather_code=weather_data[0].current.weather_code, # Use primary source
             weather_description=weather_data[0].current.weather_description,
             uv_index=weather_data[0].current.uv_index,
             cloud_cover=weather_data[0].current.cloud_cover,
-            feels_like=weather_data[0].current.feels_like # simplified
+            feels_like=composite_fl
         )
         
         sources = [w.provider for w in weather_data]
+
+        # Aggregate daily/hourly from ALL providers
+        agg_daily, agg_hourly = self._aggregate_forecasts(weather_data)
+
+        # Model agreement
+        agreement = self._compute_model_agreement(weather_data, language)
 
         # Calculate complete astronomy data using ephem
         location = weather_data[0].location
@@ -362,12 +606,13 @@ Analyze these sources and deduce the most accurate current weather."""
         return AggregatedForecast(
             location=weather_data[0].location,
             current=avg_current,
-            daily_forecast=weather_data[0].daily_forecast,
-            hourly_forecast=weather_data[0].hourly_forecast,
+            daily_forecast=agg_daily,
+            hourly_forecast=agg_hourly,
             astronomy=astronomy,
             ai_summary=fallback_msg,
             confidence_score=0.5 + (0.1 * len(weather_data)),
-            sources_used=sources
+            sources_used=sources,
+            model_agreement=agreement
         )
     
     async def get_ambient_theme(

@@ -25,6 +25,7 @@ interface WeatherResponse {
     ai_summary?: string;
     confidence_score: number;
     sources_used: string[];
+    model_agreement?: any;
 }
 
 interface ThemeResponse {

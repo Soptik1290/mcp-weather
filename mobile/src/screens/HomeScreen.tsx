@@ -20,7 +20,7 @@ import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal, AnimatedCard, AnimatedPressable } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal, AnimatedCard, AnimatedPressable, MoonPhaseCard } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 import { useColorScheme, Alert, useWindowDimensions } from 'react-native';
 
@@ -91,6 +91,7 @@ export function HomeScreen() {
                 confidence_score: weatherData.confidence_score,
                 sources_used: weatherData.sources_used,
                 ambient_theme: themeData,
+                model_agreement: weatherData.model_agreement,
             });
             setTheme(themeData);
             setAuroraData(aurora);
@@ -407,8 +408,8 @@ export function HomeScreen() {
                                         )}
                                     </View>
 
-                                    {/* Tablet AI Summary (Under Left Card) */}
-                                    {weather?.ai_summary && (
+                                    {/* Tablet AI Summary (Under Left Card) — Pro/Ultra only */}
+                                    {weather?.ai_summary && tier !== 'free' && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg, marginTop: 0, marginBottom: 0 }]}>
                                             <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
@@ -420,6 +421,28 @@ export function HomeScreen() {
                                                 </Text>
                                             </View>
                                         </View>
+                                    )}
+
+                                    {/* Model Divergence Alert */}
+                                    {weather?.model_agreement?.alert && (
+                                        <View style={[styles.divergenceAlert, { backgroundColor: isDark ? 'rgba(255,165,0,0.15)' : 'rgba(255,140,0,0.1)' }]}>
+                                            <Text style={[styles.divergenceText, { color: isDark ? '#FFB347' : '#CC7000' }]}>
+                                                {weather.model_agreement.alert}
+                                            </Text>
+                                        </View>
+                                    )}
+
+                                    {/* Moon Phase Card — All tiers */}
+                                    {weather?.astronomy && (
+                                        <MoonPhaseCard
+                                            astronomy={weather.astronomy}
+                                            textColor={textColor}
+                                            subTextColor={subTextColor}
+                                            cardBg={cardBg}
+                                            isDark={isDark}
+                                            language={lang}
+                                            timeFormat={settings.time_format}
+                                        />
                                     )}
 
                                     {/* Daily Forecast (Moved to Left Column on Tablet for spatial balance) */}
@@ -702,9 +725,24 @@ export function HomeScreen() {
                                         </AnimatedCard>
                                     )}
 
-                                    {/* AI Summary */}
-                                    {weather?.ai_summary && (
+                                    {/* Moon Phase Card — All tiers */}
+                                    {weather?.astronomy && (
                                         <AnimatedCard index={3}>
+                                            <MoonPhaseCard
+                                                astronomy={weather.astronomy}
+                                                textColor={textColor}
+                                                subTextColor={subTextColor}
+                                                cardBg={cardBg}
+                                                isDark={isDark}
+                                                language={lang}
+                                                timeFormat={settings.time_format}
+                                            />
+                                        </AnimatedCard>
+                                    )}
+
+                                    {/* AI Summary — Pro/Ultra only */}
+                                    {weather?.ai_summary && tier !== 'free' && (
+                                        <AnimatedCard index={4}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                                 <Text style={styles.aiIcon}>🤖</Text>
                                                 <View style={styles.aiContent}>
@@ -719,9 +757,20 @@ export function HomeScreen() {
                                         </AnimatedCard>
                                     )}
 
+                                    {/* Model Divergence Alert */}
+                                    {weather?.model_agreement?.alert && (
+                                        <AnimatedCard index={5}>
+                                            <View style={[styles.divergenceAlert, { backgroundColor: isDark ? 'rgba(255,165,0,0.15)' : 'rgba(255,140,0,0.1)' }]}>
+                                                <Text style={[styles.divergenceText, { color: isDark ? '#FFB347' : '#CC7000' }]}>
+                                                    {weather.model_agreement.alert}
+                                                </Text>
+                                            </View>
+                                        </AnimatedCard>
+                                    )}
+
                                     {/* Daily Forecast */}
                                     {weather?.daily_forecast && weather.daily_forecast.length > 0 && (
-                                        <AnimatedCard index={4}>
+                                        <AnimatedCard index={6}>
                                             <DailyForecast
                                                 data={weather.daily_forecast}
                                                 textColor={textColor}
@@ -739,7 +788,7 @@ export function HomeScreen() {
                                         settings.aurora_display,
                                         auroraData?.visibility_probability
                                     ) && (
-                                            <AnimatedCard index={5}>
+                                            <AnimatedCard index={7}>
                                                 <AuroraCard
                                                     data={auroraData}
                                                     textColor={textColor}
@@ -755,7 +804,7 @@ export function HomeScreen() {
 
                                     {/* AstroPack Card (Ultra) */}
                                     {tier === 'ultra' && astroData && (
-                                        <AnimatedCard index={6}>
+                                        <AnimatedCard index={8}>
                                             <AstroCard
                                                 data={astroData}
                                                 textColor={textColor}
@@ -1028,6 +1077,16 @@ const styles = StyleSheet.create({
     },
     confidenceText: {
         fontSize: 12,
+    },
+    divergenceAlert: {
+        padding: 12,
+        borderRadius: 12,
+        marginTop: 2,
+    },
+    divergenceText: {
+        fontSize: 13,
+        fontWeight: '500',
+        textAlign: 'center',
     },
 });
 

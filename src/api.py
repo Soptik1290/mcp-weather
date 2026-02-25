@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+import asyncio
 from datetime import datetime, timedelta
 from fastapi import FastAPI, HTTPException, Response, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -61,6 +62,22 @@ providers = initialize_providers()
 open_meteo = get_open_meteo_provider(providers)
 
 print(f"Active providers: {[p[0] for p in providers]}")
+
+
+# Helper for parallel provider fetching with timeout
+async def _fetch_provider(name: str, provider, location, days: int, language: str, timeout: float = 8.0):
+    """Fetch weather from a single provider with timeout. Returns None on failure."""
+    try:
+        return await asyncio.wait_for(
+            provider.get_weather(location, days=days, language=language),
+            timeout=timeout
+        )
+    except asyncio.TimeoutError:
+        print(f"Provider {name} timed out ({timeout}s)")
+        return None
+    except Exception as e:
+        print(f"Provider {name} failed: {e}")
+        return None
 
 # Redis Cache
 import redis.asyncio as redis
@@ -240,7 +257,8 @@ async def get_current_weather(request: WeatherRequest, response: Response):
             "confidence": aggregated.confidence_score,
             "ambient_theme": theme,
             "sources": aggregated.sources_used,
-            "model_used": model
+            "model_used": model,
+            "model_agreement": aggregated.model_agreement
         }
         
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
@@ -272,16 +290,14 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         
         location = locations[0]
         
-        # Collect weather data from all available providers
+        # Collect weather data from all available providers IN PARALLEL
         weather_data_list: list[WeatherData] = []
         
-        for provider_name, provider in providers:
-            try:
-                weather = await provider.get_weather(location, days=min(request.days, 16), language=request.language)
-                weather_data_list.append(weather)
-            except Exception as e:
-                print(f"Provider {provider_name} failed: {e}")
-                continue
+        results = await asyncio.gather(
+            *[_fetch_provider(name, prov, location, min(request.days, 16), request.language)
+              for name, prov in providers]
+        )
+        weather_data_list = [r for r in results if r is not None]
         
         if not weather_data_list:
             raise HTTPException(status_code=500, detail="All weather providers failed")
@@ -315,7 +331,8 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
             "ambient_theme": theme,
             "sources": aggregated.sources_used,
             "provider_count": len(weather_data_list),
-            "model_used": model
+            "model_used": model,
+            "model_agreement": aggregated.model_agreement
         }
         
         # Save to cache
@@ -378,7 +395,8 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
             "confidence": aggregated.confidence_score,
             "ambient_theme": theme,
             "sources": aggregated.sources_used,
-            "model_used": model
+            "model_used": model,
+            "model_agreement": aggregated.model_agreement
         }
         
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800) # 30m
@@ -508,23 +526,24 @@ async def explain_weather(request: ExplainRequest, response: Response):
             raise HTTPException(status_code=404, detail="Location not found")
         location = locations[0]
              
-        # Collect weather data from all providers for comparison
+        # Collect weather data from all providers IN PARALLEL
         weather_data_list: list[WeatherData] = []
         sources_summary = []
 
-        for provider_name, provider in providers:
-            try:
-                w = await provider.get_weather(location, days=1, language=request.language)
+        results = await asyncio.gather(
+            *[_fetch_provider(name, prov, location, 1, request.language)
+              for name, prov in providers]
+        )
+        for i, w in enumerate(results):
+            if w is not None:
                 weather_data_list.append(w)
                 if w.current:
                     sources_summary.append({
-                        "name": provider_name.upper(),
+                        "name": providers[i][0].upper(),
                         "temp": w.current.temperature,
                         "desc": w.current.weather_description,
                         "wind": w.current.wind_speed
                     })
-            except Exception:
-                continue
         
         if not weather_data_list:
             raise HTTPException(status_code=500, detail="Weather data unavailable")

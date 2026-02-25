@@ -94,4 +94,5 @@ class AggregatedForecast(BaseModel):
     ai_summary: Optional[str] = Field(None, description="AI-generated weather summary")
     confidence_score: float = Field(0.75, description="Confidence 0-1 based on source agreement")
     sources_used: list[str] = Field(default_factory=list, description="List of weather providers used")
+    model_agreement: Optional[dict] = Field(None, description="Per-field model agreement metrics and divergence alert")
 

@@ -272,6 +272,16 @@ const translations: Record<Language, Record<string, string>> = {
         'manage_subs_in_store': 'Manage your subscription in the store settings.',
         'restore': 'Restore',
 
+        // Moon Phase
+        'moon_phase': 'Moon Phase',
+        'moon_illumination': 'Illumination',
+        'moonrise': 'Moonrise',
+        'moonset': 'Moonset',
+        'next_full_moon': 'Next Full Moon',
+
+        // Model Agreement
+        'models_diverge': 'Models diverge',
+
         // AstroPack & Ultra
 
         'explain_btn': 'Why? 🤔',
@@ -546,6 +556,16 @@ const translations: Record<Language, Record<string, string>> = {
         'info': 'Info',
         'manage_subs_in_store': 'Spravujte své předplatné v nastavení obchodu.',
         'restore': 'Obnovit',
+
+        // Moon Phase
+        'moon_phase': 'Fáze Měsíce',
+        'moon_illumination': 'Osvětlení',
+        'moonrise': 'Východ Měsíce',
+        'moonset': 'Západ Měsíce',
+        'next_full_moon': 'Další úplněk',
+
+        // Model Agreement
+        'models_diverge': 'Modely se rozcházejí',
 
         // AstroPack & Ultra
 

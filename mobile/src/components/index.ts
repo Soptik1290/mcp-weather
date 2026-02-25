@@ -9,3 +9,4 @@ export * from './AstroCard';
 export * from './ExplainModal';
 export { AnimatedCard } from './AnimatedCard';
 export { AnimatedPressable } from './AnimatedPressable';
+export { MoonPhaseCard } from './MoonPhaseCard';
