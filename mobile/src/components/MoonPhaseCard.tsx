@@ -135,6 +135,18 @@ function MoonSvg({ phase, size, isDark }: { phase: number; size: number; isDark:
     );
 }
 
+/** Derive localized moon phase name from numeric value (0-1). */
+function getPhaseNameFromValue(phase: number, language: string): string {
+    const names: Record<string, string[]> = {
+        en: ['New Moon', 'Waxing Crescent', 'First Quarter', 'Waxing Gibbous', 'Full Moon', 'Waning Gibbous', 'Last Quarter', 'Waning Crescent'],
+        cs: ['Nov', 'Dorůstající srpek', 'První čtvrť', 'Dorůstající měsíc', 'Úplněk', 'Couvající měsíc', 'Poslední čtvrť', 'Couvající srpek'],
+    };
+    const lang = names[language] ? language : 'en';
+    const p = ((phase % 1) + 1) % 1;
+    const idx = Math.round(p * 8) % 8;
+    return names[lang][idx];
+}
+
 export function MoonPhaseCard({
     astronomy,
     textColor,
@@ -149,11 +161,44 @@ export function MoonPhaseCard({
     const moonSize = isTablet ? 90 : 76;
 
     const phase = astronomy.moon_phase ?? 0;
-    const phaseName = astronomy.moon_phase_name || '—';
     const illumination = astronomy.moon_illumination;
     const moonrise = astronomy.moonrise;
     const moonset = astronomy.moonset;
     const nextFull = astronomy.next_full_moon;
+
+    // Derive phase name from value if not provided
+    const phaseName = astronomy.moon_phase_name || getPhaseNameFromValue(phase, language);
+
+    // Format ISO timestamp to HH:MM for display
+    const formatISOToTime = (iso: string): string => {
+        try {
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) {
+                // Fallback: try extracting HH:MM from string
+                const match = iso.match(/(\d{2}):(\d{2})/);
+                return match ? `${match[1]}:${match[2]}` : iso;
+            }
+            const hh = d.getHours().toString().padStart(2, '0');
+            const mm = d.getMinutes().toString().padStart(2, '0');
+            return `${hh}:${mm}`;
+        } catch {
+            return iso;
+        }
+    };
+
+    // Format ISO date to readable date
+    const formatISOToDate = (iso: string): string => {
+        try {
+            const d = new Date(iso);
+            if (isNaN(d.getTime())) return iso;
+            return d.toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US', {
+                day: 'numeric',
+                month: 'long',
+            });
+        } catch {
+            return iso;
+        }
+    };
 
     return (
         <View
@@ -201,7 +246,7 @@ export function MoonPhaseCard({
                             <View style={styles.timeItem}>
                                 <Text style={{ fontSize: 14 }}>🌅</Text>
                                 <Text style={[styles.timeLabel, { color: subTextColor }]}>
-                                    {formatTimeString(moonrise, timeFormat)}
+                                    {formatTimeString(formatISOToTime(moonrise), timeFormat)}
                                 </Text>
                             </View>
                         )}
@@ -209,7 +254,7 @@ export function MoonPhaseCard({
                             <View style={styles.timeItem}>
                                 <Text style={{ fontSize: 14 }}>🌇</Text>
                                 <Text style={[styles.timeLabel, { color: subTextColor }]}>
-                                    {formatTimeString(moonset, timeFormat)}
+                                    {formatTimeString(formatISOToTime(moonset), timeFormat)}
                                 </Text>
                             </View>
                         )}
@@ -221,7 +266,7 @@ export function MoonPhaseCard({
             {nextFull && (
                 <View style={styles.nextFull}>
                     <Text style={[styles.metaText, { color: subTextColor }]}>
-                        {t('next_full_moon', language)}: {nextFull}
+                        {t('next_full_moon', language)}: {formatISOToDate(nextFull)}
                     </Text>
                 </View>
             )}
