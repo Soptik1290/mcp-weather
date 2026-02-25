@@ -233,43 +233,35 @@ export function MoonPhaseCard({
                         {phaseName}
                     </Text>
 
-                    {/* Illumination */}
-                    {illumination != null && (
-                        <Text style={[styles.metaText, { color: subTextColor }]}>
-                            {t('moon_illumination', language)}: {Math.round(illumination)}%
-                        </Text>
-                    )}
+                    {/* Illumination — always show, even 0% */}
+                    <Text style={[styles.metaText, { color: subTextColor }]}>
+                        {t('moon_illumination', language)}: {illumination !== undefined && illumination !== null ? `${Math.round(illumination)}%` : '—'}
+                    </Text>
 
-                    {/* Moonrise / Moonset */}
+                    {/* Moonrise / Moonset — always show row */}
                     <View style={styles.timesRow}>
-                        {moonrise && (
-                            <View style={styles.timeItem}>
-                                <Text style={{ fontSize: 14 }}>🌅</Text>
-                                <Text style={[styles.timeLabel, { color: subTextColor }]}>
-                                    {formatTimeString(formatISOToTime(moonrise), timeFormat)}
-                                </Text>
-                            </View>
-                        )}
-                        {moonset && (
-                            <View style={styles.timeItem}>
-                                <Text style={{ fontSize: 14 }}>🌇</Text>
-                                <Text style={[styles.timeLabel, { color: subTextColor }]}>
-                                    {formatTimeString(formatISOToTime(moonset), timeFormat)}
-                                </Text>
-                            </View>
-                        )}
+                        <View style={styles.timeItem}>
+                            <Text style={{ fontSize: 14 }}>🌅</Text>
+                            <Text style={[styles.timeLabel, { color: subTextColor }]}>
+                                {moonrise ? formatTimeString(formatISOToTime(moonrise), timeFormat) : '—'}
+                            </Text>
+                        </View>
+                        <View style={styles.timeItem}>
+                            <Text style={{ fontSize: 14 }}>🌇</Text>
+                            <Text style={[styles.timeLabel, { color: subTextColor }]}>
+                                {moonset ? formatTimeString(formatISOToTime(moonset), timeFormat) : '—'}
+                            </Text>
+                        </View>
                     </View>
                 </View>
             </View>
 
             {/* Next full moon */}
-            {nextFull && (
-                <View style={styles.nextFull}>
-                    <Text style={[styles.metaText, { color: subTextColor }]}>
-                        {t('next_full_moon', language)}: {formatISOToDate(nextFull)}
-                    </Text>
-                </View>
-            )}
+            <View style={styles.nextFull}>
+                <Text style={[styles.metaText, { color: subTextColor }]}>
+                    {t('next_full_moon', language)}: {nextFull ? formatISOToDate(nextFull) : '—'}
+                </Text>
+            </View>
         </View>
     );
 }
