@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
     View,
     Text,
@@ -9,6 +9,8 @@ import {
     StatusBar,
     TouchableOpacity,
     Modal,
+    Animated,
+    Easing,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -44,6 +46,7 @@ export function HomeScreen() {
     const [explainModalVisible, setExplainModalVisible] = useState(false);
     const [explainLoading, setExplainLoading] = useState(false);
     const [explainData, setExplainData] = useState<{ explanation: string; sources: any[] }>({ explanation: '', sources: [] });
+    const [aiSummary, setAiSummary] = useState<string | null>(null);
     const [aiLoading, setAiLoading] = useState(false);
 
     // ... existing code ...
@@ -66,10 +69,8 @@ export function HomeScreen() {
         try {
             const locationName = currentLocation?.name || '';
 
-            const isPaidTier = tier === 'pro' || tier === 'ultra';
-
             const [weatherData, themeData, aurora, astro] = await Promise.all([
-                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias, isPaidTier),
+                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias),
                 weatherService.getAmbientTheme(locationName),
                 weatherService.getAuroraForecast(
                     currentLocation?.latitude || 50.0,
@@ -98,23 +99,6 @@ export function HomeScreen() {
             });
             setTheme(themeData);
             setAuroraData(aurora);
-
-            // Phase 2: Lazy load AI summary for paid tiers
-            if (isPaidTier && !weatherData.ai_summary) {
-                setAiLoading(true);
-                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias, false)
-                    .then(aiData => {
-                        setWeather(prev => prev ? ({
-                            ...prev,
-                            ai_summary: aiData.ai_summary,
-                            confidence_score: aiData.confidence_score,
-                            sources_used: aiData.sources_used,
-                            model_agreement: aiData.model_agreement,
-                        }) : prev);
-                    })
-                    .catch(err => console.warn('AI summary fetch failed:', err))
-                    .finally(() => setAiLoading(false));
-            }
 
             // Update Android Widget
             if (weatherData.current) {
@@ -186,6 +170,30 @@ export function HomeScreen() {
     useEffect(() => {
         fetchWeather();
     }, [currentLocation?.name, lang, tier, settings.confidence_bias]);
+
+    // Lazy-load AI summary for Pro/Ultra tiers AFTER weather is loaded
+    const fetchAISummary = useCallback(async () => {
+        if (tier === 'free' || !currentLocation?.name) return;
+        setAiLoading(true);
+        try {
+            const result = await weatherService.getAISummary(
+                currentLocation.name,
+                lang,
+                settings.confidence_bias
+            );
+            setAiSummary(result.ai_summary);
+        } catch (e) {
+            console.warn('AI summary lazy-load failed:', e);
+        } finally {
+            setAiLoading(false);
+        }
+    }, [currentLocation?.name, lang, tier, settings.confidence_bias]);
+
+    useEffect(() => {
+        if (weather && tier !== 'free') {
+            fetchAISummary();
+        }
+    }, [weather, fetchAISummary]);
 
     const formatTemperature = (temp: number): string => {
         if (settings.temperature_unit === 'fahrenheit') {
@@ -429,22 +437,22 @@ export function HomeScreen() {
                                     </View>
 
                                     {/* Tablet AI Summary (Under Left Card) — Pro/Ultra only */}
-                                    {tier !== 'free' && (weather?.ai_summary || aiLoading) && (
+                                    {tier !== 'free' && (aiSummary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg, marginTop: 0, marginBottom: 0 }]}>
                                             <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
                                                 </Text>
-                                                {aiLoading && !weather?.ai_summary ? (
-                                                    <View style={styles.aiSkeletonContainer}>
-                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '100%' }]} />
-                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '85%' }]} />
-                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '70%' }]} />
+                                                {aiLoading ? (
+                                                    <View style={{ gap: 8, marginTop: 4 }}>
+                                                        <View style={[styles.skeletonLine, { width: '100%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                                        <View style={[styles.skeletonLine, { width: '85%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                                        <View style={[styles.skeletonLine, { width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
                                                     </View>
                                                 ) : (
                                                     <Text style={[styles.aiSummary, { color: subTextColor, fontSize: 16, lineHeight: 24 }]}>
-                                                        {weather?.ai_summary}
+                                                        {aiSummary}
                                                     </Text>
                                                 )}
                                             </View>
@@ -599,22 +607,22 @@ export function HomeScreen() {
                                     )}
 
                                     {/* AI Summary - Phone only */}
-                                    {!isTablet && tier !== 'free' && (weather?.ai_summary || aiLoading) && (
+                                    {!isTablet && tier !== 'free' && (aiSummary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                             <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
                                                 </Text>
-                                                {aiLoading && !weather?.ai_summary ? (
-                                                    <View style={styles.aiSkeletonContainer}>
-                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '100%' }]} />
-                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '85%' }]} />
-                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '70%' }]} />
+                                                {aiLoading ? (
+                                                    <View style={{ gap: 8, marginTop: 4 }}>
+                                                        <View style={[styles.skeletonLine, { width: '100%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                                        <View style={[styles.skeletonLine, { width: '85%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                                        <View style={[styles.skeletonLine, { width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
                                                     </View>
                                                 ) : (
                                                     <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                        {weather?.ai_summary}
+                                                        {aiSummary}
                                                     </Text>
                                                 )}
                                             </View>
@@ -777,7 +785,7 @@ export function HomeScreen() {
                                     )}
 
                                     {/* AI Summary — Pro/Ultra only */}
-                                    {tier !== 'free' && (weather?.ai_summary || aiLoading) && (
+                                    {tier !== 'free' && (aiSummary || aiLoading) && (
                                         <AnimatedCard index={4}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                                 <Text style={styles.aiIcon}>🤖</Text>
@@ -785,15 +793,15 @@ export function HomeScreen() {
                                                     <Text style={[styles.aiTitle, { color: textColor }]}>
                                                         {t('ai_summary', lang)}
                                                     </Text>
-                                                    {aiLoading && !weather?.ai_summary ? (
-                                                        <View style={styles.aiSkeletonContainer}>
-                                                            <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '100%' }]} />
-                                                            <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '85%' }]} />
-                                                            <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '70%' }]} />
+                                                    {aiLoading ? (
+                                                        <View style={{ gap: 8, marginTop: 4 }}>
+                                                            <View style={[styles.skeletonLine, { width: '100%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                                            <View style={[styles.skeletonLine, { width: '85%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                                            <View style={[styles.skeletonLine, { width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
                                                         </View>
                                                     ) : (
                                                         <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                            {weather?.ai_summary}
+                                                            {aiSummary}
                                                         </Text>
                                                     )}
                                                 </View>
@@ -1132,14 +1140,9 @@ const styles = StyleSheet.create({
         fontWeight: '500',
         textAlign: 'center',
     },
-    aiSkeletonContainer: {
-        gap: 8,
-        marginTop: 4,
-    },
-    aiSkeletonLine: {
-        height: 12,
-        borderRadius: 6,
-        opacity: 0.15,
+    skeletonLine: {
+        height: 14,
+        borderRadius: 7,
     },
 });
 

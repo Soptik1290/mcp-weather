@@ -331,27 +331,17 @@ class WeatherAggregator:
             "balanced": "ADOPT A BALANCED BIAS. Weigh sources equally and aim for the most statistically probable outcome."
         }.get(confidence_bias, "ADOPT A BALANCED BIAS.")
 
-        language_instruction = f"The 'reasoning' and 'conditions' fields MUST be strictly in the '{language.upper()}' language code (e.g. 'EN' for English, 'CS' for Czech). All other JSON keys must remain in English."
+        language_instruction = f"The 'conditions' field MUST be strictly in the '{language.upper()}' language code (e.g. 'EN' for English, 'CS' for Czech). All other JSON keys must remain in English."
 
-        system_prompt = f"""You are a friendly personal weather assistant. Your goal is to provide a helpful, human-like weather summary based on data from multiple sources.
+        system_prompt = f"""You are a weather data analyst. Deduce the most accurate weather values from multiple sources.
 
 {language_instruction}
 {bias_instruction}
 
 Your task:
 1. Analyze the weather data to determine the most likely actual conditions.
-2. Provide a "reasoning" summary that focuses on ACTIONABLE ADVICE for the user.
-   - Tell them what to wear (e.g., "Take a coat", "T-shirt is enough").
-   - Mention accessories (e.g., "Don't forget an umbrella", "Sunglasses needed").
-   - Warn about specific hazards (e.g., "It will be slippery", "High winds expected").
-   - Keep the tone friendly and conversational, not robotic or statistical.
-3. Deduce the most accurate numerical values (temperature, wind, etc.) based on the consensus of sources.
-
-Formatting Instructions:
-- The "reasoning" field MUST be a natural language summary.
-- Do NOT list sources or statistical deviations in the summary unless critical.
-- If the language is 'CS' (Czech), use natural, casual Czech (e.g., "Vypadá to na déšť...", "Bude krásně..."). If it is 'EN' (English), use natural English.
-- Keep it concise (max 2-3 sentences).
+2. Deduce the most accurate numerical values (temperature, wind, etc.) based on the consensus of sources.
+3. The "conditions" field should be a short weather description (e.g., "Cloudy", "Light rain").
 
 Return a JSON object with:
 - "temperature": your deduced temperature in °C
@@ -362,8 +352,7 @@ Return a JSON object with:
 - "uv_index": UV index (if available)
 - "conditions": weather description (in target language)
 - "precipitation_confidence": 0-100 how confident you are about precipitation today
-- "confidence": 0-1 score
-- "reasoning": your friendly, actionable advice (in target language)"""
+- "confidence": 0-1 score"""
 
         user_prompt = f"""Location: {safe_location_name}
 
@@ -449,7 +438,7 @@ Analyze these sources and deduce the most accurate current weather."""
                 daily_forecast=agg_daily,
                 hourly_forecast=agg_hourly,
                 astronomy=astronomy,
-                ai_summary=result.get("reasoning", "AI aggregation complete"),
+                ai_summary=None,  # Summary loaded lazily via /weather/ai-summary
                 confidence_score=result.get("confidence", 0.85),
                 sources_used=sources,
                 model_agreement=agreement
@@ -533,7 +522,7 @@ Analyze these sources and deduce the most accurate current weather."""
                         daily_forecast=agg_daily,
                         hourly_forecast=agg_hourly,
                         astronomy=astronomy_backup,
-                        ai_summary=result.get("reasoning", "AI aggregation complete (backup)"),
+                        ai_summary=None,  # Summary loaded lazily via /weather/ai-summary
                         confidence_score=result.get("confidence", 0.80),
                         sources_used=sources,
                         model_agreement=agreement
@@ -672,6 +661,98 @@ Analyze these sources and deduce the most accurate current weather."""
             sources_used=sources,
             model_agreement=agreement
         )
+
+    async def generate_ai_summary(
+        self,
+        weather_data: list[WeatherData],
+        language: str = "en",
+        confidence_bias: str = "balanced"
+    ) -> Optional[str]:
+        """
+        Generate ONLY the AI text summary (actionable advice) via a lightweight GPT call.
+        This is separate from numerical aggregation to allow lazy loading.
+        """
+        if not self.has_ai or not weather_data:
+            return None
+
+        # Build compact context
+        sources = [w.provider for w in weather_data]
+        location = weather_data[0].location
+        safe_location_name = self._sanitize_prompt_input(location.name)
+
+        context_parts = []
+        for w in weather_data:
+            if w.current:
+                context_parts.append(f"{w.provider}: {w.current.temperature}°C, {w.current.weather_description}, wind {w.current.wind_speed}km/h, humidity {w.current.humidity}%")
+                if w.current.feels_like is not None:
+                    context_parts[-1] += f", feels {w.current.feels_like}°C"
+            if w.daily_forecast:
+                d0 = w.daily_forecast[0]
+                if d0.precipitation_probability is not None:
+                    context_parts[-1] += f", precip {d0.precipitation_probability}%"
+
+        bias_hint = {
+            "cautious": "Lean towards worse conditions for safety.",
+            "optimistic": "Lean towards better conditions, but warn about dangers.",
+            "balanced": "Be balanced."
+        }.get(confidence_bias, "")
+
+        lang_name = "Czech" if language == "cs" else "English"
+
+        system_prompt = f"""You are a friendly personal weather assistant. Generate a short, actionable weather summary.
+
+Write in {lang_name}. {bias_hint}
+
+Focus on:
+- What to wear (coat, umbrella, sunglasses)
+- Specific hazards (slippery, high winds)
+- Friendly, conversational tone
+
+Return a JSON object with ONLY:
+- "summary": your advice (2-3 sentences, in {lang_name})"""
+
+        user_prompt = f"""Location: {safe_location_name}
+Data from {len(sources)} sources:
+{chr(10).join(context_parts)}"""
+
+        try:
+            response = await self.client.chat.completions.create(
+                model="gpt-5-mini",
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_prompt}
+                ],
+                max_completion_tokens=300,
+                response_format={"type": "json_object"}
+            )
+
+            content = response.choices[0].message.content
+            if not content:
+                return None
+
+            result = json.loads(content)
+            return result.get("summary")
+
+        except Exception as e:
+            print(f"[WARN] AI summary generation failed: {e}")
+            # Try backup model
+            try:
+                response = await self.client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ],
+                    max_completion_tokens=300,
+                    response_format={"type": "json_object"}
+                )
+                content = response.choices[0].message.content
+                if content:
+                    result = json.loads(content)
+                    return result.get("summary")
+            except Exception as e2:
+                print(f"[ERR] AI summary backup failed: {e2}")
+            return None
     
     async def get_ambient_theme(
         self,

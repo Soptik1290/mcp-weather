@@ -156,7 +156,6 @@ class WeatherRequest(BaseModel):
     language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
     tier: str = Field("free", pattern=r"^(free|pro|ultra)$")
     confidence_bias: str = Field("balanced", pattern=r"^(cautious|balanced|optimistic)$")
-    skip_ai: bool = Field(False, description="Skip AI aggregation for fast initial load")
 
 
 class ExplainRequest(BaseModel):
@@ -276,7 +275,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
     """Get weather forecast with AI analysis from multiple sources."""
     try:
         # Cache: 30m (Dynamic + AI cost)
-        cache_key = f"weather:forecast:v6:{request.location_name.lower()}:{request.days}:{request.language}:{request.tier}:{request.confidence_bias}:{request.skip_ai}"
+        cache_key = f"weather:forecast:v6:{request.location_name.lower()}:{request.days}:{request.language}:{request.tier}:{request.confidence_bias}"
         
         # Try cache
         cached = await get_cached_weather(cache_key)
@@ -303,17 +302,14 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         if not weather_data_list:
             raise HTTPException(status_code=500, detail="All weather providers failed")
         
-        if request.tier in ["pro", "ultra"] and not request.skip_ai:
+        if request.tier in ["pro", "ultra"]:
              # AI Aggregation for paid tiers
              model = "gpt-5-mini"
              aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model, confidence_bias=request.confidence_bias)
         else:
-             # Statistical Aggregation for free tier or skip_ai fast path
+             # Statistical Aggregation for free tier
              model = "statistical"
-             if request.skip_ai and request.tier != "free":
-                 msg = None  # No message needed for skip_ai — AI summary will follow
-             else:
-                 msg = "Statistický souhrn (Upgrade pro AI)" if request.language == "cs" else "Statistical summary (Upgrade for AI)"
+             msg = "Statistický souhrn (Upgrade pro AI)" if request.language == "cs" else "Statistical summary (Upgrade for AI)"
              aggregated = await aggregator._statistical_aggregate(weather_data_list, request.language, availability_message=msg)
         
         # Get ambient theme
@@ -350,6 +346,65 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         print(f"Internal Error: {e}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class AISummaryRequest(BaseModel):
+    location_name: str = Field(..., min_length=2, max_length=100)
+    language: str = Field("en", pattern=r"^[a-z]{2}(-[a-zA-Z]{2})?$", max_length=5)
+    confidence_bias: str = Field("balanced", pattern=r"^(cautious|balanced|optimistic)$")
+
+
+@app.post("/weather/ai-summary", dependencies=[Depends(RateLimiter(requests_per_minute=20))])
+async def get_ai_summary(request: AISummaryRequest, response: Response):
+    """Generate AI weather summary text (lazy-loaded, separate from forecast numbers)."""
+    try:
+        cache_key = f"weather:ai-summary:v1:{request.location_name.lower()}:{request.language}:{request.confidence_bias}"
+
+        cached = await get_cached_weather(cache_key)
+        if cached:
+            response.headers["X-Cache-Status"] = "HIT"
+            return cached
+
+        # Fetch weather from all providers (fast, usually cached at HTTP/provider level)
+        locations = await open_meteo.search_location(request.location_name)
+        if not locations:
+            raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
+
+        location = locations[0]
+
+        results = await asyncio.gather(
+            *[_fetch_provider(name, prov, location, 1, request.language)
+              for name, prov in providers]
+        )
+        weather_data_list = [r for r in results if r is not None]
+
+        if not weather_data_list:
+            raise HTTPException(status_code=500, detail="All weather providers failed")
+
+        # Generate AI summary only (lightweight GPT call)
+        summary = await aggregator.generate_ai_summary(
+            weather_data_list,
+            request.language,
+            request.confidence_bias
+        )
+
+        response_data = {
+            "ai_summary": summary,
+            "model_used": "gpt-5-mini" if summary else "none"
+        }
+
+        await set_cached_weather(cache_key, response_data, ttl_seconds=1800)  # 30m
+
+        response.headers["X-Cache-Status"] = "MISS"
+        return response_data
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"AI Summary Error: {e}")
+        traceback.print_exc()
+        # Return null summary rather than error — frontend handles gracefully
+        return {"ai_summary": None, "model_used": "error"}
 
 
 @app.post("/weather/coordinates", dependencies=[Depends(RateLimiter(requests_per_minute=20))])

@@ -89,21 +89,13 @@ class WeatherService {
         days: number = 7,
         language: string = 'cs',
         tier: string = 'free',
-        confidenceBias: string = 'balanced',
-        skipAi: boolean = false
+        confidenceBias: string = 'balanced'
     ): Promise<WeatherResponse> {
         try {
             const response = await fetch(`${this.baseUrl}/weather/forecast`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location_name: locationName,
-                    days,
-                    language,
-                    tier,
-                    confidence_bias: confidenceBias,
-                    skip_ai: skipAi,
-                }),
+                body: JSON.stringify({ location_name: locationName, days, language, tier, confidence_bias: confidenceBias }),
             });
 
             if (!response.ok) {
@@ -114,6 +106,34 @@ class WeatherService {
         } catch (error) {
             console.error('Get weather forecast error:', error);
             throw error;
+        }
+    }
+
+    async getAISummary(
+        locationName: string,
+        language: string = 'cs',
+        confidenceBias: string = 'balanced'
+    ): Promise<{ ai_summary: string | null; model_used: string }> {
+        try {
+            const response = await fetch(`${this.baseUrl}/weather/ai-summary`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    location_name: locationName,
+                    language,
+                    confidence_bias: confidenceBias,
+                }),
+            });
+
+            if (!response.ok) {
+                console.warn(`AI summary fetch failed: ${response.status}`);
+                return { ai_summary: null, model_used: 'error' };
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.warn('AI summary fetch error:', error);
+            return { ai_summary: null, model_used: 'error' };
         }
     }
 
