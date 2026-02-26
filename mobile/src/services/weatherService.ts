@@ -89,13 +89,21 @@ class WeatherService {
         days: number = 7,
         language: string = 'cs',
         tier: string = 'free',
-        confidenceBias: string = 'balanced'
+        confidenceBias: string = 'balanced',
+        skipAi: boolean = false
     ): Promise<WeatherResponse> {
         try {
             const response = await fetch(`${this.baseUrl}/weather/forecast`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ location_name: locationName, days, language, tier, confidence_bias: confidenceBias }),
+                body: JSON.stringify({
+                    location_name: locationName,
+                    days,
+                    language,
+                    tier,
+                    confidence_bias: confidenceBias,
+                    skip_ai: skipAi,
+                }),
             });
 
             if (!response.ok) {

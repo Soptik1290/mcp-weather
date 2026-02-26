@@ -44,6 +44,7 @@ export function HomeScreen() {
     const [explainModalVisible, setExplainModalVisible] = useState(false);
     const [explainLoading, setExplainLoading] = useState(false);
     const [explainData, setExplainData] = useState<{ explanation: string; sources: any[] }>({ explanation: '', sources: [] });
+    const [aiLoading, setAiLoading] = useState(false);
 
     // ... existing code ...
 
@@ -65,8 +66,10 @@ export function HomeScreen() {
         try {
             const locationName = currentLocation?.name || '';
 
+            const isPaidTier = tier === 'pro' || tier === 'ultra';
+
             const [weatherData, themeData, aurora, astro] = await Promise.all([
-                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias),
+                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias, isPaidTier),
                 weatherService.getAmbientTheme(locationName),
                 weatherService.getAuroraForecast(
                     currentLocation?.latitude || 50.0,
@@ -95,6 +98,23 @@ export function HomeScreen() {
             });
             setTheme(themeData);
             setAuroraData(aurora);
+
+            // Phase 2: Lazy load AI summary for paid tiers
+            if (isPaidTier && !weatherData.ai_summary) {
+                setAiLoading(true);
+                weatherService.getWeatherForecast(locationName, 7, settings.language, tier, settings.confidence_bias, false)
+                    .then(aiData => {
+                        setWeather(prev => prev ? ({
+                            ...prev,
+                            ai_summary: aiData.ai_summary,
+                            confidence_score: aiData.confidence_score,
+                            sources_used: aiData.sources_used,
+                            model_agreement: aiData.model_agreement,
+                        }) : prev);
+                    })
+                    .catch(err => console.warn('AI summary fetch failed:', err))
+                    .finally(() => setAiLoading(false));
+            }
 
             // Update Android Widget
             if (weatherData.current) {
@@ -409,16 +429,24 @@ export function HomeScreen() {
                                     </View>
 
                                     {/* Tablet AI Summary (Under Left Card) — Pro/Ultra only */}
-                                    {weather?.ai_summary && tier !== 'free' && (
+                                    {tier !== 'free' && (weather?.ai_summary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg, marginTop: 0, marginBottom: 0 }]}>
                                             <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
                                                 </Text>
-                                                <Text style={[styles.aiSummary, { color: subTextColor, fontSize: 16, lineHeight: 24 }]}>
-                                                    {weather.ai_summary}
-                                                </Text>
+                                                {aiLoading && !weather?.ai_summary ? (
+                                                    <View style={styles.aiSkeletonContainer}>
+                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '100%' }]} />
+                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '85%' }]} />
+                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '70%' }]} />
+                                                    </View>
+                                                ) : (
+                                                    <Text style={[styles.aiSummary, { color: subTextColor, fontSize: 16, lineHeight: 24 }]}>
+                                                        {weather?.ai_summary}
+                                                    </Text>
+                                                )}
                                             </View>
                                         </View>
                                     )}
@@ -571,16 +599,24 @@ export function HomeScreen() {
                                     )}
 
                                     {/* AI Summary - Phone only */}
-                                    {!isTablet && weather?.ai_summary && (
+                                    {!isTablet && tier !== 'free' && (weather?.ai_summary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                             <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
                                                 </Text>
-                                                <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                    {weather.ai_summary}
-                                                </Text>
+                                                {aiLoading && !weather?.ai_summary ? (
+                                                    <View style={styles.aiSkeletonContainer}>
+                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '100%' }]} />
+                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '85%' }]} />
+                                                        <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '70%' }]} />
+                                                    </View>
+                                                ) : (
+                                                    <Text style={[styles.aiSummary, { color: subTextColor }]}>
+                                                        {weather?.ai_summary}
+                                                    </Text>
+                                                )}
                                             </View>
                                         </View>
                                     )}
@@ -741,7 +777,7 @@ export function HomeScreen() {
                                     )}
 
                                     {/* AI Summary — Pro/Ultra only */}
-                                    {weather?.ai_summary && tier !== 'free' && (
+                                    {tier !== 'free' && (weather?.ai_summary || aiLoading) && (
                                         <AnimatedCard index={4}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                                 <Text style={styles.aiIcon}>🤖</Text>
@@ -749,9 +785,17 @@ export function HomeScreen() {
                                                     <Text style={[styles.aiTitle, { color: textColor }]}>
                                                         {t('ai_summary', lang)}
                                                     </Text>
-                                                    <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                        {weather.ai_summary}
-                                                    </Text>
+                                                    {aiLoading && !weather?.ai_summary ? (
+                                                        <View style={styles.aiSkeletonContainer}>
+                                                            <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '100%' }]} />
+                                                            <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '85%' }]} />
+                                                            <View style={[styles.aiSkeletonLine, { backgroundColor: cardBg, width: '70%' }]} />
+                                                        </View>
+                                                    ) : (
+                                                        <Text style={[styles.aiSummary, { color: subTextColor }]}>
+                                                            {weather?.ai_summary}
+                                                        </Text>
+                                                    )}
                                                 </View>
                                             </View>
                                         </AnimatedCard>
@@ -1087,6 +1131,15 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '500',
         textAlign: 'center',
+    },
+    aiSkeletonContainer: {
+        gap: 8,
+        marginTop: 4,
+    },
+    aiSkeletonLine: {
+        height: 12,
+        borderRadius: 6,
+        opacity: 0.15,
     },
 });
 
