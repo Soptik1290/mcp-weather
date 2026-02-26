@@ -173,11 +173,11 @@ export function HomeScreen() {
 
     // Lazy-load AI summary for Pro/Ultra tiers AFTER weather is loaded
     const fetchAISummary = useCallback(async () => {
-        if (tier === 'free' || !currentLocation?.name) return;
+        if (tier === 'free' || !weather?.location?.name) return;
         setAiLoading(true);
         try {
             const result = await weatherService.getAISummary(
-                currentLocation.name,
+                weather.location.name,
                 lang,
                 settings.confidence_bias
             );
@@ -187,7 +187,7 @@ export function HomeScreen() {
         } finally {
             setAiLoading(false);
         }
-    }, [currentLocation?.name, lang, tier, settings.confidence_bias]);
+    }, [weather?.location?.name, lang, tier, settings.confidence_bias]);
 
     useEffect(() => {
         if (weather && tier !== 'free') {
@@ -685,15 +685,15 @@ export function HomeScreen() {
                                                     setExplainModalVisible(true);
                                                     setExplainLoading(true);
                                                     try {
-                                                        const data = await weatherService.explainWeather(
-                                                            weather?.location.name || '',
+                                                        const result = await weatherService.explainWeather(
+                                                            weather?.location.name || currentLocation?.name || 'Unknown',
                                                             lang,
                                                             tier,
                                                             settings.confidence_bias
                                                         );
                                                         setExplainData({
-                                                            explanation: data.explanation,
-                                                            sources: data.sources_data || []
+                                                            explanation: result.explanation,
+                                                            sources: result.sources_data || []
                                                         });
                                                     } catch (e) {
                                                         setExplainData({
