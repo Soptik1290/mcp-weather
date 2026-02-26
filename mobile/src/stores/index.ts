@@ -39,7 +39,7 @@ const defaultSettings: UserSettings = {
     time_format: '24h',
     confidence_bias: 'balanced',
     aurora_display: 'auto',
-    theme_mode: 'system',
+    theme_mode: 'auto',
     notifications_enabled: true,
     aurora_alerts: true,
     iss_alerts: false,

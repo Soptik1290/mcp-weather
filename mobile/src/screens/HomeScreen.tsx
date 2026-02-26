@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, G, Polygon, Defs, ClipPath, Path, Rect, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
-import { Search, Settings } from 'lucide-react-native';
+import { Search, Settings, AlertTriangle, RefreshCcw } from 'lucide-react-native';
 import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode, getLocalizedCity, getLocalizedCountry, triggerHaptic } from '../utils';
 
 import { weatherService, widgetService } from '../services';
@@ -48,6 +48,20 @@ export function HomeScreen() {
     const [explainData, setExplainData] = useState<{ explanation: string; sources: any[] }>({ explanation: '', sources: [] });
     const [aiSummary, setAiSummary] = useState<string | null>(null);
     const [aiLoading, setAiLoading] = useState(false);
+
+    const errorShake = React.useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        if (error) {
+            triggerHaptic('notificationError');
+            Animated.sequence([
+                Animated.timing(errorShake, { toValue: 10, duration: 100, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: -10, duration: 100, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: 10, duration: 100, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: 0, duration: 100, useNativeDriver: true })
+            ]).start();
+        }
+    }, [error]);
 
     // ... existing code ...
 
@@ -223,9 +237,34 @@ export function HomeScreen() {
 
     if (error) {
         return (
-            <View style={styles.errorContainer}>
-                <Text style={styles.errorText}>{error}</Text>
-            </View>
+            <>
+                <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+                <LinearGradient
+                    colors={['#4A90D9', '#67B8DE', '#8BC7E8']}
+                    style={styles.gradient}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                >
+                    <SafeAreaView style={styles.errorContainer}>
+                        <Animated.View style={[styles.errorContent, { transform: [{ translateX: errorShake }] }]}>
+                            <AlertTriangle size={48} color="#fff" style={{ marginBottom: 16 }} />
+                            <Text style={styles.errorText}>{error}</Text>
+
+                            <TouchableOpacity
+                                style={styles.retryBtn}
+                                onPress={() => {
+                                    triggerHaptic('impactMedium');
+                                    fetchWeather();
+                                }}
+                                activeOpacity={0.8}
+                            >
+                                <RefreshCcw size={20} color="#4A90D9" />
+                                <Text style={styles.retryBtnText}>{t('try_again', lang)}</Text>
+                            </TouchableOpacity>
+                        </Animated.View>
+                    </SafeAreaView>
+                </LinearGradient>
+            </>
         );
     }
 
@@ -979,13 +1018,36 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
-        backgroundColor: '#4A90D9',
         padding: 20,
+    },
+    errorContent: {
+        alignItems: 'center',
+        backgroundColor: 'rgba(255,255,255,0.15)',
+        padding: 30,
+        borderRadius: 24,
+        width: '100%',
+        maxWidth: 400,
     },
     errorText: {
         color: '#fff',
         fontSize: 16,
         textAlign: 'center',
+        lineHeight: 24,
+        marginBottom: 24,
+    },
+    retryBtn: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        backgroundColor: '#fff',
+        paddingHorizontal: 24,
+        paddingVertical: 14,
+        borderRadius: 30,
+        gap: 10,
+    },
+    retryBtnText: {
+        color: '#4A90D9',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     header: {
         flexDirection: 'row',

@@ -10,6 +10,9 @@ import {
     useWindowDimensions,
     ActivityIndicator,
     Modal,
+    LayoutAnimation,
+    Platform,
+    UIManager,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
@@ -36,6 +39,10 @@ import { t, triggerHaptic } from '../utils';
 import { notificationService } from '../services/NotificationService';
 import { weatherService, dataExportService, admobService } from '../services';
 import { Alert } from 'react-native';
+
+if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 interface SettingsScreenProps {
     onClose: () => void;
@@ -80,6 +87,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
 
     const toggleSection = (key: string) => {
         triggerHaptic('impactLight');
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedSection(expandedSection === key ? null : key);
     };
 
@@ -162,6 +170,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     ) => {
         const handleToggle = async (newValue: boolean) => {
             triggerHaptic('impactLight');
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
             if (newValue) {
                 const granted = await notificationService.requestPermission();
                 if (granted) {
