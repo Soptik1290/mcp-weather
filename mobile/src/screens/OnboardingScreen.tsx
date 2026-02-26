@@ -38,7 +38,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     const { settings, updateSettings } = useSettingsStore();
     const { setCurrentLocation } = useLocationStore();
-    const { getCurrentPosition, loading: geoLoading } = useGeolocation();
+    const { getCurrentPosition, loading: geoLoading, error: geoError } = useGeolocation();
 
     const [step, setStep] = useState(0);
     const [selectedLang, setSelectedLang] = useState<'en' | 'cs'>(settings.language);
@@ -429,7 +429,15 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                 </Animated.View>
 
                                 {/* Search — matches SearchScreen's searchContainer */}
-                                <Animated.View style={[styles.searchContainer, fadeStyle(step2Search)]}>
+                                {geoError && (
+                                    <Animated.View style={[styles.errorContainer, fadeStyle(step2Search)]}>
+                                        <Text style={styles.errorText}>
+                                            {geoError}
+                                        </Text>
+                                    </Animated.View>
+                                )}
+
+                                <Animated.View style={[styles.searchContainer, fadeStyle(step2Search), geoError ? { marginTop: 12 } : {}]}>
                                     <Search size={20} color="rgba(255,255,255,0.6)" />
                                     <TextInput
                                         style={styles.searchInput}
@@ -644,6 +652,23 @@ const styles = StyleSheet.create({
         textTransform: 'uppercase',
         fontWeight: '600',
         letterSpacing: 0.5,
+    },
+    errorContainer: {
+        width: '100%',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+        backgroundColor: 'rgba(239, 68, 68, 0.15)', // Light red bg
+        borderWidth: 1,
+        borderColor: 'rgba(239, 68, 68, 0.3)',
+        marginBottom: 8,
+        alignItems: 'center',
+    },
+    errorText: {
+        color: '#FECACA', // Light red text
+        fontSize: 14,
+        fontWeight: '500',
+        textAlign: 'center',
     },
     // Search — mirrors SearchScreen.searchContainer
     searchContainer: {
