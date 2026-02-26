@@ -11,6 +11,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { Check, X, AlertTriangle, Info } from 'lucide-react-native';
 import { BlurView } from '@react-native-community/blur';
+import { triggerHaptic } from '../utils';
 
 export type AlertType = 'success' | 'error' | 'info' | 'warning';
 
@@ -160,8 +161,8 @@ export const CustomAlert = ({
                                         btn.style === 'destructive' && styles.destructiveButton
                                     ]}
                                     onPress={() => {
+                                        triggerHaptic('impactLight');
                                         btn.onPress();
-                                        // Auto-close is handled by parent usually, but we could add onClose() here if needed
                                     }}
                                 >
                                     <Text style={[
@@ -174,7 +175,7 @@ export const CustomAlert = ({
                         ) : (
                             <TouchableOpacity
                                 style={styles.button}
-                                onPress={onClose}
+                                onPress={() => { triggerHaptic('impactLight'); onClose(); }}
                             >
                                 <LinearGradient
                                     colors={config.gradient}

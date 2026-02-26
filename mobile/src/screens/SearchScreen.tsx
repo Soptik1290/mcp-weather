@@ -168,7 +168,7 @@ export function SearchScreen({
                                 {t('search_title', language)}
                             </Text>
                             <TouchableOpacity
-                                onPress={onClose}
+                                onPress={() => { triggerHaptic('impactLight'); onClose(); }}
                                 style={[styles.closeButton, { backgroundColor: cardBg }]}
                             >
                                 <X size={22} color={textColor} strokeWidth={2} />

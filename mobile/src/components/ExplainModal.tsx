@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, ActivityIn
 import LinearGradient from 'react-native-linear-gradient';
 import { X, Sparkles, BrainCircuit } from 'lucide-react-native';
 import { BlurView } from '@react-native-community/blur';
+import { triggerHaptic } from '../utils';
 
 interface SourceData {
     name: string;
@@ -62,7 +63,7 @@ export const ExplainModal = ({
                                     {language === 'cs' ? 'AI Meteorolog' : 'AI Meteorologist'}
                                 </Text>
                             </View>
-                            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+                            <TouchableOpacity onPress={() => { triggerHaptic('impactLight'); onClose(); }} style={styles.closeButton}>
                                 <X size={24} color={textColor} />
                             </TouchableOpacity>
                         </View>

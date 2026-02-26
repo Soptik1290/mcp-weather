@@ -6,7 +6,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { ChevronLeft, Rocket, Star, Eye } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { weatherService } from '../services';
-import { t } from '../utils';
+import { t, triggerHaptic } from '../utils';
 
 const { width } = Dimensions.get('window');
 
@@ -119,7 +119,7 @@ export const AstroPackScreen = () => {
             >
                 <SafeAreaView style={styles.safeArea}>
                     <View style={styles.header}>
-                        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
+                        <TouchableOpacity onPress={() => { triggerHaptic('impactLight'); navigation.goBack(); }} style={styles.backButton}>
                             <ChevronLeft size={28} color="#fff" />
                         </TouchableOpacity>
                         <Text style={styles.headerTitle}>{t('astro_pack', settings.language)}</Text>
