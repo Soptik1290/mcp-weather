@@ -11,6 +11,7 @@ import Svg, {
 } from 'react-native-svg';
 import { t } from '../utils';
 import { useSettingsStore } from '../stores';
+import { Droplets, Wind } from 'lucide-react-native';
 
 interface HourlyData {
     time: string;
@@ -39,19 +40,6 @@ const formatHour = (timeString: string, index: number): string => {
     } catch {
         return '';
     }
-};
-
-const getWeatherEmoji = (code?: number): string => {
-    if (!code) return '🌡️';
-    if (code === 0) return '☀️';
-    if (code <= 3) return '⛅';
-    if (code <= 48) return '🌫️';
-    if (code <= 67) return '🌧️';
-    if (code <= 77) return '🌨️';
-    if (code <= 82) return '🌧️';
-    if (code <= 86) return '❄️';
-    if (code >= 95) return '⛈️';
-    return '🌡️';
 };
 
 export function TemperatureChart({
@@ -215,13 +203,22 @@ export function TemperatureChart({
                         </Text>
                         <View style={styles.tooltipRow}>
                             {selectedPoint.precipitation_probability !== undefined && (
-                                <Text style={styles.tooltipSub}>💧 {selectedPoint.precipitation_probability}%</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Droplets size={12} color="#94a3b8" style={{ marginRight: 2 }} />
+                                    <Text style={styles.tooltipSub}>{selectedPoint.precipitation_probability}%</Text>
+                                </View>
                             )}
                             {selectedPoint.wind_speed !== undefined && (
-                                <Text style={styles.tooltipSub}>💨 {Math.round(selectedPoint.wind_speed)}km/h</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Wind size={12} color="#94a3b8" style={{ marginRight: 2 }} />
+                                    <Text style={styles.tooltipSub}>{Math.round(selectedPoint.wind_speed)}km/h</Text>
+                                </View>
                             )}
                             {selectedPoint.humidity !== undefined && (
-                                <Text style={styles.tooltipSub}>💧 {selectedPoint.humidity}%</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                                    <Droplets size={12} color="#94a3b8" style={{ marginRight: 2 }} />
+                                    <Text style={styles.tooltipSub}>{selectedPoint.humidity}%</Text>
+                                </View>
                             )}
                         </View>
                     </View>

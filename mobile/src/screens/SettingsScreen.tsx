@@ -32,7 +32,10 @@ import {
     Heart,
     FileText,
     Layout,
-    Rocket
+    Rocket,
+    Shield,
+    Scale,
+    Wand2
 } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { t, triggerHaptic } from '../utils';
@@ -55,6 +58,7 @@ type OptionValue = string | boolean;
 interface SettingOption {
     label: string;
     value: OptionValue;
+    icon?: React.ReactNode;
 }
 
 import { useNavigation } from '@react-navigation/native';
@@ -142,13 +146,20 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 }}
                                 activeOpacity={0.7}
                             >
-                                <Text style={[
-                                    styles.optionLabel,
-                                    { color: textColor },
-                                    currentValue === option.value && styles.optionLabelActive,
-                                ]}>
-                                    {option.label}
-                                </Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
+                                    {option.icon && (
+                                        <View style={{ marginRight: 10 }}>
+                                            {option.icon}
+                                        </View>
+                                    )}
+                                    <Text style={[
+                                        styles.optionLabel,
+                                        { color: textColor },
+                                        currentValue === option.value && styles.optionLabelActive,
+                                    ]}>
+                                        {option.label}
+                                    </Text>
+                                </View>
                                 {currentValue === option.value && (
                                     <Check size={18} color="#4A90D9" strokeWidth={2.5} />
                                 )}
@@ -381,9 +392,9 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 {renderOptionRow(
                                     t('forecast_style', lang),
                                     [
-                                        { label: t('cautious', lang), value: 'cautious' },
-                                        { label: t('balanced', lang), value: 'balanced' },
-                                        { label: t('optimistic', lang), value: 'optimistic' },
+                                        { label: t('cautious', lang), value: 'cautious', icon: <Shield size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
+                                        { label: t('balanced', lang), value: 'balanced', icon: <Scale size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
+                                        { label: t('optimistic', lang), value: 'optimistic', icon: <Sparkles size={16} color={isDark ? '#e2e8f0' : '#475569'} /> }
                                     ],
                                     settings.confidence_bias,
                                     (val) => updateSettings({ confidence_bias: val }),
@@ -523,7 +534,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                         {renderOptionRow(
                             t('aurora_setting', lang),
                             [
-                                { label: t('aurora_auto', lang), value: 'auto' },
+                                { label: t('aurora_auto', lang), value: 'auto', icon: <Wand2 size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
                                 { label: t('aurora_always', lang), value: 'always' },
                                 { label: t('aurora_never', lang), value: 'never' },
                             ],

@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import Svg, { Circle, G, Polygon, Defs, ClipPath, Path, Rect, LinearGradient as SvgLinearGradient, Stop } from 'react-native-svg';
-import { Search, Settings, AlertTriangle, RefreshCcw } from 'lucide-react-native';
+import { Search, Settings, AlertTriangle, RefreshCcw, Sparkles, Droplets, Wind, Eye, Gauge } from 'lucide-react-native';
 import { getWeatherIcon, getWeatherIconColor, t, shouldShowAurora, shouldUseDarkMode, getLocalizedCity, getLocalizedCountry, triggerHaptic } from '../utils';
 
 import { weatherService, widgetService } from '../services';
@@ -437,13 +437,13 @@ export function HomeScreen() {
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                                     {current.humidity != null && (
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                                            <Text style={{ fontSize: 18, color: textColor, marginRight: 8 }}>💧</Text>
+                                                            <Droplets size={18} color={textColor} style={{ marginRight: 8 }} />
                                                             <Text style={{ fontSize: 16, color: subTextColor }}>{current.humidity}%</Text>
                                                         </View>
                                                     )}
                                                     {current.wind_speed != null && (
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                                            <Text style={{ fontSize: 18, color: textColor, marginRight: 8 }}>🪁</Text>
+                                                            <Wind size={18} color={textColor} style={{ marginRight: 8 }} />
                                                             <Text style={{ fontSize: 16, color: subTextColor }}>{Math.round(current.wind_speed)} km/h</Text>
                                                         </View>
                                                     )}
@@ -451,13 +451,13 @@ export function HomeScreen() {
                                                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
                                                     {current.visibility != null && (
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                                            <Text style={{ fontSize: 18, color: textColor, marginRight: 8 }}>👁</Text>
+                                                            <Eye size={18} color={textColor} style={{ marginRight: 8 }} />
                                                             <Text style={{ fontSize: 16, color: subTextColor }}>{current.visibility > 1000 ? `${Math.round(current.visibility / 1000)} km` : `${current.visibility} m`}</Text>
                                                         </View>
                                                     )}
                                                     {current.pressure != null && (
                                                         <View style={{ flexDirection: 'row', alignItems: 'center', flex: 1 }}>
-                                                            <Text style={{ fontSize: 18, color: textColor, marginRight: 8 }}>⏲</Text>
+                                                            <Gauge size={18} color={textColor} style={{ marginRight: 8 }} />
                                                             <Text style={{ fontSize: 16, color: subTextColor }}>{Math.round(current.pressure)} hPa</Text>
                                                         </View>
                                                     )}
@@ -478,7 +478,7 @@ export function HomeScreen() {
                                     {/* Tablet AI Summary (Under Left Card) — Pro/Ultra only */}
                                     {tier !== 'free' && (aiSummary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg, marginTop: 0, marginBottom: 0 }]}>
-                                            <Text style={styles.aiIcon}>🤖</Text>
+                                            <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
@@ -648,7 +648,7 @@ export function HomeScreen() {
                                     {/* AI Summary - Phone only */}
                                     {!isTablet && tier !== 'free' && (aiSummary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
-                                            <Text style={styles.aiIcon}>🤖</Text>
+                                            <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
@@ -827,7 +827,7 @@ export function HomeScreen() {
                                     {tier !== 'free' && (aiSummary || aiLoading) && (
                                         <AnimatedCard index={4}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
-                                                <Text style={styles.aiIcon}>🤖</Text>
+                                                <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
                                                 <View style={styles.aiContent}>
                                                     <Text style={[styles.aiTitle, { color: textColor }]}>
                                                         {t('ai_summary', lang)}

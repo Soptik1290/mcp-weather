@@ -15,7 +15,7 @@ import {
     Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { MapPin, Search, ChevronRight, Navigation, AlertTriangle } from 'lucide-react-native';
+import { MapPin, Search, ChevronRight, Navigation, AlertTriangle, CloudSun } from 'lucide-react-native';
 import { useSettingsStore, useLocationStore } from '../stores';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { weatherService } from '../services';
@@ -323,8 +323,8 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                         {/* ===== STEP 1: Language ===== */}
                         <View style={styles.stepPage}>
                             <View style={styles.stepContent}>
-                                <Animated.View style={[fadeStyle(iconAnim, 30), { transform: [{ translateY: iconTranslateY }] }]}>
-                                    <Text style={styles.appIcon}>⛅</Text>
+                                <Animated.View style={[fadeStyle(iconAnim, 30), { transform: [{ translateY: iconTranslateY }], alignItems: 'center' }]}>
+                                    <CloudSun size={80} color="#FFF" style={{ marginBottom: 20 }} />
                                 </Animated.View>
 
                                 <Animated.Text style={[styles.welcomeTitle, fadeStyle(titleAnim)]}>

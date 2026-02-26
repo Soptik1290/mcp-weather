@@ -137,9 +137,9 @@ const translations: Record<Language, Record<string, string>> = {
         'vibration': 'Vibration',
         'notifications': 'Notifications',
         'forecast_style': 'Forecast style',
-        'cautious': '🛡️ Cautious',
-        'balanced': '⚖️ Balanced',
-        'optimistic': '🌟 Optimistic',
+        'cautious': 'Cautious',
+        'balanced': 'Balanced',
+        'optimistic': 'Optimistic',
 
         // AI Summary
         'ai_forecast': 'AI-powered forecast',
@@ -175,7 +175,7 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_best_time': 'Best viewing',
         'aurora_setting': 'Aurora Forecast',
         'aurora_setting_desc': 'When to show the Aurora activity widget',
-        'aurora_auto': '🌌 Auto (when visible)',
+        'aurora_auto': 'Auto (when visible)',
         'aurora_always': '✅ Always show',
         'aurora_never': '❌ Never show',
 
@@ -437,9 +437,9 @@ const translations: Record<Language, Record<string, string>> = {
         'customize_widget': 'Přizpůsobit widget',
         'vibration': 'Vibrace',
         'forecast_style': 'Styl předpovědi',
-        'cautious': '🛡️ Opatrný',
-        'balanced': '⚖️ Vyvážený',
-        'optimistic': '🌟 Optimistický',
+        'cautious': 'Opatrný',
+        'balanced': 'Vyvážený',
+        'optimistic': 'Optimistický',
 
         // AI Summary
         'ai_forecast': 'AI předpověď',
@@ -475,7 +475,7 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_best_time': 'Nejlepší čas',
         'aurora_setting': 'Polární záře',
         'aurora_setting_desc': 'Kdy zobrazovat widget s aktivitou polární záře',
-        'aurora_auto': '🌌 Auto (když je viditelná)',
+        'aurora_auto': 'Auto (když je viditelná)',
         'aurora_always': '✅ Vždy zobrazit',
         'aurora_never': '❌ Nikdy nezobrazovat',
 
