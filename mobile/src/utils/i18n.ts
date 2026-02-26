@@ -293,6 +293,19 @@ const translations: Record<Language, Record<string, string>> = {
         'continue_btn': 'Continue',
         'lets_go': "Let's go!",
         'detecting_location': 'Detecting location...',
+        'geo_permission_denied': 'Location access was denied',
+        'geo_unavailable': 'Location is unavailable',
+        'geo_timeout': 'Location request timed out',
+        'geo_error': 'Failed to get location',
+        'geo_permission_title': 'Location Permission',
+        'geo_permission_msg': 'Weatherly needs access to your location to show local weather.',
+        'geo_ask_later': 'Ask Later',
+        'geo_deny': 'Deny',
+        'geo_allow': 'Allow',
+        'geo_cancel': 'Cancel',
+        'geo_settings': 'Settings',
+        'geo_denied_alert': 'Permission Denied',
+        'geo_denied_msg': 'Please enable location access in settings to use geolocation.',
 
         // AstroPack & Ultra
 
@@ -590,6 +603,19 @@ const translations: Record<Language, Record<string, string>> = {
         'continue_btn': 'Pokračovat',
         'lets_go': 'Pojďme na to!',
         'detecting_location': 'Zjišťuji polohu...',
+        'geo_permission_denied': 'Přístup k poloze byl zamítnut',
+        'geo_unavailable': 'Poloha není dostupná',
+        'geo_timeout': 'Časový limit pro získání polohy vypršel',
+        'geo_error': 'Nepodařilo se získat polohu',
+        'geo_permission_title': 'Povolení polohy',
+        'geo_permission_msg': 'Weatherly potřebuje přístup k vaší poloze pro zobrazení místního počasí.',
+        'geo_ask_later': 'Zeptat se později',
+        'geo_deny': 'Zamítnout',
+        'geo_allow': 'Povolit',
+        'geo_cancel': 'Zrušit',
+        'geo_settings': 'Nastavení',
+        'geo_denied_alert': 'Povolení zamítnuto',
+        'geo_denied_msg': 'Pro použití geolokace povolte přístup k poloze v nastavení.',
 
         // AstroPack & Ultra
 

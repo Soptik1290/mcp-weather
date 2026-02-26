@@ -46,7 +46,7 @@ export function SearchScreen({
     const [error, setError] = useState<string | null>(null);
 
     const { setCurrentLocation } = useLocationStore();
-    const { getCurrentPosition, loading: geoLoading } = useGeolocation();
+    const { getCurrentPosition, loading: geoLoading } = useGeolocation(language);
 
     const { width } = useWindowDimensions();
     const isTablet = width >= 768;

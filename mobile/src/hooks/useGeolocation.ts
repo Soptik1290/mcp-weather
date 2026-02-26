@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { Platform, PermissionsAndroid, Alert, Linking } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
+import { t, type Language } from '../utils';
 
 export interface GeolocationPosition {
     latitude: number;
@@ -15,7 +16,7 @@ export interface UseGeolocationResult {
     getCurrentPosition: () => Promise<GeolocationPosition | null>;
 }
 
-export function useGeolocation(): UseGeolocationResult {
+export function useGeolocation(language: Language = 'cs'): UseGeolocationResult {
     const [position, setPosition] = useState<GeolocationPosition | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -25,11 +26,11 @@ export function useGeolocation(): UseGeolocationResult {
             const granted = await PermissionsAndroid.request(
                 PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
                 {
-                    title: 'Povolení polohy',
-                    message: 'Weatherly potřebuje přístup k vaší poloze pro zobrazení místního počasí.',
-                    buttonNeutral: 'Zeptat se později',
-                    buttonNegative: 'Zamítnout',
-                    buttonPositive: 'Povolit',
+                    title: t('geo_permission_title', language),
+                    message: t('geo_permission_msg', language),
+                    buttonNeutral: t('geo_ask_later', language),
+                    buttonNegative: t('geo_deny', language),
+                    buttonPositive: t('geo_allow', language),
                 }
             );
             return granted === PermissionsAndroid.RESULTS.GRANTED;
@@ -47,14 +48,14 @@ export function useGeolocation(): UseGeolocationResult {
         if (Platform.OS === 'android') {
             const hasPermission = await requestAndroidPermission();
             if (!hasPermission) {
-                setError('Přístup k poloze byl zamítnut');
+                setError(t('geo_permission_denied', language));
                 setLoading(false);
                 Alert.alert(
-                    'Povolení zamítnuto',
-                    'Pro použití geolokace povolte přístup k poloze v nastavení.',
+                    t('geo_denied_alert', language),
+                    t('geo_denied_msg', language),
                     [
-                        { text: 'Zrušit', style: 'cancel' },
-                        { text: 'Nastavení', onPress: () => Linking.openSettings() },
+                        { text: t('geo_cancel', language), style: 'cancel' },
+                        { text: t('geo_settings', language), onPress: () => Linking.openSettings() },
                     ]
                 );
                 return null;
@@ -75,17 +76,17 @@ export function useGeolocation(): UseGeolocationResult {
                 },
                 (err) => {
                     console.error('Geolocation error:', err);
-                    let errorMessage = 'Nepodařilo se získat polohu';
+                    let errorMessage = t('geo_error', language);
 
                     switch (err.code) {
                         case 1: // PERMISSION_DENIED
-                            errorMessage = 'Přístup k poloze byl zamítnut';
+                            errorMessage = t('geo_permission_denied', language);
                             break;
                         case 2: // POSITION_UNAVAILABLE
-                            errorMessage = 'Poloha není dostupná';
+                            errorMessage = t('geo_unavailable', language);
                             break;
                         case 3: // TIMEOUT
-                            errorMessage = 'Časový limit pro získání polohy vypršel';
+                            errorMessage = t('geo_timeout', language);
                             break;
                     }
 
@@ -100,7 +101,7 @@ export function useGeolocation(): UseGeolocationResult {
                 }
             );
         });
-    }, []);
+    }, [language]);
 
     return {
         position,

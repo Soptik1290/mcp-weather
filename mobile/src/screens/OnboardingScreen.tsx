@@ -15,7 +15,7 @@ import {
     Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { MapPin, Search, ChevronRight, Navigation } from 'lucide-react-native';
+import { MapPin, Search, ChevronRight, Navigation, AlertTriangle } from 'lucide-react-native';
 import { useSettingsStore, useLocationStore } from '../stores';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { weatherService } from '../services';
@@ -38,10 +38,10 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     const { settings, updateSettings } = useSettingsStore();
     const { setCurrentLocation } = useLocationStore();
-    const { getCurrentPosition, loading: geoLoading, error: geoError } = useGeolocation();
-
     const [step, setStep] = useState(0);
     const [selectedLang, setSelectedLang] = useState<'en' | 'cs'>(settings.language);
+
+    const { getCurrentPosition, loading: geoLoading, error: geoError } = useGeolocation(selectedLang);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
     const [searching, setSearching] = useState(false);
@@ -72,7 +72,24 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     // Floating icon
     const iconFloat = useRef(new Animated.Value(0)).current;
 
+    // Error shake animation
+    const errorShake = useRef(new Animated.Value(0)).current;
+
     const lang = selectedLang;
+
+    useEffect(() => {
+        if (geoError && step === 1) {
+            triggerHaptic('notificationError');
+            errorShake.setValue(0);
+            Animated.sequence([
+                Animated.timing(errorShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: -10, duration: 50, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: 10, duration: 50, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: -10, duration: 50, useNativeDriver: true }),
+                Animated.timing(errorShake, { toValue: 0, duration: 50, useNativeDriver: true }),
+            ]).start();
+        }
+    }, [geoError, step, errorShake]);
 
     // === Entrance animation ===
     useEffect(() => {
@@ -430,7 +447,12 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
 
                                 {/* Search — matches SearchScreen's searchContainer */}
                                 {geoError && (
-                                    <Animated.View style={[styles.errorContainer, fadeStyle(step2Search)]}>
+                                    <Animated.View style={[
+                                        styles.errorContainer,
+                                        fadeStyle(step2Search),
+                                        { transform: [{ translateX: errorShake }] }
+                                    ]}>
+                                        <AlertTriangle size={18} color="#FECACA" style={{ marginBottom: 4 }} />
                                         <Text style={styles.errorText}>
                                             {geoError}
                                         </Text>
