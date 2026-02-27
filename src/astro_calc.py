@@ -102,6 +102,41 @@ def get_astronomy_data(lat: float, lon: float, dt: date = None):
         moon_dist_km = None
         next_full_iso = None
 
+    # Eclipses
+    next_solar_iso = None
+    next_lunar_iso = None
+    try:
+        obs2 = ephem.Observer()
+        obs2.lat = '0'
+        obs2.lon = '0'
+        obs2.elevation = 0
+        
+        # Solar Eclipse (New Moon)
+        d = dt
+        for _ in range(24): # search ~2 years
+            d = ephem.next_new_moon(d)
+            obs2.date = d
+            sun.compute(obs2)
+            moon.compute(obs2)
+            sep = math.degrees(ephem.separation(sun, moon))
+            if sep < 1.5:
+                next_solar_iso = format_date(d)
+                break
+                
+        # Lunar Eclipse (Full Moon)
+        d = dt
+        for _ in range(24):
+            d = ephem.next_full_moon(d)
+            obs2.date = d
+            sun.compute(obs2)
+            moon.compute(obs2)
+            sep = math.degrees(ephem.separation(sun, moon))
+            if abs(sep - 180) < 1.5 or abs(sep - math.pi) < 0.026:
+                next_lunar_iso = format_date(d)
+                break
+    except Exception as e:
+        print(f"Eclipse calc error: {e}")
+
     return {
         "moonrise": moonrise,
         "moonset": moonset,
@@ -109,5 +144,8 @@ def get_astronomy_data(lat: float, lon: float, dt: date = None):
         "moon_phase": moon_phase_01,
         "daylight_duration": daylight_duration,
         "moon_distance": int(moon_dist_km) if moon_dist_km else None,
-        "next_full_moon": next_full_iso
+        "next_full_moon": next_full_iso,
+        "next_solar_eclipse": next_solar_iso,
+        "next_lunar_eclipse": next_lunar_iso
     }
+

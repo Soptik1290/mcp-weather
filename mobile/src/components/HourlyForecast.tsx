@@ -109,11 +109,15 @@ export function HourlyForecast({
         return Math.max(0, idx);
     }, [data]);
 
+    const upcomingData = React.useMemo(() => {
+        return data.slice(nowIndex);
+    }, [data, nowIndex]);
+
     const renderItem = ({ item, index }: { item: HourlyData, index: number }) => {
         const isNight = isNightTime(item.time);
         const WeatherIcon = getWeatherIcon(item.weather_code, isNight);
         const iconColor = getWeatherIconColor(item.weather_code, isDark);
-        const isCurrent = index === nowIndex;
+        const isCurrent = index === 0; // First item is 'Now'
 
         return (
             <View
@@ -166,7 +170,7 @@ export function HourlyForecast({
             </Text>
             <FlatList
                 horizontal
-                data={data}
+                data={upcomingData}
                 renderItem={renderItem}
                 keyExtractor={(item) => item.time}
                 showsHorizontalScrollIndicator={false}
@@ -176,10 +180,6 @@ export function HourlyForecast({
                     offset: 64 * index,
                     index,
                 })}
-                initialScrollIndex={Math.max(0, nowIndex - 1)} // Start slightly before current so user sees context
-                onScrollToIndexFailed={(info: { index: number; highestMeasuredFrameIndex: number; averageItemLength: number }) => {
-                    // Fallback if measurement isn't ready
-                }}
             />
         </View>
     );

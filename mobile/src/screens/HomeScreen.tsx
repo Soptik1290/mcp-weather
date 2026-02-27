@@ -645,28 +645,7 @@ export function HomeScreen() {
                                         />
                                     )}
 
-                                    {/* AI Summary - Phone only */}
-                                    {!isTablet && tier !== 'free' && (aiSummary || aiLoading) && (
-                                        <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
-                                            <Text style={styles.aiIcon}>🤖</Text>
-                                            <View style={styles.aiContent}>
-                                                <Text style={[styles.aiTitle, { color: textColor }]}>
-                                                    {t('ai_summary', lang)}
-                                                </Text>
-                                                {aiLoading ? (
-                                                    <View style={{ gap: 8, marginTop: 4 }}>
-                                                        <View style={[styles.skeletonLine, { width: '100%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
-                                                        <View style={[styles.skeletonLine, { width: '85%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
-                                                        <View style={[styles.skeletonLine, { width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
-                                                    </View>
-                                                ) : (
-                                                    <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                        {aiSummary}
-                                                    </Text>
-                                                )}
-                                            </View>
-                                        </View>
-                                    )}
+
 
                                     {/* Aurora Card */}
                                     {shouldShowAurora(
@@ -760,9 +739,20 @@ export function HomeScreen() {
 
                                 <View style={{ gap: 16 }}>
 
+                                    {/* Model Divergence Alert */}
+                                    {weather?.model_agreement?.alert && (
+                                        <AnimatedCard index={0}>
+                                            <View style={[styles.divergenceAlert, { backgroundColor: isDark ? 'rgba(255,165,0,0.15)' : 'rgba(255,140,0,0.1)' }]}>
+                                                <Text style={[styles.divergenceText, { color: isDark ? '#FFB347' : '#CC7000' }]}>
+                                                    {weather.model_agreement.alert}
+                                                </Text>
+                                            </View>
+                                        </AnimatedCard>
+                                    )}
+
                                     {/* Hourly Forecast */}
                                     {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
-                                        <AnimatedCard index={0}>
+                                        <AnimatedCard index={1}>
                                             <HourlyForecast
                                                 data={weather.hourly_forecast}
                                                 textColor={textColor}
@@ -778,7 +768,7 @@ export function HomeScreen() {
 
                                     {/* Temperature Chart */}
                                     {weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
-                                        <AnimatedCard index={1}>
+                                        <AnimatedCard index={2}>
                                             <TemperatureChart
                                                 data={weather.hourly_forecast}
                                                 textColor={textColor}
@@ -789,7 +779,7 @@ export function HomeScreen() {
 
                                     {/* Weather Details */}
                                     {current && (
-                                        <AnimatedCard index={2}>
+                                        <AnimatedCard index={3}>
                                             <WeatherDetails
                                                 humidity={current.humidity}
                                                 windSpeed={current.wind_speed}
@@ -810,7 +800,7 @@ export function HomeScreen() {
 
                                     {/* Moon Phase Card — All tiers */}
                                     {weather?.astronomy && (
-                                        <AnimatedCard index={3}>
+                                        <AnimatedCard index={4}>
                                             <MoonPhaseCard
                                                 astronomy={weather.astronomy}
                                                 textColor={textColor}
@@ -823,9 +813,11 @@ export function HomeScreen() {
                                         </AnimatedCard>
                                     )}
 
+
+
                                     {/* AI Summary — Pro/Ultra only */}
                                     {tier !== 'free' && (aiSummary || aiLoading) && (
-                                        <AnimatedCard index={4}>
+                                        <AnimatedCard index={5}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                                 <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
                                                 <View style={styles.aiContent}>
@@ -844,17 +836,6 @@ export function HomeScreen() {
                                                         </Text>
                                                     )}
                                                 </View>
-                                            </View>
-                                        </AnimatedCard>
-                                    )}
-
-                                    {/* Model Divergence Alert */}
-                                    {weather?.model_agreement?.alert && (
-                                        <AnimatedCard index={5}>
-                                            <View style={[styles.divergenceAlert, { backgroundColor: isDark ? 'rgba(255,165,0,0.15)' : 'rgba(255,140,0,0.1)' }]}>
-                                                <Text style={[styles.divergenceText, { color: isDark ? '#FFB347' : '#CC7000' }]}>
-                                                    {weather.model_agreement.alert}
-                                                </Text>
                                             </View>
                                         </AnimatedCard>
                                     )}

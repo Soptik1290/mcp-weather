@@ -253,7 +253,16 @@ class WeatherAggregator:
         if overall == "low":
             # Find which field diverges most
             low_fields = [k for k, v in result.items() if isinstance(v, dict) and v.get("agreement") == "low"]
-            fields_str = ", ".join(low_fields)
+            
+            field_translations = {
+                "temperature": "teploty" if language == "cs" else "temperature",
+                "precipitation": "srážek" if language == "cs" else "precipitation",
+                "wind": "větru" if language == "cs" else "wind",
+                "cloud_cover": "oblačnosti" if language == "cs" else "cloud cover",
+            }
+            translated_fields = [field_translations.get(f, f) for f in low_fields]
+            fields_str = ", ".join(translated_fields)
+
             if language == "cs":
                 result["alert"] = f"⚠️ Modely se rozcházejí u: {fields_str} — sledujte aktualizace"
             else:

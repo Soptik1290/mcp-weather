@@ -181,8 +181,8 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_setting': 'Aurora Forecast',
         'aurora_setting_desc': 'When to show the Aurora activity widget',
         'aurora_auto': 'Auto (when visible)',
-        'aurora_always': '✅ Always show',
-        'aurora_never': '❌ Never show',
+        'aurora_always': 'Always show',
+        'aurora_never': 'Never show',
 
         // Theme Mode
         'theme_section': 'APPEARANCE',
@@ -486,8 +486,8 @@ const translations: Record<Language, Record<string, string>> = {
         'aurora_setting': 'Polární záře',
         'aurora_setting_desc': 'Kdy zobrazovat widget s aktivitou polární záře',
         'aurora_auto': 'Auto (když je viditelná)',
-        'aurora_always': '✅ Vždy zobrazit',
-        'aurora_never': '❌ Nikdy nezobrazovat',
+        'aurora_always': 'Vždy zobrazit',
+        'aurora_never': 'Nikdy nezobrazovat',
 
         // Theme Mode
         'theme_section': 'VZHLED',

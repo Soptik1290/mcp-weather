@@ -14,6 +14,7 @@ import {
     Platform,
     UIManager,
 } from 'react-native';
+import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import {
@@ -89,9 +90,9 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
     const activeBg = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
     const modalBg = isDark ? '#1e293b' : '#ffffff';
 
+
     const toggleSection = (key: string) => {
         triggerHaptic('impactLight');
-        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         setExpandedSection(expandedSection === key ? null : key);
     };
 
@@ -109,7 +110,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
         const currentLabel = options.find(o => o.value === currentValue)?.label || String(currentValue);
 
         return (
-            <View key={sectionKey}>
+            <Animated.View layout={LinearTransition.springify()} key={sectionKey}>
                 <TouchableOpacity
                     style={styles.settingRow}
                     onPress={() => toggleSection(sectionKey)}
@@ -135,7 +136,11 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                 </TouchableOpacity>
 
                 {isExpanded && (
-                    <View style={[styles.optionsContainer, { backgroundColor: activeBg }]}>
+                    <Animated.View
+                        entering={FadeIn}
+                        exiting={FadeOut}
+                        style={[styles.optionsContainer, { backgroundColor: activeBg }]}
+                    >
                         {options.map((option) => (
                             <TouchableOpacity
                                 key={String(option.value)}
@@ -165,9 +170,9 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 )}
                             </TouchableOpacity>
                         ))}
-                    </View>
+                    </Animated.View>
                 )}
-            </View>
+            </Animated.View>
         );
     };
 
@@ -520,22 +525,6 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     '#3B82F6'
                                 )}
                             </View>
-
-                            <Text style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
-                                {t('widgets', lang)}
-                            </Text>
-                            <TouchableOpacity
-                                style={[styles.card, { backgroundColor: cardBg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }]}
-                                onPress={() => navigation.navigate('WidgetConfig')}
-                            >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                    <Layout size={24} color="#A78BFA" />
-                                    <Text style={{ color: textColor, fontSize: 16, fontWeight: '500' }}>
-                                        {t('customize_widget', lang)}
-                                    </Text>
-                                </View>
-                                <ChevronRight size={20} color={subTextColor} />
-                            </TouchableOpacity>
                         </>
                     )}
 

@@ -59,6 +59,36 @@ const MeteorShowerList = ({ data }: { data: any }) => {
     );
 };
 
+const EclipseList = ({ data }: { data: any }) => {
+    const settings = useSettingsStore(state => state.settings);
+    if (!data || (!data.solar && !data.lunar)) return null;
+
+    return (
+        <View style={styles.card}>
+            <View style={styles.cardHeader}>
+                <Eye color="#6366f1" size={24} />
+                <Text style={styles.cardTitle}>{t('next_eclipses', settings.language)}</Text>
+            </View>
+            {data.solar && (
+                <View style={styles.showerRow}>
+                    <Text style={styles.eclipseName}>☀️ {t('solar_eclipse', settings.language)}</Text>
+                    <Text style={styles.eclipseDate}>
+                        {new Date(data.solar).toLocaleDateString(settings.language === 'cs' ? 'cs-CZ' : 'en-US')}
+                    </Text>
+                </View>
+            )}
+            {data.lunar && (
+                <View style={styles.showerRow}>
+                    <Text style={styles.eclipseName}>🌕 {t('lunar_eclipse', settings.language)}</Text>
+                    <Text style={styles.eclipseDate}>
+                        {new Date(data.lunar).toLocaleDateString(settings.language === 'cs' ? 'cs-CZ' : 'en-US')}
+                    </Text>
+                </View>
+            )}
+        </View>
+    );
+};
+
 export const AstroPackScreen = () => {
     const navigation = useNavigation();
     const settings = useSettingsStore(state => state.settings);
@@ -129,6 +159,7 @@ export const AstroPackScreen = () => {
                     <ScrollView contentContainerStyle={styles.content}>
                         <IssTracker data={astroData?.iss} />
                         <MeteorShowerList data={astroData?.meteors} />
+                        <EclipseList data={astroData?.eclipses} />
                     </ScrollView>
                 </SafeAreaView>
             </LinearGradient>
@@ -198,4 +229,6 @@ const styles = StyleSheet.create({
     showerName: { color: 'white', fontWeight: 'bold' },
     showerDate: { color: '#F59E0B' },
     showerZhr: { color: 'rgba(255,255,255,0.7)' },
+    eclipseName: { color: 'white', fontWeight: 'bold' },
+    eclipseDate: { color: '#F59E0B' },
 });
