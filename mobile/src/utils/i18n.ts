@@ -149,6 +149,7 @@ const translations: Record<Language, Record<string, string>> = {
         // AI Summary
         'ai_forecast': 'AI-powered forecast',
         'ai_summary': 'AI Summary',
+        'ai_summary_unavailable': 'AI Summary temporarily unavailable',
         'confidence': 'Confidence',
         'aggregated_from': 'Aggregated from',
         'sources': 'sources',
@@ -447,13 +448,11 @@ const translations: Record<Language, Record<string, string>> = {
         'customize_widget': 'Přizpůsobit widget',
         'vibration': 'Vibrace',
         'forecast_style': 'Styl předpovědi',
-        'cautious': 'Opatrný',
-        'balanced': 'Vyvážený',
-        'optimistic': 'Optimistický',
 
         // AI Summary
         'ai_forecast': 'AI předpověď',
         'ai_summary': 'AI shrnutí',
+        'ai_summary_unavailable': 'AI shrnutí je dočasně nedostupné.',
         'confidence': 'Spolehlivost',
         'aggregated_from': 'Agregováno z',
         'sources': 'zdrojů',

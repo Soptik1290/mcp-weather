@@ -189,18 +189,38 @@ export function HomeScreen() {
     const fetchAISummary = useCallback(async () => {
         if (tier === 'free' || !weather?.location?.name) return;
         setAiLoading(true);
-        try {
-            const result = await weatherService.getAISummary(
-                weather.location.name,
-                lang,
-                settings.confidence_bias
-            );
-            setAiSummary(result.ai_summary);
-        } catch (e) {
-            console.warn('AI summary lazy-load failed:', e);
-        } finally {
-            setAiLoading(false);
+
+        let attempts = 0;
+        const maxAttempts = 3;
+
+        while (attempts < maxAttempts) {
+            try {
+                const result = await weatherService.getAISummary(
+                    weather.location.name,
+                    lang,
+                    settings.confidence_bias
+                );
+
+                if (result.ai_summary) {
+                    setAiSummary(result.ai_summary);
+                    setAiLoading(false);
+                    return;
+                }
+
+                console.log(`AI summary returned null, attempt ${attempts + 1}/${maxAttempts}. retrying...`);
+            } catch (e) {
+                console.warn(`AI summary lazy-load failed (attempt ${attempts + 1}/${maxAttempts}):`, e);
+            }
+
+            attempts++;
+            if (attempts < maxAttempts) {
+                await new Promise(resolve => setTimeout(() => resolve(undefined), 2000));
+            }
         }
+
+        // If we reach here, all attempts failed
+        setAiSummary(null);
+        setAiLoading(false);
     }, [weather?.location?.name, lang, tier, settings.confidence_bias]);
 
     useEffect(() => {
@@ -476,7 +496,7 @@ export function HomeScreen() {
                                     </View>
 
                                     {/* Tablet AI Summary (Under Left Card) — Pro/Ultra only */}
-                                    {tier !== 'free' && (aiSummary || aiLoading) && (
+                                    {tier !== 'free' && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg, marginTop: 0, marginBottom: 0 }]}>
                                             <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
@@ -490,8 +510,8 @@ export function HomeScreen() {
                                                         <View style={[styles.skeletonLine, { width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
                                                     </View>
                                                 ) : (
-                                                    <Text style={[styles.aiSummary, { color: subTextColor, fontSize: 16, lineHeight: 24 }]}>
-                                                        {aiSummary}
+                                                    <Text style={[styles.aiSummary, { color: subTextColor, fontSize: 16, lineHeight: 24, fontStyle: !aiSummary ? 'italic' : 'normal' }]}>
+                                                        {aiSummary || t('ai_summary_unavailable', lang) || 'AI Summary temporarily unavailable'}
                                                     </Text>
                                                 )}
                                             </View>
@@ -816,7 +836,7 @@ export function HomeScreen() {
 
 
                                     {/* AI Summary — Pro/Ultra only */}
-                                    {tier !== 'free' && (aiSummary || aiLoading) && (
+                                    {tier !== 'free' && (
                                         <AnimatedCard index={5}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                                 <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
@@ -831,8 +851,8 @@ export function HomeScreen() {
                                                             <View style={[styles.skeletonLine, { width: '60%', backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
                                                         </View>
                                                     ) : (
-                                                        <Text style={[styles.aiSummary, { color: subTextColor }]}>
-                                                            {aiSummary}
+                                                        <Text style={[styles.aiSummary, { color: subTextColor, fontStyle: !aiSummary ? 'italic' : 'normal' }]}>
+                                                            {aiSummary || t('ai_summary_unavailable', lang) || 'AI Summary temporarily unavailable'}
                                                         </Text>
                                                     )}
                                                 </View>
