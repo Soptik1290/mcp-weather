@@ -139,6 +139,7 @@ export interface UserSettings {
     iss_alerts: boolean;
     haptic_enabled: boolean;
     aurora_notifications: boolean;
+    eclipse_notifications: boolean;
     daily_brief: boolean;
     hasCompletedOnboarding: boolean;
 }
@@ -161,4 +162,8 @@ export interface ActiveMeteorShower {
 export interface AstroPackData {
     iss: ISSPosition | null;
     meteors: ActiveMeteorShower[];
+    eclipses?: {
+        solar: string | null;
+        lunar: string | null;
+    } | null;
 }

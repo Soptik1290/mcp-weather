@@ -6,7 +6,7 @@ import {
     StyleSheet,
     useWindowDimensions
 } from 'react-native';
-import { Rocket, Star } from 'lucide-react-native';
+import { Rocket, Star, Sun, Moon } from 'lucide-react-native';
 import { t, Language } from '../utils';
 
 interface AstroCardProps {
@@ -66,6 +66,33 @@ export function AstroCard({ data, textColor, subTextColor, cardBg, isDark, langu
                 </View>
             ) : (
                 <Text style={[styles.label, { color: subTextColor }]}>{t('no_showers', language)}</Text>
+            )}
+
+            {data.eclipses && (data.eclipses.solar || data.eclipses.lunar) && (
+                <>
+                    <View style={styles.divider} />
+                    <View style={styles.section}>
+                        <Text style={[styles.label, { color: subTextColor }]}>{t('next_eclipses', language)}</Text>
+                        {data.eclipses.solar && (
+                            <View style={styles.meteorRow}>
+                                <Sun size={14} color="#FBBF24" />
+                                <Text style={[styles.meteorName, { color: textColor }]}>{t('solar_eclipse', language)}</Text>
+                                <Text style={[styles.meteorStatus, { color: textColor }]}>
+                                    {new Date(data.eclipses.solar).toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US')}
+                                </Text>
+                            </View>
+                        )}
+                        {data.eclipses.lunar && (
+                            <View style={styles.meteorRow}>
+                                <Moon size={14} color="#9CA3AF" />
+                                <Text style={[styles.meteorName, { color: textColor }]}>{t('lunar_eclipse', language)}</Text>
+                                <Text style={[styles.meteorStatus, { color: textColor }]}>
+                                    {new Date(data.eclipses.lunar).toLocaleDateString(language === 'cs' ? 'cs-CZ' : 'en-US')}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                </>
             )}
         </View>
     );

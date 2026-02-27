@@ -26,6 +26,12 @@ class NotificationService {
                 importance: AndroidImportance.HIGH,
                 description: 'Real-time alerts when Aurora is visible',
             });
+            await notifee.createChannel({
+                id: 'astro_alerts',
+                name: 'Astronomy Alerts (Ultra)',
+                importance: AndroidImportance.HIGH,
+                description: 'Notifications for rare astronomical events like eclipses',
+            });
         }
     }
 
@@ -57,6 +63,24 @@ class NotificationService {
                     id: 'default',
                 },
                 color: '#A78BFA',
+            },
+        });
+    }
+
+    async showEclipseAlert(type: 'solar' | 'lunar', timeStr: string) {
+        await this.createChannels();
+        const emoji = type === 'solar' ? '☀️' : '🌕';
+        const title = type === 'solar' ? 'Solar Eclipse!' : 'Lunar Eclipse!';
+        await notifee.displayNotification({
+            title: `${title} ${emoji}`,
+            body: `An eclipse is happening soon! (${new Date(timeStr).toLocaleTimeString()})`,
+            android: {
+                channelId: 'astro_alerts',
+                smallIcon: 'ic_launcher',
+                pressAction: {
+                    id: 'default',
+                },
+                color: type === 'solar' ? '#FBBF24' : '#9CA3AF',
             },
         });
     }

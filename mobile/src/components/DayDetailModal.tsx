@@ -297,7 +297,18 @@ export function DayDetailModal({
                         <View style={styles.mainInfo}>
                             <View style={{ marginBottom: 12 }}>
                                 {(() => {
-                                    const WeatherIcon = getWeatherIcon(day.weather_code, false);
+                                    const now = new Date();
+                                    const sunrise = day.sunrise ? new Date(day.sunrise) : undefined;
+                                    const sunset = day.sunset ? new Date(day.sunset) : undefined;
+                                    let isNight = false;
+                                    if (sunrise && sunset) {
+                                        const nowTime = now.getTime();
+                                        isNight = nowTime < sunrise.getTime() || nowTime > sunset.getTime();
+                                    } else {
+                                        const hour = now.getHours();
+                                        isNight = hour < 6 || hour >= 20;
+                                    }
+                                    const WeatherIcon = getWeatherIcon(day.weather_code, isNight);
                                     const iconColor = getWeatherIconColor(day.weather_code, isDark);
                                     return <WeatherIcon size={72} color={iconColor} strokeWidth={1.5} />;
                                 })()}

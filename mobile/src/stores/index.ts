@@ -45,6 +45,7 @@ const defaultSettings: UserSettings = {
     iss_alerts: false,
     haptic_enabled: true,
     aurora_notifications: false,
+    eclipse_notifications: false,
     daily_brief: false,
     hasCompletedOnboarding: false,
 };

@@ -498,6 +498,19 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     Bell,
                                     '#F59E0B'
                                 )}
+                                {tier === 'ultra' && (
+                                    <>
+                                        <View style={styles.divider} />
+                                        {renderToggle(
+                                            t('astro_alerts', lang),
+                                            settings.eclipse_notifications,
+                                            (val) => updateSettings({ eclipse_notifications: val }),
+                                            Rocket,
+                                            '#3B82F6',
+                                            t('astro_alerts_desc', lang)
+                                        )}
+                                    </>
+                                )}
                                 <View style={styles.divider} />
                                 {renderToggle(
                                     t('daily_brief', lang),

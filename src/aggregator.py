@@ -774,6 +774,36 @@ Data from {len(sources)} sources:
         weather_code = current_weather.weather_code or 0
         cloud_cover = current_weather.cloud_cover or 0
         
+        # Check for active eclipses (within 1 hour)
+        if astronomy:
+            now = datetime.utcnow()
+            
+            # Solar Eclipse
+            if astronomy.next_solar_eclipse:
+                try:
+                    solar_time = datetime.fromisoformat(astronomy.next_solar_eclipse.replace("Z", "+00:00")).replace(tzinfo=None)
+                    if abs((solar_time - now).total_seconds()) <= 3600:
+                         return {
+                             "theme": "solar_eclipse",
+                             "gradient": ["#000000", "#1a0b2e", "#4b1d52"],
+                             "effect": "stars"
+                         }
+                except:
+                    pass
+            
+            # Lunar Eclipse
+            if astronomy.next_lunar_eclipse:
+                try:
+                    lunar_time = datetime.fromisoformat(astronomy.next_lunar_eclipse.replace("Z", "+00:00")).replace(tzinfo=None)
+                    if abs((lunar_time - now).total_seconds()) <= 3600:
+                         return {
+                             "theme": "lunar_eclipse",
+                             "gradient": ["#1a0b2e", "#4a0e2e", "#8b0000"],
+                             "effect": "stars"
+                         }
+                except:
+                    pass
+        
         # Hail conditions (codes 96, 99)
         if weather_code in [96, 99]:
             return {

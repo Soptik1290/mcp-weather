@@ -120,21 +120,29 @@ class AstroService:
 
     async def get_astro_pack(self, lat: float, lon: float, dt: date = None) -> Dict[str, Any]:
         """
-        Get comprehensive AstroPack data (ISS + Meteors).
+        Get comprehensive AstroPack data (ISS + Meteors + Eclipses).
         """
         iss_data = await self.get_iss_position(lat, lon)
         
         if not ephem:
              return {
                  "iss": iss_data,
-                 "meteors": []
+                 "meteors": [],
+                 "eclipses": None
              }
 
         meteors = self.get_meteor_showers(dt)
         
+        from src.astro_calc import get_astronomy_data
+        astro = get_astronomy_data(lat, lon, dt)
+        
         return {
             "iss": iss_data,
-            "meteors": meteors
+            "meteors": meteors,
+            "eclipses": {
+                "solar": astro.get("next_solar_eclipse"),
+                "lunar": astro.get("next_lunar_eclipse")
+            }
         }
 
 # Singleton instance

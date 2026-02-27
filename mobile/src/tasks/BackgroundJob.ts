@@ -120,7 +120,45 @@ const performBackgroundTask = async () => {
             }
         }
 
-        // 4. Update Widget Data
+        // 4. Astro/Eclipse Alerts
+        if (settings.eclipse_notifications && currentLocation && tier === 'ultra') {
+            try {
+                const astroPackData = await weatherService.getAstroPack(currentLocation.latitude, currentLocation.longitude);
+                if (astroPackData && astroPackData.eclipses) {
+                    const { solar, lunar } = astroPackData.eclipses;
+                    const checkDateThreshold = (dateStr: string | null, storageKey: string, type: 'solar' | 'lunar') => {
+                        if (!dateStr) return false;
+                        const eclipseDate = new Date(dateStr);
+                        // Alert 24 hours before
+                        const diffHours = (eclipseDate.getTime() - now.getTime()) / (1000 * 60 * 60);
+                        if (diffHours > 0 && diffHours <= 24) {
+                            return true;
+                        }
+                        return false;
+                    };
+
+                    if (solar && checkDateThreshold(solar, 'solar', 'solar')) {
+                        const lastSolarNotif = await AsyncStorage.getItem('last_solar_eclipse_alert');
+                        if (lastSolarNotif !== solar) {
+                            await notificationService.showEclipseAlert('solar', solar);
+                            await AsyncStorage.setItem('last_solar_eclipse_alert', solar);
+                        }
+                    }
+
+                    if (lunar && checkDateThreshold(lunar, 'lunar', 'lunar')) {
+                        const lastLunarNotif = await AsyncStorage.getItem('last_lunar_eclipse_alert');
+                        if (lastLunarNotif !== lunar) {
+                            await notificationService.showEclipseAlert('lunar', lunar);
+                            await AsyncStorage.setItem('last_lunar_eclipse_alert', lunar);
+                        }
+                    }
+                }
+            } catch (e) {
+                console.error('Failed to check for eclipse alerts', e);
+            }
+        }
+
+        // 5. Update Widget Data
         if (currentLocation) {
             try {
                 const weatherData = await weatherService.getWeatherForecast(

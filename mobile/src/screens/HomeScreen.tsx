@@ -382,7 +382,7 @@ export function HomeScreen() {
                                             <View style={{ marginVertical: 40, alignItems: 'flex-start' }}>
                                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                                                     {(() => {
-                                                        const WeatherIcon = getWeatherIcon(current.weather_code);
+                                                        const WeatherIcon = getWeatherIcon(current.weather_code, theme.is_dark);
                                                         const iconColor = getWeatherIconColor(current.weather_code, theme.is_dark);
                                                         return <WeatherIcon size={140} color={iconColor} strokeWidth={1.2} />;
                                                     })()}
@@ -478,7 +478,7 @@ export function HomeScreen() {
                                     {/* Tablet AI Summary (Under Left Card) — Pro/Ultra only */}
                                     {tier !== 'free' && (aiSummary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg, marginTop: 0, marginBottom: 0 }]}>
-                                            <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
+                                            <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
@@ -648,7 +648,7 @@ export function HomeScreen() {
                                     {/* AI Summary - Phone only */}
                                     {!isTablet && tier !== 'free' && (aiSummary || aiLoading) && (
                                         <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
-                                            <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
+                                            <Text style={styles.aiIcon}>🤖</Text>
                                             <View style={styles.aiContent}>
                                                 <Text style={[styles.aiTitle, { color: textColor }]}>
                                                     {t('ai_summary', lang)}
@@ -705,7 +705,7 @@ export function HomeScreen() {
                                     <View style={styles.currentWeather}>
                                         <View style={styles.weatherIconContainer}>
                                             {(() => {
-                                                const WeatherIcon = getWeatherIcon(current.weather_code);
+                                                const WeatherIcon = getWeatherIcon(current.weather_code, theme.is_dark);
                                                 const iconColor = getWeatherIconColor(current.weather_code, theme.is_dark);
                                                 return <WeatherIcon size={80} color={iconColor} strokeWidth={1.5} />;
                                             })()}

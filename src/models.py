@@ -71,6 +71,8 @@ class Astronomy(BaseModel):
     daylight_duration: Optional[float] = Field(None, description="Seconds of daylight")
     moon_distance: Optional[int] = Field(None, description="Distance in km")
     next_full_moon: Optional[str] = Field(None, description="ISO datetime of next full moon")
+    next_solar_eclipse: Optional[str] = Field(None, description="ISO datetime of next solar eclipse")
+    next_lunar_eclipse: Optional[str] = Field(None, description="ISO datetime of next lunar eclipse")
 
 
 class WeatherData(BaseModel):
