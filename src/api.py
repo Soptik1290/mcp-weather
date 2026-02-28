@@ -236,7 +236,7 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         weather = await open_meteo.get_weather(location, days=1, language=request.language)
         
         # Determine model based on tier
-        model = "gpt-4o-mini" if request.tier in ["pro", "ultra"] else "gpt-3.5-turbo"
+        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-3.5-turbo"
         
         # Get AI aggregation
         aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
@@ -304,7 +304,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         
         if request.tier in ["pro", "ultra"]:
              # AI Aggregation for paid tiers
-             model = "gpt-4o-mini"
+             model = "gpt-5-mini"
              aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model, confidence_bias=request.confidence_bias)
         else:
              # Statistical Aggregation for free tier
@@ -390,7 +390,7 @@ async def get_ai_summary(request: AISummaryRequest, response: Response):
 
         response_data = {
             "ai_summary": summary,
-            "model_used": "gpt-4o-mini" if summary else "none"
+            "model_used": "gpt-5-mini" if summary else "none"
         }
 
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800)  # 30m
@@ -433,7 +433,7 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
         weather = await open_meteo.get_weather(location, days=min(request.days, 16), language=request.language)
         
         # Get AI aggregation
-        model = "gpt-4o-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
+        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
         aggregated = await aggregator.aggregate([weather], request.language, model=model)
         
         # Get ambient theme
