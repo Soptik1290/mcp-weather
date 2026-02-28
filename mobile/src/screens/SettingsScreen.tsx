@@ -36,7 +36,12 @@ import {
     Rocket,
     Shield,
     Scale,
-    Wand2
+    Wand2,
+    Eye,
+    EyeOff,
+    MonitorSmartphone,
+    Moon,
+    Sun
 } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { t, triggerHaptic } from '../utils';
@@ -138,7 +143,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                 {isExpanded && (
                     <Animated.View
                         entering={FadeIn}
-                        exiting={FadeOut}
+                        exiting={FadeOut.duration(200)}
                         style={[styles.optionsContainer, { backgroundColor: activeBg }]}
                     >
                         {options.map((option) => (
@@ -276,10 +281,10 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                     </TouchableOpacity>
 
                     {/* General Settings */}
-                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                    <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                         {t('general', lang)}
-                    </Text>
-                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                    </Animated.Text>
+                    <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
                             t('language', lang),
                             [
@@ -296,28 +301,30 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
 
                         {tier !== 'free' && (
                             <>
-                                <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                <Animated.View layout={LinearTransition.springify()} style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
-                                <TouchableOpacity
-                                    style={styles.settingRow}
-                                    onPress={() => (navigation as any).navigate('WidgetConfig')}
-                                    activeOpacity={0.7}
-                                >
-                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
-                                        <Palette size={20} color="#3B82F6" strokeWidth={2} />
-                                    </View>
-                                    <View style={styles.settingContent}>
-                                        <Text style={[styles.settingLabel, { color: textColor }]}>{t('widget_settings', settings.language)}</Text>
-                                        <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                            {t('customize_appearance', settings.language)}
-                                        </Text>
-                                    </View>
-                                    <ChevronRight size={16} color={subTextColor} />
-                                </TouchableOpacity>
+                                <Animated.View layout={LinearTransition.springify()}>
+                                    <TouchableOpacity
+                                        style={styles.settingRow}
+                                        onPress={() => (navigation as any).navigate('WidgetConfig')}
+                                        activeOpacity={0.7}
+                                    >
+                                        <View style={[styles.iconContainer, { backgroundColor: 'rgba(59, 130, 246, 0.2)' }]}>
+                                            <Palette size={20} color="#3B82F6" strokeWidth={2} />
+                                        </View>
+                                        <View style={styles.settingContent}>
+                                            <Text style={[styles.settingLabel, { color: textColor }]}>{t('widget_settings', settings.language)}</Text>
+                                            <Text style={[styles.settingDescription, { color: subTextColor }]}>
+                                                {t('customize_appearance', settings.language)}
+                                            </Text>
+                                        </View>
+                                        <ChevronRight size={16} color={subTextColor} />
+                                    </TouchableOpacity>
+                                </Animated.View>
                             </>
                         )}
 
-                        <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                        <Animated.View layout={LinearTransition.springify()} style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderOptionRow(
                             t('temperature', lang),
@@ -333,7 +340,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             t('temp_desc', lang)
                         )}
 
-                        <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                        <Animated.View layout={LinearTransition.springify()} style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
 
                         {renderOptionRow(
                             t('settings_time_format', lang), // Assuming key might differ, but keeping original logic
@@ -348,13 +355,13 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             '#F59E0B',
                             t('time_format_desc', lang)
                         )}
-                    </View>
+                    </Animated.View>
 
                     {/* Notifications */}
-                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                    <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                         {t('notifications_section', lang)}
-                    </Text>
-                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                    </Animated.Text>
+                    <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderToggle(
                             t('notifications', lang),
                             settings.notifications_enabled,
@@ -385,15 +392,15 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             '#F97316',
                             t('haptic_desc', lang)
                         )}
-                    </View>
+                    </Animated.View>
 
                     {/* AI Settings (Ultra Only) */}
                     {tier === 'ultra' && (
                         <>
-                            <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                            <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                                 {t('ai_section', lang)}
-                            </Text>
-                            <View style={[styles.card, { backgroundColor: cardBg }]}>
+                            </Animated.Text>
+                            <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                                 {renderOptionRow(
                                     t('forecast_style', lang),
                                     [
@@ -408,34 +415,35 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     '#10B981',
                                     t('confidence_desc', lang)
                                 )}
-                            </View>
+                            </Animated.View>
 
-                            <Text style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
+                            <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
                                 {t('astro_pack', lang)}
-                            </Text>
-                            <TouchableOpacity
-                                style={[styles.card, { backgroundColor: cardBg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }]}
-                                onPress={() => navigation.navigate('AstroPack')}
-                            >
-                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
-                                    <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 215, 0, 0.2)', marginRight: 0, width: 36, height: 36 }]}>
-                                        <Rocket size={20} color="#FFD700" />
+                            </Animated.Text>
+                            <Animated.View layout={LinearTransition.springify()}>
+                                <TouchableOpacity
+                                    style={[styles.card, { backgroundColor: cardBg, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: 16 }]}
+                                    onPress={() => navigation.navigate('AstroPack')}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+                                        <View style={[styles.iconContainer, { backgroundColor: 'rgba(255, 215, 0, 0.2)', marginRight: 0, width: 36, height: 36 }]}>
+                                            <Rocket size={20} color="#FFD700" />
+                                        </View>
+                                        <View>
+                                            <Text style={{ color: textColor, fontSize: 16, fontWeight: '500' }}>
+                                                {t('astro_pack', lang)}
+                                            </Text>
+                                            <Text style={{ color: subTextColor, fontSize: 13 }}>
+                                                {t('astro_pack_desc', lang) || 'ISS, Meteors & Best Viewing'}
+                                            </Text>
+                                        </View>
                                     </View>
-                                    <View>
-                                        <Text style={{ color: textColor, fontSize: 16, fontWeight: '500' }}>
-                                            {t('astro_pack', lang)}
-                                        </Text>
-                                        <Text style={{ color: subTextColor, fontSize: 13 }}>
-                                            {t('astro_pack_desc', lang) || 'ISS, Meteors & Best Viewing'}
-                                        </Text>
-                                    </View>
-                                </View>
-                                <ChevronRight size={20} color={subTextColor} />
-                            </TouchableOpacity>
-                            <Text style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
+                                </TouchableOpacity>
+                            </Animated.View>
+                            <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor, marginTop: 24 }]}>
                                 {t('data_export', lang) || 'Data Export'}
-                            </Text>
-                            <View style={[styles.card, { backgroundColor: cardBg }]}>
+                            </Animated.Text>
+                            <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                                 <TouchableOpacity
                                     style={styles.settingRow}
                                     onPress={async () => {
@@ -485,17 +493,17 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     </View>
                                     <ChevronRight size={16} color={subTextColor} />
                                 </TouchableOpacity>
-                            </View>
+                            </Animated.View>
                         </>
                     )}
 
                     {/* Notifications (Pro) */}
                     {(tier === 'pro' || tier === 'ultra') && (
                         <>
-                            <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                            <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                                 {t('notifications', lang)}
-                            </Text>
-                            <View style={[styles.card, { backgroundColor: cardBg }]}>
+                            </Animated.Text>
+                            <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                                 {renderToggle(
                                     t('aurora_alerts', lang),
                                     settings.aurora_notifications,
@@ -524,21 +532,21 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     FileText,
                                     '#3B82F6'
                                 )}
-                            </View>
+                            </Animated.View>
                         </>
                     )}
 
                     {/* Aurora Display */}
-                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                    <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                         {t('aurora_section', lang)}
-                    </Text>
-                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                    </Animated.Text>
+                    <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
                             t('aurora_setting', lang),
                             [
                                 { label: t('aurora_auto', lang), value: 'auto', icon: <Wand2 size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
-                                { label: t('aurora_always', lang), value: 'always' },
-                                { label: t('aurora_never', lang), value: 'never' },
+                                { label: t('aurora_always', lang), value: 'always', icon: <Eye size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
+                                { label: t('aurora_never', lang), value: 'never', icon: <EyeOff size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
                             ],
                             settings.aurora_display,
                             (val) => updateSettings({ aurora_display: val }),
@@ -547,20 +555,20 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             '#A78BFA',
                             t('aurora_setting_desc', lang)
                         )}
-                    </View>
+                    </Animated.View>
 
                     {/* Theme Mode */}
-                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                    <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                         {t('theme_section', lang)}
-                    </Text>
-                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                    </Animated.Text>
+                    <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                         {renderOptionRow(
                             t('theme_mode', lang),
                             [
-                                { label: t('theme_auto', lang), value: 'auto' },
-                                { label: t('theme_system', lang), value: 'system' },
-                                { label: t('theme_dark', lang), value: 'dark' },
-                                { label: t('theme_light', lang), value: 'light' },
+                                { label: t('theme_auto', lang), value: 'auto', icon: <Wand2 size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
+                                { label: t('theme_system', lang), value: 'system', icon: <MonitorSmartphone size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
+                                { label: t('theme_dark', lang), value: 'dark', icon: <Moon size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
+                                { label: t('theme_light', lang), value: 'light', icon: <Sun size={16} color={isDark ? '#e2e8f0' : '#475569'} /> },
                             ],
                             settings.theme_mode,
                             (val) => updateSettings({ theme_mode: val }),
@@ -569,13 +577,13 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             '#F472B6',
                             t('theme_mode_desc', lang)
                         )}
-                    </View>
+                    </Animated.View>
 
                     {/* About */}
-                    <Text style={[styles.sectionHeader, { color: subTextColor }]}>
+                    <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
                         {t('about_section', lang)}
-                    </Text>
-                    <View style={[styles.card, { backgroundColor: cardBg }]}>
+                    </Animated.Text>
+                    <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
                         <View style={styles.settingRow}>
                             <View style={[styles.iconContainer, { backgroundColor: 'rgba(74,144,217,0.2)' }]}>
                                 <Info size={20} color="#4A90D9" strokeWidth={2} />
@@ -629,7 +637,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             </View>
                             <ChevronRight size={16} color={subTextColor} />
                         </TouchableOpacity>
-                    </View>
+                    </Animated.View>
 
                     <Modal
                         visible={showSupportModal}
@@ -782,6 +790,8 @@ const styles = StyleSheet.create({
     },
     settingContent: {
         flex: 1,
+        flexShrink: 1,
+        marginRight: 16,
     },
     settingLabel: {
         fontSize: 16,
@@ -795,9 +805,13 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         gap: 4,
+        flexShrink: 1,
+        maxWidth: '55%',
     },
     currentValue: {
         fontSize: 14,
+        flexShrink: 1,
+        textAlign: 'right',
     },
     separator: {
         height: StyleSheet.hairlineWidth,

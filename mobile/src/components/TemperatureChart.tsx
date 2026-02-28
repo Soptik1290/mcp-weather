@@ -9,7 +9,7 @@ import Svg, {
     Text as SvgText,
     G
 } from 'react-native-svg';
-import { t } from '../utils';
+import { t, formatTime, TimeFormat } from '../utils';
 import { useSettingsStore } from '../stores';
 import { Droplets, Wind } from 'lucide-react-native';
 
@@ -29,14 +29,18 @@ interface TemperatureChartProps {
     height?: number;
 }
 
-const formatHour = (timeString: string, index: number): string => {
-    if (index === 0) return 'Teď';
+const formatHour = (timeString: string, index: number, language: string, timeFormat: TimeFormat): string => {
+    if (index === 0) return t('now', language as any);
     try {
         const date = new Date(timeString);
-        return date.toLocaleTimeString('cs', {
-            hour: '2-digit',
-            hour12: false
-        }).replace(':00', 'h');
+        let timeStr = formatTime(date, timeFormat);
+        // Clean up string for compact chart view
+        if (timeFormat === '24h') {
+            timeStr = timeStr.replace(':00', 'h');
+        } else {
+            timeStr = timeStr.replace(':00', '');
+        }
+        return timeStr;
     } catch {
         return '';
     }
@@ -59,8 +63,31 @@ export function TemperatureChart({
 
     if (!data || data.length < 2) return null;
 
-    // Take 12 hours for the chart
-    const chartData = data.slice(0, 12);
+    // Find index of current hour
+    const nowIndex = React.useMemo(() => {
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
+        const currentDay = String(now.getDate()).padStart(2, '0');
+        const currentHour = String(now.getHours()).padStart(2, '0');
+        const currentHourStr = `${currentYear}-${currentMonth}-${currentDay}T${currentHour}`;
+
+        let idx = data.findIndex(h => h.time.startsWith(currentHourStr));
+        if (idx === -1) {
+            let minDiff = Infinity;
+            data.forEach((h, i) => {
+                const diff = Math.abs(new Date(h.time).getTime() - now.getTime());
+                if (diff < minDiff) {
+                    minDiff = diff;
+                    idx = i;
+                }
+            });
+        }
+        return Math.max(0, idx);
+    }, [data]);
+
+    // Take 12 hours for the chart starting from current hour
+    const chartData = data.slice(nowIndex, nowIndex + 12);
     const chartHeight = height;
     const paddingTop = 30;
     const paddingBottom = 45;
@@ -181,7 +208,7 @@ export function TemperatureChart({
                                     textAnchor="middle"
                                     opacity={0.7}
                                 >
-                                    {formatHour(point.time, index)}
+                                    {formatHour(point.time, index, language, settings.time_format as TimeFormat)}
                                 </SvgText>
                             )}
                         </G>
@@ -199,7 +226,7 @@ export function TemperatureChart({
                         }
                     ]}>
                         <Text style={[styles.tooltipText, { color: textColor === '#fff' ? '#fff' : '#000', fontWeight: 'bold' }]}>
-                            {formatHour(selectedPoint.time, 1)} • {Math.round(selectedPoint.temperature)}°C
+                            {formatHour(selectedPoint.time, 1, language, settings.time_format as TimeFormat)} • {Math.round(selectedPoint.temperature)}°C
                         </Text>
                         <View style={styles.tooltipRow}>
                             {selectedPoint.precipitation_probability !== undefined && (
