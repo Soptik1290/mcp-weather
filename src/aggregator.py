@@ -152,7 +152,10 @@ class WeatherAggregator:
         hourly_by_time: dict[str, list[HourlyForecast]] = {}
         for w in weather_data:
             for h in w.hourly_forecast:
-                hourly_by_time.setdefault(h.time, []).append(h)
+                # Normalize time strings to YYYY-MM-DDTHH:MM (16 chars)
+                # This prevents duplicate hour entries when providers format times differently (e.g. 17:00 vs 17:00:00)
+                normalized_time = h.time[:16]
+                hourly_by_time.setdefault(normalized_time, []).append(h)
 
         aggregated_hourly: list[HourlyForecast] = []
         for time_str in sorted(hourly_by_time.keys()):
