@@ -87,7 +87,24 @@ export function TemperatureChart({
     }, [data]);
 
     // Take 12 hours for the chart starting from current hour
-    const chartData = data.slice(nowIndex, nowIndex + 12);
+    const rawChartData = data.slice(nowIndex, nowIndex + 12);
+
+    // Apply EWMA smoothing to temperatures to prevent the roller-coaster effect
+    const smoothedTemps = React.useMemo(() => {
+        if (rawChartData.length === 0) return [];
+        const alpha = 0.4; // Smoothing factor (0 = flat, 1 = raw)
+        const smoothed = [rawChartData[0].temperature];
+        for (let i = 1; i < rawChartData.length; i++) {
+            smoothed.push(alpha * rawChartData[i].temperature + (1 - alpha) * smoothed[i - 1]);
+        }
+        return smoothed;
+    }, [rawChartData]);
+
+    const chartData = rawChartData.map((d, i) => ({
+        ...d,
+        temperature: smoothedTemps[i]
+    }));
+
     const chartHeight = height;
     const paddingTop = 30;
     const paddingBottom = 45;

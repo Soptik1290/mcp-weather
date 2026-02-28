@@ -64,7 +64,7 @@ class WeatherAggregator:
             try:
                 from openai import AsyncOpenAI
                 self.client = AsyncOpenAI(api_key=self.api_key)
-                self.model = "gpt-5-mini"  # GPT-5 mini for intelligent aggregation
+                self.model = "gpt-4o-mini"  # GPT-4o mini for intelligent aggregation
                 print(f"[OK] AI aggregation enabled (model: {self.model})")
             except Exception as e:
                 print(f"[ERR] AI aggregation failed: {e}")
@@ -457,8 +457,8 @@ Analyze these sources and deduce the most accurate current weather."""
             # First failure with primary model
             print(f"[WARN] AI aggregation error (primary {model}): {e}")
             
-            # Fallback to gpt-4o if primary was gpt-5-mini
-            if model == "gpt-5-mini":
+            # Fallback to gpt-4o if primary was gpt-4o-mini
+            if model == "gpt-4o-mini":
                 try:
                     print("[INFO] Retrying with gpt-4o...")
                     response = await self.client.chat.completions.create(
@@ -549,7 +549,7 @@ Analyze these sources and deduce the most accurate current weather."""
                     
                     return await self._statistical_aggregate(weather_data, language, availability_message=f"Statistický souhrn ({friendly_error})")
 
-            # If not gpt-5-mini or fallback failed (though backup failure is handled above)
+            # If not gpt-4o-mini or fallback failed (though backup failure is handled above)
             error_msg = f"AI Error: {type(e).__name__}"
             return await self._statistical_aggregate(weather_data, language, availability_message=f"Statistický souhrn ({error_msg})")
     
@@ -726,7 +726,7 @@ Data from {len(sources)} sources:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-5-mini",
+                model="gpt-4o-mini",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
