@@ -38,12 +38,10 @@ class AstroService:
             print("TLE fetch error:", e)
         return None
         
-    async def get_iss_position(self, lat: float = None, lon: float = None) -> Dict[str, Any]:
+    async def get_iss_position(self, lat: float = None, lon: float = None) -> Optional[Dict[str, Any]]:
         """
         Get current ISS position.
         """
-        result = {"latitude": 0.0, "longitude": 0.0, "timestamp": 0, "next_pass": None}
-        
         try:
             async with httpx.AsyncClient() as client:
                 response = await client.get(self.iss_url, timeout=5.0)
@@ -52,11 +50,25 @@ class AstroService:
                 
                 if data.get("message") == "success":
                     pos = data.get("iss_position", {})
-                    result["latitude"] = float(pos.get("latitude", 0))
-                    result["longitude"] = float(pos.get("longitude", 0))
-                    result["timestamp"] = data.get("timestamp")
+                    
+                    iss_lat = float(pos.get("latitude", 0))
+                    iss_lon = float(pos.get("longitude", 0))
+                    
+                    # If coordinates are actually 0,0 from a corrupted API response, fail gracefully
+                    if iss_lat == 0.0 and iss_lon == 0.0:
+                        return None
+                        
+                    result = {
+                        "latitude": iss_lat,
+                        "longitude": iss_lon,
+                        "timestamp": data.get("timestamp"),
+                        "next_pass": None
+                    }
+                else:
+                    return None
         except Exception as e:
             print(f"ISS fetch error: {e}")
+            return None
             
         if ephem and lat is not None and lon is not None:
             tle = await self._get_iss_tle()

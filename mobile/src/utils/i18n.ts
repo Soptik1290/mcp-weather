@@ -448,6 +448,9 @@ const translations: Record<Language, Record<string, string>> = {
         'customize_widget': 'Přizpůsobit widget',
         'vibration': 'Vibrace',
         'forecast_style': 'Styl předpovědi',
+        'cautious': 'Opatrný',
+        'balanced': 'Vyvážený',
+        'optimistic': 'Optimistický',
 
         // AI Summary
         'ai_forecast': 'AI předpověď',

@@ -185,6 +185,34 @@ export function HomeScreen() {
         fetchWeather();
     }, [currentLocation?.name, lang, tier, settings.confidence_bias]);
 
+    // Auto-refresh ISS position every 10s silently without triggering main loading state
+    useEffect(() => {
+        let interval: ReturnType<typeof setInterval>;
+
+        // Only poll if we have Ultra tier, current location, and existing astroData to update
+        if (tier === 'ultra' && currentLocation && astroData) {
+            interval = setInterval(async () => {
+                try {
+                    const newData = await weatherService.getAstroPack(
+                        currentLocation.latitude,
+                        currentLocation.longitude,
+                        settings.language
+                    );
+                    setAstroData((prev: any) => ({
+                        ...prev,
+                        iss: newData.iss
+                    }));
+                } catch (e) {
+                    // Ignore silent update errors so it doesn't interrupt UX
+                }
+            }, 10000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [tier, currentLocation, astroData, settings.language]);
+
     // Lazy-load AI summary for Pro/Ultra tiers AFTER weather is loaded
     const fetchAISummary = useCallback(async () => {
         if (tier === 'free' || !weather?.location?.name) return;
