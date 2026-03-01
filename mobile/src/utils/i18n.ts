@@ -189,10 +189,10 @@ const translations: Record<Language, Record<string, string>> = {
         'theme_section': 'APPEARANCE',
         'theme_mode': 'Theme',
         'theme_mode_desc': 'Choose app appearance',
-        'theme_auto': '🌤️ Auto (weather)',
-        'theme_system': '📱 System',
-        'theme_dark': '🌙 Dark',
-        'theme_light': '☀️ Light',
+        'theme_auto': 'Auto (weather)',
+        'theme_system': 'System',
+        'theme_dark': 'Dark',
+        'theme_light': 'Light',
 
         // Temperature units
         'celsius': '°C Celsius',
@@ -495,10 +495,10 @@ const translations: Record<Language, Record<string, string>> = {
         'theme_section': 'VZHLED',
         'theme_mode': 'Vzhled',
         'theme_mode_desc': 'Zvolte vzhled aplikace',
-        'theme_auto': '🌤️ Auto (počasí)',
-        'theme_system': '📱 Systém',
-        'theme_dark': '🌙 Tmavý',
-        'theme_light': '☀️ Světlý',
+        'theme_auto': 'Auto (počasí)',
+        'theme_system': 'Systém',
+        'theme_dark': 'Tmavý',
+        'theme_light': 'Světlý',
 
         // Temperature units
         'celsius': '°C Celsius',

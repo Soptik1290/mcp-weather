@@ -7,6 +7,7 @@ import {
     useWindowDimensions,
 } from 'react-native';
 import Svg, { Circle, Ellipse, Defs, ClipPath, Rect } from 'react-native-svg';
+import { Moon, Sunrise, Sunset } from 'lucide-react-native';
 import { t, Language, TimeFormat, formatTimeString } from '../utils';
 import type { Astronomy } from '../types';
 
@@ -213,7 +214,7 @@ export function MoonPhaseCard({
         >
             {/* Header */}
             <View style={styles.header}>
-                <Text style={{ fontSize: 20 }}>🌙</Text>
+                <Moon size={20} color="#FBBF24" />
                 <Text style={[styles.title, { color: textColor }]}>
                     {t('moon_phase', language)}
                 </Text>
@@ -241,13 +242,13 @@ export function MoonPhaseCard({
                     {/* Moonrise / Moonset — always show row */}
                     <View style={styles.timesRow}>
                         <View style={styles.timeItem}>
-                            <Text style={{ fontSize: 14 }}>🌅</Text>
+                            <Sunrise size={16} color="#F59E0B" />
                             <Text style={[styles.timeLabel, { color: subTextColor }]}>
                                 {moonrise ? formatTimeString(formatISOToTime(moonrise), timeFormat) : '—'}
                             </Text>
                         </View>
                         <View style={styles.timeItem}>
-                            <Text style={{ fontSize: 14 }}>🌇</Text>
+                            <Sunset size={16} color="#EF4444" />
                             <Text style={[styles.timeLabel, { color: subTextColor }]}>
                                 {moonset ? formatTimeString(formatISOToTime(moonset), timeFormat) : '—'}
                             </Text>
