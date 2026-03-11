@@ -961,7 +961,7 @@ export function HomeScreen() {
                 <SearchScreen
                     onClose={() => setShowSearch(false)}
                     themeGradient={theme.gradient}
-                    isDark={theme.is_dark}
+                    isDark={isDark}
                     language={settings.language}
                 />
             </Modal >
@@ -973,7 +973,7 @@ export function HomeScreen() {
                 onClose={() => setSelectedDay(null)}
                 day={selectedDay}
                 themeGradient={theme.gradient}
-                isDark={theme.is_dark}
+                isDark={isDark}
                 language={settings.language}
                 timeFormat={settings.time_format}
                 temperatureUnit={settings.temperature_unit}
@@ -988,7 +988,7 @@ export function HomeScreen() {
                 <SettingsScreen
                     onClose={() => setShowSettings(false)}
                     themeGradient={theme.gradient}
-                    isDark={theme.is_dark}
+                    isDark={isDark}
                 />
             </Modal >
 
@@ -1000,7 +1000,7 @@ export function HomeScreen() {
                 explanation={explainData.explanation}
                 sources={explainData.sources}
                 themeGradient={theme.gradient}
-                isDark={theme.is_dark}
+                isDark={isDark}
                 language={lang}
             />
         </>

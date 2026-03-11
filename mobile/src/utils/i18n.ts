@@ -776,7 +776,7 @@ export function shouldUseDarkMode(
                 return themeIsDark;
             }
             // Last resort: hardcoded dark theme names
-            const darkThemes = ['storm', 'clear_night', 'cloudy_night', 'sunset'];
+            const darkThemes = ['storm', 'clear_night', 'cloudy_night', 'sunset', 'fog_night', 'rain_night', 'snow_night', 'hail_night', 'sandstorm_night', 'blizzard_night', 'extreme_heat_night', 'extreme_cold_night', 'wind_night'];
             return darkThemes.includes(themeName);
     }
 }

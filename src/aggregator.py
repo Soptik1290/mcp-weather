@@ -779,9 +779,9 @@ Data from {len(sources)} sources:
             Dict with theme name and gradient colors
         """
         # Determine if it's day or night
-        is_night = current_hour < 6 or current_hour > 20
+        is_night = current_hour < 6 or current_hour >= 20
         is_sunrise = 5 <= current_hour <= 7
-        is_sunset = 18 <= current_hour <= 20
+        is_sunset = 18 <= current_hour <= 19
         
         weather_code = current_weather.weather_code or 0
         cloud_cover = current_weather.cloud_cover or 0
@@ -818,6 +818,12 @@ Data from {len(sources)} sources:
         
         # Hail conditions (codes 96, 99)
         if weather_code in [96, 99]:
+            if is_night:
+                return {
+                    "theme": "hail_night",
+                    "gradient": ["#2d3436", "#2c3e50", "#4a5568"],
+                    "effect": None
+                }
             return {
                 "theme": "hail",
                 "gradient": ["#606c88", "#3f4c6b", "#BDBBBE"],
@@ -829,7 +835,13 @@ Data from {len(sources)} sources:
         # Checking description is safer for "sand" or "dust".
         description = getattr(current_weather, 'weather_description', '') or ''
         if weather_code in [30, 31, 32, 33, 34, 35] or 'sand' in description.lower() or 'dust' in description.lower():
-             return {
+            if is_night:
+                return {
+                    "theme": "sandstorm_night",
+                    "gradient": ["#5c4033", "#3e2723", "#4a3728"],
+                    "effect": None
+                }
+            return {
                 "theme": "sandstorm",
                 "gradient": ["#c9aa88", "#e4d5b7", "#d6cebf"],
                 "effect": None
@@ -839,7 +851,13 @@ Data from {len(sources)} sources:
         # Snow codes: 71, 73, 75, 77, 85, 86
         wind_speed = current_weather.wind_speed or 0
         if weather_code in [71, 73, 75, 77, 85, 86] and wind_speed >= 50:
-             return {
+            if is_night:
+                return {
+                    "theme": "blizzard_night",
+                    "gradient": ["#1a2a3a", "#2c3e50", "#34495e"],
+                    "effect": None
+                }
+            return {
                 "theme": "blizzard",
                 "gradient": ["#cfd9df", "#e2ebf0", "#fdfbfb"],
                 "effect": None
@@ -857,7 +875,13 @@ Data from {len(sources)} sources:
         # Check current temperature
         temp = current_weather.temperature
         if temp is not None and temp >= 32:
-             return {
+            if is_night:
+                return {
+                    "theme": "extreme_heat_night",
+                    "gradient": ["#8b2500", "#c0392b", "#6b1d1d"],
+                    "effect": None
+                }
+            return {
                 "theme": "extreme_heat",
                 "gradient": ["#ff4e50", "#f9d423", "#ff9a9e"],
                 "effect": None
@@ -865,7 +889,13 @@ Data from {len(sources)} sources:
             
         # Extreme Cold (<-15°C)
         if temp is not None and temp <= -15:
-             return {
+            if is_night:
+                return {
+                    "theme": "extreme_cold_night",
+                    "gradient": ["#0a1628", "#1a2980", "#0d1b3e"],
+                    "effect": None
+                }
+            return {
                 "theme": "extreme_cold",
                 "gradient": ["#00c6ff", "#0072ff", "#a1c4fd"],
                 "effect": None
@@ -874,7 +904,13 @@ Data from {len(sources)} sources:
         # Wind (>40 km/h)
         wind = current_weather.wind_speed
         if wind is not None and wind >= 40:
-             return {
+            if is_night:
+                return {
+                    "theme": "wind_night",
+                    "gradient": ["#1a3a4a", "#2c3e50", "#1e272e"],
+                    "effect": None
+                }
+            return {
                 "theme": "wind",
                 "gradient": ["#4CA1AF", "#C4E0E5", "#2C3E50"],
                 "effect": None
