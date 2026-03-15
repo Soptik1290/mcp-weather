@@ -57,6 +57,8 @@ class HourlyForecast(BaseModel):
     precipitation_probability: Optional[float] = None
     wind_speed: Optional[float] = None
     humidity: Optional[float] = None
+    pressure: Optional[float] = Field(None, description="Pressure in hPa")
+    precipitation_amount: Optional[float] = Field(None, description="Precipitation in mm")
 
 
 class Astronomy(BaseModel):

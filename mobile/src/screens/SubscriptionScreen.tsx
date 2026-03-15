@@ -320,7 +320,8 @@ export function SubscriptionScreen() {
                                 t('pro_feat_2', settings.language),
                                 t('pro_feat_3', settings.language),
                                 t('pro_feat_4', settings.language),
-                                t('pro_feat_5', settings.language)
+                                t('pro_feat_5', settings.language),
+                                t('pro_feat_6', settings.language)
                             ]}
                         />
 
@@ -336,7 +337,8 @@ export function SubscriptionScreen() {
                                 t('ultra_feat_2', settings.language),
                                 t('ultra_feat_3', settings.language),
                                 t('ultra_feat_4', settings.language),
-                                t('ultra_feat_5', settings.language)
+                                t('ultra_feat_5', settings.language),
+                                t('ultra_feat_6', settings.language)
                             ]}
                         />
 

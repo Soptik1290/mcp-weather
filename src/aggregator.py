@@ -168,6 +168,8 @@ class WeatherAggregator:
             precip_probs = [e.precipitation_probability for e in entries if e.precipitation_probability is not None]
             winds = [e.wind_speed for e in entries if e.wind_speed is not None]
             humidities = [e.humidity for e in entries if e.humidity is not None]
+            pressures = [e.pressure for e in entries if e.pressure is not None]
+            precip_amounts = [e.precipitation_amount for e in entries if e.precipitation_amount is not None]
 
             # Wind: IQR filter then median
             filtered_wind = self._iqr_filter(winds) if winds else []
@@ -180,6 +182,8 @@ class WeatherAggregator:
                 precipitation_probability=round(statistics.mean(precip_probs)) if precip_probs else entries[0].precipitation_probability,
                 wind_speed=round(statistics.median(filtered_wind), 1) if filtered_wind else entries[0].wind_speed,
                 humidity=round(statistics.mean(humidities)) if humidities else entries[0].humidity,
+                pressure=round(statistics.mean(pressures)) if pressures else entries[0].pressure,
+                precipitation_amount=round(statistics.mean(precip_amounts), 1) if precip_amounts else entries[0].precipitation_amount,
             ))
 
         return aggregated_daily, aggregated_hourly

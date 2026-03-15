@@ -134,9 +134,11 @@ class OpenMeteoProvider(WeatherProvider):
                     "temperature_2m",
                     "weather_code",
                     "precipitation_probability",
+                    "precipitation",
                     "wind_speed_10m",
                     "relative_humidity_2m",
-                    "uv_index"
+                    "uv_index",
+                    "pressure_msl"
                 ],
                 "daily": [
                     "weather_code",
@@ -228,7 +230,9 @@ class OpenMeteoProvider(WeatherProvider):
                 weather_description=WMO_CODES.get(weather_code, {}).get(language, "Unknown") if weather_code else None,
                 precipitation_probability=hourly_data.get("precipitation_probability", [])[original_idx] if original_idx < len(hourly_data.get("precipitation_probability", [])) else None,
                 wind_speed=hourly_data.get("wind_speed_10m", [])[original_idx] if original_idx < len(hourly_data.get("wind_speed_10m", [])) else None,
-                humidity=hourly_data.get("relative_humidity_2m", [])[original_idx] if original_idx < len(hourly_data.get("relative_humidity_2m", [])) else None
+                humidity=hourly_data.get("relative_humidity_2m", [])[original_idx] if original_idx < len(hourly_data.get("relative_humidity_2m", [])) else None,
+                pressure=hourly_data.get("pressure_msl", [])[original_idx] if original_idx < len(hourly_data.get("pressure_msl", [])) else None,
+                precipitation_amount=hourly_data.get("precipitation", [])[original_idx] if original_idx < len(hourly_data.get("precipitation", [])) else None
             ))
         
         # Astronomy data (from first day's sunrise/sunset)

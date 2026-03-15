@@ -168,7 +168,9 @@ class WeatherBitProvider(WeatherProvider):
                 weather_description=item.get("weather", {}).get("description", "Unknown"),
                 precipitation_probability=item.get("pop", 0),
                 wind_speed=item.get("wind_spd", 0) * 3.6,
-                humidity=item.get("rh", 0)
+                humidity=item.get("rh", 0),
+                pressure=item.get("pres"),
+                precipitation_amount=item.get("precip"),
             ))
             
         return hourly

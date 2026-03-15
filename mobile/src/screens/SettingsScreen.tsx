@@ -41,7 +41,10 @@ import {
     EyeOff,
     MonitorSmartphone,
     Moon,
-    Sun
+    Sun,
+    Wind,
+    Gauge,
+    Droplets
 } from 'lucide-react-native';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
 import { t, triggerHaptic } from '../utils';
@@ -218,6 +221,38 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                 <Switch
                     value={value}
                     onValueChange={handleToggle}
+                    trackColor={{ false: 'rgba(128,128,128,0.3)', true: '#4A90D9' }}
+                    thumbColor="#fff"
+                />
+            </View>
+        );
+    };
+
+    const renderSimpleToggle = (
+        label: string,
+        value: boolean,
+        onToggle: (val: boolean) => void,
+        IconComponent: React.ComponentType<{ size: number; color: string; strokeWidth?: number }>,
+        iconColor: string,
+        description?: string
+    ) => {
+        return (
+            <View style={styles.settingRow}>
+                <View style={[styles.iconContainer, { backgroundColor: `${iconColor}20` }]}>
+                    <IconComponent size={20} color={iconColor} strokeWidth={2} />
+                </View>
+                <View style={styles.settingContent}>
+                    <Text style={[styles.settingLabel, { color: textColor }]}>{label}</Text>
+                    {description && (
+                        <Text style={[styles.settingDescription, { color: subTextColor }]}>{description}</Text>
+                    )}
+                </View>
+                <Switch
+                    value={value}
+                    onValueChange={(newValue) => {
+                        triggerHaptic('impactLight');
+                        onToggle(newValue);
+                    }}
                     trackColor={{ false: 'rgba(128,128,128,0.3)', true: '#4A90D9' }}
                     thumbColor="#fff"
                 />
@@ -556,6 +591,43 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             t('aurora_setting_desc', lang)
                         )}
                     </Animated.View>
+
+                    {/* Charts (Pro/Ultra) */}
+                    {tier !== 'free' && (
+                        <>
+                            <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>
+                                {t('charts_section', lang)}
+                            </Animated.Text>
+                            <Animated.View layout={LinearTransition.springify()} style={[styles.card, { backgroundColor: cardBg }]}>
+                                {renderSimpleToggle(
+                                    t('wind_chart', lang),
+                                    settings.show_wind_chart,
+                                    (val) => updateSettings({ show_wind_chart: val }),
+                                    Wind,
+                                    '#10B981',
+                                    t('wind_chart_desc', lang)
+                                )}
+                                <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                {renderSimpleToggle(
+                                    t('pressure_chart', lang),
+                                    settings.show_pressure_chart,
+                                    (val) => updateSettings({ show_pressure_chart: val }),
+                                    Gauge,
+                                    '#8B5CF6',
+                                    t('pressure_chart_desc', lang)
+                                )}
+                                <View style={[styles.separator, { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)' }]} />
+                                {renderSimpleToggle(
+                                    t('precipitation_chart', lang),
+                                    settings.show_precipitation_chart,
+                                    (val) => updateSettings({ show_precipitation_chart: val }),
+                                    Droplets,
+                                    '#3B82F6',
+                                    t('precipitation_chart_desc', lang)
+                                )}
+                            </Animated.View>
+                        </>
+                    )}
 
                     {/* Theme Mode */}
                     <Animated.Text layout={LinearTransition.springify()} style={[styles.sectionHeader, { color: subTextColor }]}>

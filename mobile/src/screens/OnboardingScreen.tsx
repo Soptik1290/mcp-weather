@@ -6,6 +6,7 @@ import {
     TouchableOpacity,
     TextInput,
     FlatList,
+    ScrollView,
     ActivityIndicator,
     Animated,
     Dimensions,
@@ -15,8 +16,10 @@ import {
     Easing,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { MapPin, Search, ChevronRight, Navigation, AlertTriangle, CloudSun } from 'lucide-react-native';
+import { MapPin, Search, ChevronRight, Navigation, AlertTriangle, CloudSun, Star, Zap, Check } from 'lucide-react-native';
 import { useSettingsStore, useLocationStore } from '../stores';
+import { subscriptionService } from '../services/subscriptionService';
+import { PurchasesPackage } from 'react-native-purchases';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { weatherService } from '../services';
 import { t, triggerHaptic, getLocalizedCity, getLocalizedCountry, type Language } from '../utils';
@@ -63,11 +66,20 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     const step2Gps = useRef(new Animated.Value(0)).current;
     const step2Search = useRef(new Animated.Value(0)).current;
 
+    // Step 3 anims
+    const step3Title = useRef(new Animated.Value(0)).current;
+    const step3Cards = useRef(new Animated.Value(0)).current;
+    const step3Btn = useRef(new Animated.Value(0)).current;
+
     // Card press scales
     const csScale = useRef(new Animated.Value(1)).current;
     const enScale = useRef(new Animated.Value(1)).current;
     const continueBtnScale = useRef(new Animated.Value(1)).current;
     const gpsBtnScale = useRef(new Animated.Value(1)).current;
+
+    // Step 3 state
+    const [packages, setPackages] = useState<PurchasesPackage[]>([]);
+    const [purchasing, setPurchasing] = useState(false);
 
     // Floating icon
     const iconFloat = useRef(new Animated.Value(0)).current;
@@ -149,7 +161,11 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
         }).start();
         setStep(nextStep);
 
-        [step2Icon, step2Title, step2Gps, step2Search].forEach((anim, i) => {
+        const stepAnims = nextStep === 1
+            ? [step2Icon, step2Title, step2Gps, step2Search]
+            : [step3Title, step3Cards, step3Btn];
+
+        stepAnims.forEach((anim, i) => {
             Animated.timing(anim, {
                 toValue: 1,
                 duration: 450,
@@ -158,6 +174,44 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                 easing: Easing.out(Easing.cubic),
             }).start();
         });
+
+        if (nextStep === 2) {
+            loadPackages();
+        }
+    };
+
+    const loadPackages = async () => {
+        try {
+            const available = await subscriptionService.getPackages();
+            setPackages(available);
+        } catch (err) {
+            console.error('[Onboarding] Failed to load packages:', err);
+        }
+    };
+
+    const handlePurchase = async (targetTier: string) => {
+        triggerHaptic('impactMedium');
+        setPurchasing(true);
+        try {
+            const pkg = packages.find(p =>
+                p.product.identifier.toLowerCase().includes(targetTier) ||
+                p.identifier.toLowerCase().includes(targetTier)
+            );
+            if (!pkg) {
+                console.warn('[Onboarding] Package not found for tier:', targetTier);
+                setPurchasing(false);
+                return;
+            }
+            const success = await subscriptionService.purchasePackage(pkg);
+            if (success) {
+                triggerHaptic('notificationSuccess');
+                finishOnboarding();
+            }
+        } catch (error) {
+            console.error('[Onboarding] Purchase error:', error);
+        } finally {
+            setPurchasing(false);
+        }
     };
 
     // === Press animations ===
@@ -216,7 +270,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
             longitude: location.longitude,
             country: location.country,
         });
-        finishOnboarding();
+        animateToStep(2);
     };
 
     const handleUseGPS = async () => {
@@ -243,14 +297,14 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                     longitude: position.longitude,
                     country: results.location.country,
                 });
-                finishOnboarding();
+                animateToStep(2);
             } else {
                 setCurrentLocation({
                     name: `${position.latitude.toFixed(2)}, ${position.longitude.toFixed(2)}`,
                     latitude: position.latitude,
                     longitude: position.longitude,
                 });
-                finishOnboarding();
+                animateToStep(2);
             }
         } catch (err) {
             console.error('GPS onboarding error:', err);
@@ -312,6 +366,7 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                     <Animated.View style={[styles.progressContainer, fadeStyle(dotsAnim, 10)]}>
                         <View style={[styles.dot, step === 0 && styles.dotActive]} />
                         <View style={[styles.dot, step === 1 && styles.dotActive]} />
+                        <View style={[styles.dot, step === 2 && styles.dotActive]} />
                     </Animated.View>
 
                     <Animated.View
@@ -495,6 +550,106 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                     }
                                 />
                             </View>
+                        </View>
+
+                        {/* ===== STEP 3: Subscription ===== */}
+                        <View style={styles.stepPage}>
+                            <ScrollView
+                                style={{ flex: 1 }}
+                                contentContainerStyle={styles.stepContent}
+                                showsVerticalScrollIndicator={false}
+                            >
+                                <Animated.View style={[{ alignItems: 'center' }, fadeStyle(step3Title, 30)]}>
+                                    <View style={styles.planIconRow}>
+                                        <Star size={36} color="#60A5FA" fill="#60A5FA" fillOpacity={0.2} />
+                                        <Zap size={36} color="#F59E0B" fill="#F59E0B" fillOpacity={0.2} />
+                                    </View>
+                                    <Text style={styles.welcomeTitle}>
+                                        {t('onboarding_plans_title', lang)}
+                                    </Text>
+                                    <Text style={styles.welcomeSubtitle}>
+                                        {t('onboarding_plans_subtitle', lang)}
+                                    </Text>
+                                </Animated.View>
+
+                                {/* Pro Card */}
+                                <Animated.View style={[{ width: '100%' }, fadeStyle(step3Cards)]}>
+                                    <TouchableOpacity
+                                        style={[styles.planCard, styles.planCardPro]}
+                                        onPress={() => handlePurchase('pro')}
+                                        activeOpacity={0.8}
+                                        disabled={purchasing}
+                                    >
+                                        <View style={styles.planCardHeader}>
+                                            <View>
+                                                <Text style={styles.planCardTitle}>{t('pro_tier', lang)}</Text>
+                                                <Text style={styles.planCardPrice}>{t('pro_price', lang)}</Text>
+                                            </View>
+                                            <Star size={28} color="#60A5FA" fill="#60A5FA" fillOpacity={0.2} />
+                                        </View>
+                                        {[t('pro_feat_1', lang), t('pro_feat_2', lang), t('pro_feat_3', lang)].map((feat, i) => (
+                                            <View key={i} style={styles.planFeatureRow}>
+                                                <Check size={14} color="#60A5FA" strokeWidth={3} />
+                                                <Text style={styles.planFeatureText}>{feat}</Text>
+                                            </View>
+                                        ))}
+                                        <View style={[styles.planButton, { backgroundColor: 'rgba(59, 130, 246, 0.3)' }]}>
+                                            {purchasing ? (
+                                                <ActivityIndicator size="small" color="#fff" />
+                                            ) : (
+                                                <Text style={styles.planButtonText}>{t('upgrade_to', lang)} Pro</Text>
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
+                                </Animated.View>
+
+                                {/* Ultra Card */}
+                                <Animated.View style={[{ width: '100%' }, fadeStyle(step3Cards)]}>
+                                    <TouchableOpacity
+                                        style={[styles.planCard, styles.planCardUltra]}
+                                        onPress={() => handlePurchase('ultra')}
+                                        activeOpacity={0.8}
+                                        disabled={purchasing}
+                                    >
+                                        <View style={styles.planBadge}>
+                                            <Text style={styles.planBadgeText}>{t('most_popular', lang)}</Text>
+                                        </View>
+                                        <View style={styles.planCardHeader}>
+                                            <View>
+                                                <Text style={styles.planCardTitle}>{t('ultra_tier', lang)}</Text>
+                                                <Text style={styles.planCardPrice}>{t('ultra_price', lang)}</Text>
+                                            </View>
+                                            <Zap size={28} color="#F59E0B" fill="#F59E0B" fillOpacity={0.2} />
+                                        </View>
+                                        {[t('ultra_feat_1', lang), t('ultra_feat_2', lang), t('ultra_feat_3', lang)].map((feat, i) => (
+                                            <View key={i} style={styles.planFeatureRow}>
+                                                <Check size={14} color="#F59E0B" strokeWidth={3} />
+                                                <Text style={styles.planFeatureText}>{feat}</Text>
+                                            </View>
+                                        ))}
+                                        <View style={[styles.planButton, { backgroundColor: 'rgba(245, 158, 11, 0.3)' }]}>
+                                            {purchasing ? (
+                                                <ActivityIndicator size="small" color="#fff" />
+                                            ) : (
+                                                <Text style={styles.planButtonText}>{t('upgrade_to', lang)} Ultra</Text>
+                                            )}
+                                        </View>
+                                    </TouchableOpacity>
+                                </Animated.View>
+                            </ScrollView>
+
+                            {/* Skip / Continue for free */}
+                            <Animated.View style={[fadeStyle(step3Btn)]}>
+                                <TouchableOpacity
+                                    style={styles.skipButton}
+                                    onPress={finishOnboarding}
+                                    activeOpacity={0.7}
+                                >
+                                    <Text style={styles.skipButtonText}>
+                                        {t('continue_free', lang)}
+                                    </Text>
+                                </TouchableOpacity>
+                            </Animated.View>
                         </View>
                     </Animated.View>
                 </KeyboardAvoidingView>
@@ -755,6 +910,95 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 16,
         fontWeight: '500',
+    },
+    // Step 3: Subscription
+    planIconRow: {
+        flexDirection: 'row',
+        gap: 16,
+        marginBottom: 20,
+        marginTop: 24,
+    },
+    planCard: {
+        borderRadius: 20,
+        padding: 20,
+        marginBottom: 14,
+        borderWidth: 1.5,
+        overflow: 'hidden',
+    },
+    planCardPro: {
+        backgroundColor: 'rgba(59, 130, 246, 0.12)',
+        borderColor: 'rgba(96, 165, 250, 0.3)',
+    },
+    planCardUltra: {
+        backgroundColor: 'rgba(245, 158, 11, 0.12)',
+        borderColor: 'rgba(245, 158, 11, 0.3)',
+    },
+    planCardHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 12,
+    },
+    planCardTitle: {
+        fontSize: 22,
+        fontWeight: 'bold',
+        color: '#fff',
+        letterSpacing: -0.3,
+    },
+    planCardPrice: {
+        fontSize: 15,
+        color: 'rgba(255,255,255,0.7)',
+        marginTop: 2,
+    },
+    planFeatureRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
+        marginBottom: 8,
+    },
+    planFeatureText: {
+        color: '#fff',
+        fontSize: 14,
+        flex: 1,
+    },
+    planButton: {
+        borderRadius: 14,
+        paddingVertical: 12,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginTop: 12,
+    },
+    planButtonText: {
+        fontWeight: '600',
+        color: '#fff',
+        fontSize: 15,
+    },
+    planBadge: {
+        position: 'absolute',
+        top: 0,
+        right: 0,
+        backgroundColor: '#F59E0B',
+        borderBottomLeftRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+    },
+    planBadgeText: {
+        color: '#fff',
+        fontWeight: 'bold',
+        fontSize: 10,
+        letterSpacing: 0.5,
+    },
+    skipButton: {
+        paddingVertical: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: 20,
+    },
+    skipButtonText: {
+        fontSize: 16,
+        fontWeight: '500',
+        color: 'rgba(255,255,255,0.6)',
+        textDecorationLine: 'underline',
     },
 });
 

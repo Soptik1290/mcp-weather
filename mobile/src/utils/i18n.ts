@@ -248,7 +248,7 @@ const translations: Record<Language, Record<string, string>> = {
         'free_price': '€0 / year',
         'free_desc': 'Essential weather tracking',
         'free_feat_1': 'Basic Weather Data',
-        'free_feat_2': 'GPT-4o-mini Model',
+        'free_feat_2': 'Basic AI',
         'free_feat_3': 'Standard Widget',
         'pro_tier': 'Pro',
         'pro_price': '€4.99 / year',
@@ -257,17 +257,18 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_feat_2': 'Interactive widgets (Tap & Swipe)',
         'pro_feat_3': 'Advanced widget customization',
         'pro_feat_4': 'More weather sources',
-        'pro_feat_5': 'Smarter AI (GPT-5-mini) for better forecasts',
+        'pro_feat_5': 'Smarter AI for better forecasts',
         'pro_feat_6': 'AI Notifications & Aurora alerts',
         // 'No Ads' removed
         'ultra_tier': 'Ultra',
         'ultra_price': '€9.99 / year',
         'ultra_desc': 'The ultimate AI experience',
         'ultra_feat_1': 'Everything in Pro',
-        'ultra_feat_2': 'AstroPack (ISS, Meteor)',
-        'ultra_feat_3': 'AI Explain Mode',
-        'ultra_feat_4': 'Confidence Bias Setting',
-        'ultra_feat_5': 'AI Summary',
+        'ultra_feat_2': 'Extended wind & pressure charts',
+        'ultra_feat_3': 'Data export (CSV/JSON)',
+        'ultra_feat_4': 'AstroPack (ISS, Meteors)',
+        'ultra_feat_5': 'AI Explanation & Summary',
+        'ultra_feat_6': 'Confidence Bias Setting',
 
         // Subscription Alerts
         'sub_error_pkg_not_found': 'Package not found',
@@ -310,6 +311,11 @@ const translations: Record<Language, Record<string, string>> = {
         'geo_denied_alert': 'Permission Denied',
         'geo_denied_msg': 'Please enable location access in settings to use geolocation.',
 
+        // Onboarding - Subscription step
+        'onboarding_plans_title': 'Upgrade Your Experience',
+        'onboarding_plans_subtitle': 'Get the most out of Weatherly with a premium plan',
+        'continue_free': 'Continue for free',
+
         // AstroPack & Ultra
 
         'explain_btn': 'Why? 🤔',
@@ -321,6 +327,18 @@ const translations: Record<Language, Record<string, string>> = {
         'temp_trend': 'Temperature Trend',
         'widget_settings': 'Widget Settings',
         'customize_appearance': 'Customize appearance',
+
+        // Charts
+        'charts_section': 'Charts',
+        'wind_chart': 'Wind Speed Chart',
+        'wind_chart_desc': 'Show 12-hour wind speed trend',
+        'pressure_chart': 'Pressure Chart',
+        'pressure_chart_desc': 'Show 12-hour pressure trend',
+        'precipitation_chart': 'Precipitation Chart',
+        'precipitation_chart_desc': 'Show 12-hour precipitation forecast',
+        'wind_trend': 'Wind Speed',
+        'pressure_trend': 'Pressure',
+        'precipitation_trend': 'Precipitation',
     },
     cs: {
         // Weather cards
@@ -559,7 +577,7 @@ const translations: Record<Language, Record<string, string>> = {
         'free_price': '0 Kč / rok',
         'free_desc': 'Základní sledování počasí',
         'free_feat_1': 'Základní data o počasí',
-        'free_feat_2': 'Model GPT-4o-mini',
+        'free_feat_2': 'Základní AI',
         'free_feat_3': 'Standardní widget',
         'pro_tier': 'Pro',
         'pro_price': '129 Kč / měsíc',
@@ -568,7 +586,7 @@ const translations: Record<Language, Record<string, string>> = {
         'pro_feat_2': 'Interaktivní widgety (Tap & Swipe)',
         'pro_feat_3': 'Pokročilá úprava widgetů',
         'pro_feat_4': 'Více zdrojů počasí',
-        'pro_feat_5': 'Chytřejší AI (GPT-5-mini) pro lepší předpověď',
+        'pro_feat_5': 'Chytřejší AI pro lepší předpověď',
         'pro_feat_6': 'AI Notifikace a Aurora alerty',
 
         'ultra_tier': 'Ultra',
@@ -623,6 +641,11 @@ const translations: Record<Language, Record<string, string>> = {
         'geo_denied_alert': 'Povolení zamítnuto',
         'geo_denied_msg': 'Pro použití geolokace povolte přístup k poloze v nastavení.',
 
+        // Onboarding - Subscription step
+        'onboarding_plans_title': 'Vylepšete si zážitek',
+        'onboarding_plans_subtitle': 'Využijte Weatherly naplno s placeným plánem',
+        'continue_free': 'Pokračovat zdarma',
+
         // AstroPack & Ultra
 
         'explain_btn': 'Proč? 🤔',
@@ -632,6 +655,18 @@ const translations: Record<Language, Record<string, string>> = {
         'temp_trend': 'Vývoj teploty',
         'widget_settings': 'Nastavení widgetů',
         'customize_appearance': 'Přizpůsobit vzhled',
+
+        // Charts
+        'charts_section': 'Grafy',
+        'wind_chart': 'Graf rychlosti větru',
+        'wind_chart_desc': 'Zobrazit 12hodinový trend větru',
+        'pressure_chart': 'Graf tlaku',
+        'pressure_chart_desc': 'Zobrazit 12hodinový trend tlaku',
+        'precipitation_chart': 'Graf srážek',
+        'precipitation_chart_desc': 'Zobrazit 12hodinovou předpověď srážek',
+        'wind_trend': 'Rychlost větru',
+        'pressure_trend': 'Tlak',
+        'precipitation_trend': 'Srážky',
     },
 };
 

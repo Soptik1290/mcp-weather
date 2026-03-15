@@ -30,7 +30,7 @@ class AdmobService {
             return this.loadingPromise;
         }
 
-        const adUnitId = __DEV__ ? TestIds.REWARDED : 'ca-app-pub-3940256099942544/5224354917'; // Production placeholder
+        const adUnitId = __DEV__ ? TestIds.REWARDED : 'ca-app-pub-8109255880447388/6679034198';
 
         this.rewardedAd = RewardedAd.createForAdRequest(adUnitId, {
             requestNonPersonalizedAdsOnly: true,

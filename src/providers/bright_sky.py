@@ -139,7 +139,8 @@ class BrightSkyProvider(WeatherProvider):
                     weather_description=WMO_CODES.get(code, {}).get(language, "Unknown"),
                     precipitation_probability=entry.get("precipitation_probability"),
                     wind_speed=entry.get("wind_speed"),
-                    humidity=entry.get("relative_humidity")
+                    humidity=entry.get("relative_humidity"),
+                    precipitation_amount=entry.get("precipitation"),
                 ))
                 hours_added += 1
         

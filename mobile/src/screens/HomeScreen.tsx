@@ -22,7 +22,7 @@ import { weatherService, widgetService } from '../services';
 import { useLocationStore, useSettingsStore, useSubscriptionStore } from '../stores';
 import { SearchScreen } from './SearchScreen';
 import { SettingsScreen } from './SettingsScreen';
-import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal, AnimatedCard, AnimatedPressable, MoonPhaseCard } from '../components';
+import { HourlyForecast, DailyForecast, WeatherDetails, TemperatureChart, WeatherSkeleton, DayDetailModal, AuroraCard, AstroCard, ExplainModal, AnimatedCard, AnimatedPressable, MoonPhaseCard, WeatherChart, WIND_CHART_CONFIG, PRESSURE_CHART_CONFIG, PRECIPITATION_CHART_CONFIG } from '../components';
 import type { WeatherData, AmbientTheme } from '../types';
 import { useColorScheme, Alert, useWindowDimensions } from 'react-native';
 
@@ -693,7 +693,35 @@ export function HomeScreen() {
                                         />
                                     )}
 
-
+                                    {/* Extended Charts (Pro/Ultra) */}
+                                    {tier !== 'free' && weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
+                                        <>
+                                            {settings.show_wind_chart && (
+                                                <WeatherChart
+                                                    data={weather.hourly_forecast}
+                                                    config={WIND_CHART_CONFIG}
+                                                    textColor={textColor}
+                                                    cardBg={cardBg}
+                                                />
+                                            )}
+                                            {settings.show_pressure_chart && (
+                                                <WeatherChart
+                                                    data={weather.hourly_forecast}
+                                                    config={PRESSURE_CHART_CONFIG}
+                                                    textColor={textColor}
+                                                    cardBg={cardBg}
+                                                />
+                                            )}
+                                            {settings.show_precipitation_chart && (
+                                                <WeatherChart
+                                                    data={weather.hourly_forecast}
+                                                    config={PRECIPITATION_CHART_CONFIG}
+                                                    textColor={textColor}
+                                                    cardBg={cardBg}
+                                                />
+                                            )}
+                                        </>
+                                    )}
 
                                     {/* Aurora Card */}
                                     {shouldShowAurora(
@@ -825,9 +853,45 @@ export function HomeScreen() {
                                         </AnimatedCard>
                                     )}
 
+                                    {/* Extended Charts (Pro/Ultra) */}
+                                    {tier !== 'free' && weather?.hourly_forecast && weather.hourly_forecast.length > 0 && (
+                                        <>
+                                            {settings.show_wind_chart && (
+                                                <AnimatedCard index={3}>
+                                                    <WeatherChart
+                                                        data={weather.hourly_forecast}
+                                                        config={WIND_CHART_CONFIG}
+                                                        textColor={textColor}
+                                                        cardBg={cardBg}
+                                                    />
+                                                </AnimatedCard>
+                                            )}
+                                            {settings.show_pressure_chart && (
+                                                <AnimatedCard index={4}>
+                                                    <WeatherChart
+                                                        data={weather.hourly_forecast}
+                                                        config={PRESSURE_CHART_CONFIG}
+                                                        textColor={textColor}
+                                                        cardBg={cardBg}
+                                                    />
+                                                </AnimatedCard>
+                                            )}
+                                            {settings.show_precipitation_chart && (
+                                                <AnimatedCard index={5}>
+                                                    <WeatherChart
+                                                        data={weather.hourly_forecast}
+                                                        config={PRECIPITATION_CHART_CONFIG}
+                                                        textColor={textColor}
+                                                        cardBg={cardBg}
+                                                    />
+                                                </AnimatedCard>
+                                            )}
+                                        </>
+                                    )}
+
                                     {/* Weather Details */}
                                     {current && (
-                                        <AnimatedCard index={3}>
+                                        <AnimatedCard index={6}>
                                             <WeatherDetails
                                                 humidity={current.humidity}
                                                 windSpeed={current.wind_speed}
@@ -848,7 +912,7 @@ export function HomeScreen() {
 
                                     {/* Moon Phase Card — All tiers */}
                                     {weather?.astronomy && (
-                                        <AnimatedCard index={4}>
+                                        <AnimatedCard index={7}>
                                             <MoonPhaseCard
                                                 astronomy={weather.astronomy}
                                                 textColor={textColor}
@@ -865,7 +929,7 @@ export function HomeScreen() {
 
                                     {/* AI Summary — Pro/Ultra only */}
                                     {tier !== 'free' && (
-                                        <AnimatedCard index={5}>
+                                        <AnimatedCard index={8}>
                                             <View style={[styles.aiCard, { backgroundColor: cardBg }]}>
                                                 <Sparkles size={24} color="#F59E0B" fill="#F59E0B" style={styles.aiIcon} />
                                                 <View style={styles.aiContent}>
@@ -890,7 +954,7 @@ export function HomeScreen() {
 
                                     {/* Daily Forecast */}
                                     {weather?.daily_forecast && weather.daily_forecast.length > 0 && (
-                                        <AnimatedCard index={6}>
+                                        <AnimatedCard index={9}>
                                             <DailyForecast
                                                 data={weather.daily_forecast}
                                                 textColor={textColor}

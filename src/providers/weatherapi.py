@@ -172,6 +172,8 @@ class WeatherAPIProvider(WeatherProvider):
                         precipitation_probability=hour_data.get("chance_of_rain"),
                         wind_speed=hour_data.get("wind_kph"),
                         humidity=hour_data.get("humidity"),
+                        pressure=hour_data.get("pressure_mb"),
+                        precipitation_amount=hour_data.get("precip_mm"),
                     ))
             
             # Parse astronomy

@@ -45,6 +45,8 @@ export interface HourlyForecast {
     precipitation_probability?: number;
     wind_speed?: number;
     humidity?: number;
+    pressure?: number;
+    precipitation_amount?: number;
 }
 
 export interface Astronomy {
@@ -142,6 +144,9 @@ export interface UserSettings {
     eclipse_notifications: boolean;
     daily_brief: boolean;
     hasCompletedOnboarding: boolean;
+    show_wind_chart: boolean;
+    show_pressure_chart: boolean;
+    show_precipitation_chart: boolean;
 }
 
 // AstroPack types

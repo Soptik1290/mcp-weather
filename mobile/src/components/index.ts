@@ -10,3 +10,4 @@ export * from './ExplainModal';
 export { AnimatedCard } from './AnimatedCard';
 export { AnimatedPressable } from './AnimatedPressable';
 export { MoonPhaseCard } from './MoonPhaseCard';
+export { WeatherChart, WIND_CHART_CONFIG, PRESSURE_CHART_CONFIG, PRECIPITATION_CHART_CONFIG } from './WeatherChart';

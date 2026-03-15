@@ -171,7 +171,9 @@ class METNorwayProvider(WeatherProvider):
                 weather_description=WMO_CODES.get(code, {}).get(language, "Unknown"),
                 precipitation_probability=next_1h.get("details", {}).get("probability_of_precipitation"),
                 wind_speed=instant.get("wind_speed") * 3.6 if instant.get("wind_speed") else None,
-                humidity=instant.get("relative_humidity")
+                humidity=instant.get("relative_humidity"),
+                pressure=instant.get("air_pressure_at_sea_level"),
+                precipitation_amount=next_1h.get("details", {}).get("precipitation_amount"),
             ))
         
         # Parse daily forecast (aggregate from hourly data)

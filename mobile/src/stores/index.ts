@@ -48,6 +48,9 @@ const defaultSettings: UserSettings = {
     eclipse_notifications: false,
     daily_brief: false,
     hasCompletedOnboarding: false,
+    show_wind_chart: true,
+    show_pressure_chart: true,
+    show_precipitation_chart: true,
 };
 
 export const useSettingsStore = create<SettingsState>()(

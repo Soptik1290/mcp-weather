@@ -132,6 +132,8 @@ class VisualCrossingProvider(WeatherProvider):
                         precipitation_probability=self._safe_int(hour_data.get("precipprob")),
                         wind_speed=hour_data.get("windspeed"),
                         humidity=self._safe_int(hour_data.get("humidity")),
+                        pressure=hour_data.get("pressure"),
+                        precipitation_amount=hour_data.get("precip"),
                     ))
             
             # Astronomy from first day

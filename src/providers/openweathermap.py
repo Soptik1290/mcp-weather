@@ -190,6 +190,8 @@ class OpenWeatherMapProvider(WeatherProvider):
                 precipitation_probability=int(item.get("pop", 0) * 100),
                 wind_speed=item["wind"].get("speed", 0) * 3.6,
                 humidity=item["main"].get("humidity"),
+                pressure=item["main"].get("pressure"),
+                precipitation_amount=item.get("rain", {}).get("3h") or item.get("snow", {}).get("3h"),
             ))
             
             # Aggregate for daily
