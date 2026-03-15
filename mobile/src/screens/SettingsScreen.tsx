@@ -686,8 +686,8 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                     setShowSupportModal(true);
                                 } else if (!result.success) {
                                     Alert.alert(
-                                        "Chyba",
-                                        "Reklamu se bohužel nepodařilo načíst k zobrazení. Zkuste to prosím později."
+                                        t('ad_error_title', lang),
+                                        t('ad_error_msg', lang)
                                     );
                                 }
                             }}
@@ -704,7 +704,7 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                             <View style={styles.settingContent}>
                                 <Text style={[styles.settingLabel, { color: textColor }]}>{t('support_dev', lang)}</Text>
                                 <Text style={[styles.settingDescription, { color: subTextColor }]}>
-                                    {isAdLoading ? 'Načítám inzerát...' : t('watch_ad', lang)}
+                                    {isAdLoading ? t('ad_loading', lang) : t('watch_ad', lang)}
                                 </Text>
                             </View>
                             <ChevronRight size={16} color={subTextColor} />
@@ -724,11 +724,11 @@ export function SettingsScreen({ onClose, themeGradient, isDark }: SettingsScree
                                 </View>
 
                                 <Text style={[styles.modalTitle, { color: textColor }]}>
-                                    Děkujeme! ❤️
+                                    {t('thank_you_title', lang)} ❤️
                                 </Text>
 
                                 <Text style={[styles.modalDescription, { color: subTextColor }]}>
-                                    Moc děkujeme za tvoji podporu, moc to pro vývoj aplikace znamená.
+                                    {t('thank_you_msg', lang)}
                                 </Text>
 
                                 <TouchableOpacity

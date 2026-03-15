@@ -72,18 +72,18 @@ class WidgetService {
                 ['aurora', JSON.stringify(data.aurora ?? {})],
             ];
 
-            console.log('WidgetService: Saving data to', groupName, items);
+            if (__DEV__) console.log('WidgetService: Saving data to', groupName, items);
             await Promise.all(
                 items.map(([key, value]) =>
                     NativeSharedGroupPreferences.setItem(key, value, groupName, options)
                 )
             );
-            console.log('WidgetService: Data saved successfully');
+            if (__DEV__) console.log('WidgetService: Data saved successfully');
 
             // Trigger native widget update
             if (NativeModules.WidgetModule) {
                 NativeModules.WidgetModule.reloadAllWidgets();
-                console.log('WidgetService: Triggered native widget reload');
+                if (__DEV__) console.log('WidgetService: Triggered native widget reload');
             } else {
                 console.warn('WidgetService: Native WidgetModule not found');
             }

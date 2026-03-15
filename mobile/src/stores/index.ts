@@ -6,7 +6,6 @@ import type {
     UserSettings,
     SubscriptionInfo,
     Location,
-    WidgetConfig
 } from '../types';
 
 // User Settings Store
@@ -42,7 +41,6 @@ const defaultSettings: UserSettings = {
     theme_mode: 'auto',
     notifications_enabled: true,
     aurora_alerts: true,
-    iss_alerts: false,
     haptic_enabled: true,
     aurora_notifications: false,
     eclipse_notifications: false,
@@ -136,6 +134,7 @@ export const useSubscriptionStore = create<SubscriptionState>()(
 interface LocationState {
     currentLocation: Location | null;
     savedLocations: Location[];
+    locationVersion: number;
     setCurrentLocation: (location: Location | null) => void;
     addSavedLocation: (location: Location) => void;
     removeSavedLocation: (name: string) => void;
@@ -146,7 +145,11 @@ export const useLocationStore = create<LocationState>()(
         (set, get) => ({
             currentLocation: null,
             savedLocations: [],
-            setCurrentLocation: (location) => set({ currentLocation: location }),
+            locationVersion: 0,
+            setCurrentLocation: (location) => set((state) => ({
+                currentLocation: location,
+                locationVersion: state.locationVersion + 1,
+            })),
             addSavedLocation: (location) =>
                 set((state) => ({
                     savedLocations: [...state.savedLocations, location],
@@ -163,34 +166,3 @@ export const useLocationStore = create<LocationState>()(
     )
 );
 
-// Widget Configuration Store
-interface WidgetState {
-    widgets: WidgetConfig[];
-    addWidget: (widget: WidgetConfig) => void;
-    updateWidget: (id: string, config: Partial<WidgetConfig>) => void;
-    removeWidget: (id: string) => void;
-}
-
-export const useWidgetStore = create<WidgetState>()(
-    persist(
-        (set) => ({
-            widgets: [],
-            addWidget: (widget) =>
-                set((state) => ({ widgets: [...state.widgets, widget] })),
-            updateWidget: (id, config) =>
-                set((state) => ({
-                    widgets: state.widgets.map((w) =>
-                        w.id === id ? { ...w, ...config } : w
-                    ),
-                })),
-            removeWidget: (id) =>
-                set((state) => ({
-                    widgets: state.widgets.filter((w) => w.id !== id),
-                })),
-        }),
-        {
-            name: 'weatherly-widgets',
-            storage: createJSONStorage(() => AsyncStorage),
-        }
-    )
-);

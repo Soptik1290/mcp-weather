@@ -235,6 +235,13 @@ const translations: Record<Language, Record<string, string>> = {
         'made_with_love': 'Made with ❤️ by Tomáš Stark',
         'support_dev': 'Support the Developer',
         'watch_ad': 'Watch a short ad',
+        'ad_error_title': 'Error',
+        'ad_error_msg': 'The ad could not be loaded. Please try again later.',
+        'ad_loading': 'Loading ad...',
+        'thank_you_title': 'Thank you!',
+        'thank_you_msg': 'Thank you so much for your support, it means a lot for the development of the app.',
+        'customize_widget': 'Customize Widget',
+        'analyzing_data': 'Analyzing data sources...',
 
         // Subscription
         'premium_plans': 'Premium Plans',
@@ -564,6 +571,14 @@ const translations: Record<Language, Record<string, string>> = {
         'made_with_love': 'Vytvořeno s ❤️ od Tomáš Stark',
         'support_dev': 'Podpořit vývojáře',
         'watch_ad': 'Zhlédnutím reklamy',
+        'ad_error_title': 'Chyba',
+        'ad_error_msg': 'Reklamu se bohužel nepodařilo načíst k zobrazení. Zkuste to prosím později.',
+        'ad_loading': 'Načítám inzerát...',
+        'thank_you_title': 'Děkujeme!',
+        'thank_you_msg': 'Moc děkujeme za tvoji podporu, moc to pro vývoj aplikace znamená.',
+        'analyzing_data': 'Analyzuji data...',
+        'analyzing_models': 'Porovnávám 6 modelů počasí',
+        'analyzed_sources': 'Analyzované zdroje',
 
         // Subscription
         'premium_plans': 'Plány Předplatného',

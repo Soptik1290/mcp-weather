@@ -6,6 +6,7 @@ import Svg, {
     LinearGradient,
     Stop,
     Circle,
+    Rect,
     Text as SvgText,
     G
 } from 'react-native-svg';
@@ -32,6 +33,11 @@ export interface ChartConfig {
     fixedYRange?: { min: number; max: number };
     minYRange?: number;
     tooltipExtra?: (d: HourlyData) => string | null;
+    labelInterval?: number;
+    summaryFn?: (data: HourlyData[]) => string | null;
+    barExtractor?: (d: HourlyData) => number | undefined;
+    barColor?: string;
+    barMaxValue?: number;
 }
 
 interface WeatherChartProps {
@@ -204,9 +210,16 @@ export function WeatherChart({
                 setChartWidth(layoutWidth - (isTablet ? 48 : 32));
             }}
         >
-            <Text style={[styles.title, { color: textColor }]}>
-                {selectedIndex !== null ? 'Detail' : t(config.titleKey, language)}
-            </Text>
+            <View style={styles.titleRow}>
+                <Text style={[styles.title, { color: textColor }]}>
+                    {selectedIndex !== null ? 'Detail' : t(config.titleKey, language)}
+                </Text>
+                {config.summaryFn && config.summaryFn(chartData) && (
+                    <Text style={[styles.summaryText, { color: textColor }]}>
+                        {config.summaryFn(chartData)}
+                    </Text>
+                )}
+            </View>
 
             <View>
                 <Svg width={chartWidth} height={chartHeight}>
@@ -216,6 +229,30 @@ export function WeatherChart({
                             <Stop offset="100%" stopColor={config.lineColor} stopOpacity="0" />
                         </LinearGradient>
                     </Defs>
+
+                    {/* Bar chart (e.g. precipitation mm) */}
+                    {config.barExtractor && points.map((point, index) => {
+                        const barVal = config.barExtractor!(point);
+                        if (barVal === undefined || barVal === null || barVal <= 0) return null;
+                        const maxBar = config.barMaxValue || 5;
+                        const clampedVal = Math.min(barVal, maxBar);
+                        const barMaxH = graphHeight * 0.6;
+                        const barH = (clampedVal / maxBar) * barMaxH;
+                        const barW = Math.max(stepX * 0.4, 6);
+                        const barY = paddingTop + graphHeight - barH;
+                        return (
+                            <Rect
+                                key={`bar-${index}`}
+                                x={point.x - barW / 2}
+                                y={barY}
+                                width={barW}
+                                height={barH}
+                                rx={barW / 2}
+                                fill={config.barColor || config.lineColor}
+                                opacity={0.35}
+                            />
+                        );
+                    })}
 
                     <Path d={fillPath} fill={`url(#${config.gradientId}Fill)`} />
                     <Path d={linePath} stroke={config.lineColor} strokeWidth={3} fill="none" strokeLinecap="round" strokeLinejoin="round" />
@@ -233,7 +270,7 @@ export function WeatherChart({
                                 strokeWidth={2}
                             />
 
-                            {selectedIndex !== index && (
+                            {selectedIndex !== index && (index % (config.labelInterval || 1) === 0) && (
                                 <SvgText
                                     x={point.x}
                                     y={point.y - 12}
@@ -304,6 +341,7 @@ export const PRESSURE_CHART_CONFIG: ChartConfig = {
     lineColor: '#8B5CF6',
     gradientId: 'pressureGradient',
     minYRange: 10,
+    labelInterval: 3,
 };
 
 export const PRECIPITATION_CHART_CONFIG: ChartConfig = {
@@ -316,15 +354,32 @@ export const PRECIPITATION_CHART_CONFIG: ChartConfig = {
     tooltipExtra: (d) => d.precipitation_amount !== undefined && d.precipitation_amount !== null
         ? `${d.precipitation_amount} mm`
         : null,
+    summaryFn: (data) => {
+        const total = data.reduce((sum, d) => sum + (d.precipitation_amount || 0), 0);
+        return total > 0 ? `${total.toFixed(1)} mm` : null;
+    },
+    barExtractor: (d) => d.precipitation_amount,
+    barColor: '#3B82F6',
+    barMaxValue: 5,
 };
 
 const styles = StyleSheet.create({
     container: {
     },
+    titleRow: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 8,
+    },
     title: {
         fontSize: 17,
         fontWeight: '600',
-        marginBottom: 8,
+    },
+    summaryText: {
+        fontSize: 14,
+        fontWeight: '600',
+        opacity: 0.7,
     },
     tooltip: {
         position: 'absolute',

@@ -1,5 +1,5 @@
 import notifee, { AndroidImportance, EventType, AndroidStyle } from '@notifee/react-native';
-import { Platform } from 'react-native';
+import { Platform, PermissionsAndroid } from 'react-native';
 
 class NotificationService {
     constructor() {
@@ -7,7 +7,15 @@ class NotificationService {
     }
 
     async requestPermission(): Promise<boolean> {
-        if (Platform.OS === 'android') return true;
+        if (Platform.OS === 'android') {
+            if (Platform.Version >= 33) {
+                const granted = await PermissionsAndroid.request(
+                    PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+                );
+                return granted === PermissionsAndroid.RESULTS.GRANTED;
+            }
+            return true;
+        }
         const settings = await notifee.requestPermission();
         return settings.authorizationStatus >= 1;
     }

@@ -19,6 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { MapPin, Search, ChevronRight, Navigation, AlertTriangle, CloudSun, Star, Zap, Check } from 'lucide-react-native';
 import { useSettingsStore, useLocationStore } from '../stores';
 import { subscriptionService } from '../services/subscriptionService';
+import { notificationService } from '../services/NotificationService';
 import { PurchasesPackage } from 'react-native-purchases';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { weatherService } from '../services';
@@ -313,6 +314,8 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
     };
 
     const finishOnboarding = () => {
+        // Request notification permission (non-blocking)
+        notificationService.requestPermission().catch(() => {});
         updateSettings({ hasCompletedOnboarding: true });
         navigation.reset({
             index: 0,

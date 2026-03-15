@@ -62,7 +62,7 @@ export function SubscriptionScreen() {
         const loadPackages = async () => {
             const available = await subscriptionService.getPackages();
             setPackages(available);
-            console.log('[SubscriptionScreen] Loaded packages:', available.map(p => p.identifier));
+            if (__DEV__) console.log('[SubscriptionScreen] Loaded packages:', available.map(p => p.identifier));
         };
         loadPackages();
 

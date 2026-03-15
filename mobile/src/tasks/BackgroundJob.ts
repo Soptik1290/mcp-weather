@@ -1,4 +1,5 @@
 import BackgroundFetch from 'react-native-background-fetch';
+import notifee, { TriggerType, TimestampTrigger } from '@notifee/react-native';
 import { notificationService } from '../services/NotificationService';
 import { weatherService } from '../services/weatherService';
 import { useSettingsStore, useSubscriptionStore, useLocationStore } from '../stores';
@@ -16,11 +17,11 @@ export const initBackgroundFetch = async () => {
             stopOnTerminate: false,
             startOnBoot: true,
             enableHeadless: true, // For Android headless task
-            forceAlarmManager: false, // Use JobScheduler by default
+            forceAlarmManager: true, // Use AlarmManager for reliability on devices with aggressive battery optimization
             requiredNetworkType: BackgroundFetch.NETWORK_TYPE_ANY,
         },
         async (taskId) => {
-            console.log('[BackgroundFetch] task start: ', taskId);
+            if (__DEV__) console.log('[BackgroundFetch] task start: ', taskId);
             await performBackgroundTask();
             BackgroundFetch.finish(taskId);
         },
@@ -28,7 +29,7 @@ export const initBackgroundFetch = async () => {
             console.error('[BackgroundFetch] failed to start: ', error);
         }
     );
-    console.log('[BackgroundFetch] status: ', status);
+    if (__DEV__) console.log('[BackgroundFetch] status: ', status);
 };
 
 // Logic to run in background
@@ -44,15 +45,14 @@ const performBackgroundTask = async () => {
         const { tier } = useSubscriptionStore.getState();
         const { currentLocation } = useLocationStore.getState();
 
-        // 1. Check for Pro/Ultra
-        if (tier !== 'pro' && tier !== 'ultra') return;
         if (!settings.notifications_enabled) return;
+        const isPaid = tier === 'pro' || tier === 'ultra';
 
         const now = new Date();
         const currentHour = now.getHours();
 
-        // 2. Daily Brief (Morning 7-9 AM)
-        if (settings.daily_brief && currentHour >= 7 && currentHour <= 10) {
+        // 2. Daily Brief (Morning 7-10 AM, Pro/Ultra only)
+        if (isPaid && settings.daily_brief && currentHour >= 7 && currentHour <= 10) {
             const lastBriefDate = await AsyncStorage.getItem(STORAGE_KEY_LAST_BRIEF);
             const todayStr = now.toISOString().split('T')[0];
 
@@ -87,8 +87,8 @@ const performBackgroundTask = async () => {
             }
         }
 
-        // 3. Aurora Alerts (Every check)
-        if (settings.aurora_alerts || settings.aurora_notifications) {
+        // 3. Aurora Alerts (Pro/Ultra only, uses aurora_notifications setting)
+        if (isPaid && settings.aurora_notifications) {
             // Check if we already alerted recently (e.g. within 6 hours)
             const lastAuroraTimeStr = await AsyncStorage.getItem(STORAGE_KEY_LAST_AURORA);
             const lastAuroraTime = lastAuroraTimeStr ? parseInt(lastAuroraTimeStr) : 0;
@@ -158,7 +158,36 @@ const performBackgroundTask = async () => {
             }
         }
 
-        // 5. Update Widget Data
+        // 5. Schedule daily brief fallback trigger for tomorrow 7:00
+        if (isPaid && settings.daily_brief && currentLocation) {
+            try {
+                await notifee.cancelNotification('daily_brief_fallback');
+                const tomorrow7am = new Date();
+                tomorrow7am.setDate(tomorrow7am.getDate() + 1);
+                tomorrow7am.setHours(7, 0, 0, 0);
+
+                const trigger: TimestampTrigger = {
+                    type: TriggerType.TIMESTAMP,
+                    timestamp: tomorrow7am.getTime(),
+                };
+
+                await notifee.createTriggerNotification(
+                    {
+                        id: 'daily_brief_fallback',
+                        title: settings.language === 'cs' ? 'Ranní počasí' : 'Morning Weather',
+                        body: settings.language === 'cs'
+                            ? `Otevřete Weatherly pro dnešní předpověď pro ${currentLocation.name}`
+                            : `Open Weatherly for today's forecast for ${currentLocation.name}`,
+                        android: { channelId: 'daily_brief', smallIcon: 'ic_launcher', pressAction: { id: 'default' } },
+                    },
+                    trigger
+                );
+            } catch (e) {
+                console.error('Failed to schedule daily brief fallback', e);
+            }
+        }
+
+        // 6. Update Widget Data
         if (currentLocation) {
             try {
                 const weatherData = await weatherService.getWeatherForecast(
@@ -208,7 +237,7 @@ const performBackgroundTask = async () => {
 
 // Optional: Headless Task for Android (if app is terminated)
 export const headlessTask = async (taskId: string) => {
-    console.log('[BackgroundFetch] Headless task start: ', taskId);
+    if (__DEV__) console.log('[BackgroundFetch] Headless task start: ', taskId);
     await performBackgroundTask();
     BackgroundFetch.finish(taskId);
 };

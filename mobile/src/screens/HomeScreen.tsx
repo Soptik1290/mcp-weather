@@ -67,7 +67,7 @@ export function HomeScreen() {
 
 
 
-    const { currentLocation } = useLocationStore();
+    const { currentLocation, locationVersion } = useLocationStore();
     const { settings } = useSettingsStore();
     const { tier } = useSubscriptionStore();
     const systemColorScheme = useColorScheme();
@@ -93,7 +93,7 @@ export function HomeScreen() {
                 // Fetch AstroPack in parallel (Ultra only, otherwise null)
                 (tier === 'ultra' && currentLocation)
                     ? weatherService.getAstroPack(currentLocation.latitude, currentLocation.longitude, settings.language)
-                        .catch(e => { console.log('Astro fetch failed', e); return null; })
+                        .catch(e => { if (__DEV__) console.log('Astro fetch failed', e); return null; })
                     : Promise.resolve(null),
             ]);
 
@@ -183,7 +183,7 @@ export function HomeScreen() {
 
     useEffect(() => {
         fetchWeather();
-    }, [currentLocation?.name, lang, tier, settings.confidence_bias]);
+    }, [locationVersion, lang, tier, settings.confidence_bias]);
 
     // Auto-refresh ISS position every 10s silently without triggering main loading state
     useEffect(() => {
@@ -235,7 +235,7 @@ export function HomeScreen() {
                     return;
                 }
 
-                console.log(`AI summary returned null, attempt ${attempts + 1}/${maxAttempts}. retrying...`);
+                if (__DEV__) console.log(`AI summary returned null, attempt ${attempts + 1}/${maxAttempts}. retrying...`);
             } catch (e) {
                 console.warn(`AI summary lazy-load failed (attempt ${attempts + 1}/${maxAttempts}):`, e);
             }

@@ -14,7 +14,7 @@ class SubscriptionService {
      * Initialize the subscription service.
      */
     async initialize(): Promise<void> {
-        console.log('[SubscriptionService] Initializing RevenueCat...');
+        if (__DEV__) console.log('[SubscriptionService] Initializing RevenueCat...');
 
         Purchases.setLogLevel(LOG_LEVEL.DEBUG);
 
@@ -57,7 +57,7 @@ class SubscriptionService {
      */
     async purchasePackage(pack: PurchasesPackage): Promise<boolean> {
         try {
-            console.log(`[SubscriptionService] Purchasing package: ${pack.identifier}`);
+            if (__DEV__) console.log(`[SubscriptionService] Purchasing package: ${pack.identifier}`);
             const { customerInfo } = await Purchases.purchasePackage(pack);
 
             this.handleCustomerInfoUpdate(customerInfo);
@@ -75,7 +75,7 @@ class SubscriptionService {
      */
     async restorePurchases(): Promise<void> {
         try {
-            console.log('[SubscriptionService] Restoring purchases...');
+            if (__DEV__) console.log('[SubscriptionService] Restoring purchases...');
             const customerInfo = await Purchases.restorePurchases();
             this.handleCustomerInfoUpdate(customerInfo);
         } catch (e) {
@@ -105,18 +105,18 @@ class SubscriptionService {
         if (customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENTS.ULTRA]) {
             if (store.tier !== SubscriptionTier.Ultra) {
                 store.setTier(SubscriptionTier.Ultra);
-                console.log('[SubscriptionService] Tier updated to ULTRA');
+                if (__DEV__) console.log('[SubscriptionService] Tier updated to ULTRA');
             }
         } else if (customerInfo.entitlements.active[REVENUECAT_CONFIG.ENTITLEMENTS.PRO]) {
             if (store.tier !== SubscriptionTier.Pro) {
                 store.setTier(SubscriptionTier.Pro);
-                console.log('[SubscriptionService] Tier updated to PRO');
+                if (__DEV__) console.log('[SubscriptionService] Tier updated to PRO');
             }
         } else {
             // No active paid entitlement
             if (store.tier !== SubscriptionTier.Free) {
                 store.setTier(SubscriptionTier.Free);
-                console.log('[SubscriptionService] Tier updated to FREE');
+                if (__DEV__) console.log('[SubscriptionService] Tier updated to FREE');
             }
         }
     }

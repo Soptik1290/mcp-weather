@@ -432,9 +432,14 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
         
         weather = await open_meteo.get_weather(location, days=min(request.days, 16), language=request.language)
         
-        # Get AI aggregation
-        model = "gpt-4o-mini" if request.tier in ["pro", "ultra"] else "gpt-4o-mini"
-        aggregated = await aggregator.aggregate([weather], request.language, model=model)
+        # Aggregate based on tier
+        if request.tier in ["pro", "ultra"]:
+            model = "gpt-5-mini"
+            aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
+        else:
+            model = "statistical"
+            msg = "Statistický souhrn (Upgrade pro AI)" if request.language == "cs" else "Statistical summary (Upgrade for AI)"
+            aggregated = await aggregator._statistical_aggregate([weather], request.language, availability_message=msg)
         
         # Get ambient theme
         current_hour = datetime.now().hour

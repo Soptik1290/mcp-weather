@@ -138,7 +138,6 @@ export interface UserSettings {
     theme_mode: ThemeMode;
     notifications_enabled: boolean;
     aurora_alerts: boolean;
-    iss_alerts: boolean;
     haptic_enabled: boolean;
     aurora_notifications: boolean;
     eclipse_notifications: boolean;

@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Modal, TouchableOpacity, ScrollView, ActivityIn
 import LinearGradient from 'react-native-linear-gradient';
 import { X, Sparkles, BrainCircuit } from 'lucide-react-native';
 import { BlurView } from '@react-native-community/blur';
-import { triggerHaptic } from '../utils';
+import { triggerHaptic, t } from '../utils';
 
 interface SourceData {
     name: string;
@@ -60,7 +60,7 @@ export const ExplainModal = ({
                             <View style={styles.titleContainer}>
                                 <Sparkles size={24} color="#FFD700" style={{ marginRight: 8 }} />
                                 <Text style={[styles.title, { color: textColor }]}>
-                                    {language === 'cs' ? 'AI Meteorolog' : 'AI Meteorologist'}
+                                    {t('ai_meteorologist', language as any)}
                                 </Text>
                             </View>
                             <TouchableOpacity onPress={() => { triggerHaptic('impactLight'); onClose(); }} style={styles.closeButton}>
@@ -74,10 +74,10 @@ export const ExplainModal = ({
                                     <BrainCircuit size={48} color={textColor} style={{ opacity: 0.8, marginBottom: 16 }} />
                                     <ActivityIndicator size="large" color={textColor} />
                                     <Text style={[styles.loadingText, { color: textColor }]}>
-                                        {language === 'cs' ? 'Analyzuji data...' : 'Analyzing data sources...'}
+                                        {t('analyzing_data', language as any)}
                                     </Text>
                                     <Text style={[styles.loadingSubtext, { color: subTextColor }]}>
-                                        {language === 'cs' ? 'Porovnávám 6 modelů počasí' : 'Comparing 6 weather models'}
+                                        {t('analyzing_models', language as any)}
                                     </Text>
                                 </View>
                             ) : (
@@ -119,7 +119,7 @@ export const ExplainModal = ({
                                     {sources && sources.length > 0 && (
                                         <View style={styles.sourcesSection}>
                                             <Text style={[styles.sectionTitle, { color: subTextColor }]}>
-                                                {language === 'cs' ? 'Analyzované zdroje' : 'Analyzed Sources'}
+                                                {t('analyzed_sources', language as any)}
                                             </Text>
 
                                             {sources.map((source, index) => (

@@ -176,7 +176,6 @@ class WeatherService {
             }
 
             return await response.json();
-            return await response.json();
         } catch (error) {
             console.error('Get ambient theme error:', error);
             throw error;
@@ -190,30 +189,10 @@ class WeatherService {
         language: string;
         tier: string;
         include_astronomy: boolean;
-    }): Promise<any> {
+    }): Promise<string> {
         try {
-            const response = await fetch(`${this.baseUrl}/weather/smart_summary`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    location_name: params.location,
-                    latitude: params.lat,
-                    longitude: params.lon,
-                    language: params.language,
-                    tier: params.tier,
-                    include_astronomy: params.include_astronomy
-                }),
-            });
-
-            if (!response.ok) {
-                // If endpoint doesn't exist, generic fallback
-                return "Daily weather summary not available.";
-            }
-
-            // Backend returns { summary: "..." } or raw string?
-            // Usually Python backend returns JSON. 
-            const data = await response.json();
-            return data.summary || data; // Handle both wrapper and raw
+            const result = await this.getAISummary(params.location, params.language);
+            return result.ai_summary || "Daily weather summary not available.";
         } catch (error) {
             console.error('Get smart summary error:', error);
             return "Unable to fetch daily summary.";

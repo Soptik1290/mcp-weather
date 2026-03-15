@@ -15,7 +15,7 @@ class AdmobService {
             });
 
             await mobileAds().initialize();
-            console.log('[AdMob] Initialized correctly.');
+            if (__DEV__) console.log('[AdMob] Initialized correctly.');
         } catch (error) {
             console.error('[AdMob] Initialization error:', error);
         }
@@ -38,14 +38,14 @@ class AdmobService {
 
         this.loadingPromise = new Promise((resolve) => {
             const unsubscribeLoaded = this.rewardedAd!.addAdEventListener(RewardedAdEventType.LOADED, () => {
-                console.log('[AdMob] Rewarded Ad loaded successfully');
+                if (__DEV__) console.log('[AdMob] Rewarded Ad loaded successfully');
                 this.adLoaded = true;
                 this.loadingPromise = null;
                 resolve(true);
             });
 
             const unsubscribeError = this.rewardedAd!.addAdEventListener(AdEventType.ERROR, (error) => {
-                console.log('[AdMob] Ad failed to load: ', error);
+                if (__DEV__) console.log('[AdMob] Ad failed to load: ', error);
                 this.loadingPromise = null;
                 this.adLoaded = false;
                 resolve(false);
@@ -59,7 +59,7 @@ class AdmobService {
 
     async showRewardedAd(): Promise<{ success: boolean; earnedReward: boolean }> {
         if (!this.adLoaded || !this.rewardedAd) {
-            console.log('[AdMob] Ad not loaded yet. Attempting to load...');
+            if (__DEV__) console.log('[AdMob] Ad not loaded yet. Attempting to load...');
             const loaded = await this.loadRewardedAd();
             if (!loaded) return { success: false, earnedReward: false };
         }
@@ -79,7 +79,7 @@ class AdmobService {
             unsubscribeEarned = this.rewardedAd!.addAdEventListener(
                 RewardedAdEventType.EARNED_REWARD,
                 reward => {
-                    console.log('[AdMob] Reward earned while showing:', reward);
+                    if (__DEV__) console.log('[AdMob] Reward earned while showing:', reward);
                     earned = true;
                 },
             );
@@ -87,7 +87,7 @@ class AdmobService {
             unsubscribeClosed = this.rewardedAd!.addAdEventListener(
                 AdEventType.CLOSED,
                 () => {
-                    console.log('[AdMob] Ad closed by user');
+                    if (__DEV__) console.log('[AdMob] Ad closed by user');
                     cleanup();
                     resolve({ success: true, earnedReward: earned });
                 }
