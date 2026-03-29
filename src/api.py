@@ -144,6 +144,13 @@ class RateLimiter:
 aggregator = WeatherAggregator()
 
 
+@app.get("/app-ads.txt")
+async def get_app_ads_txt():
+    """Serves the Google AdMob / AdSense verification file."""
+    content = "google.com, pub-8109255880447388, DIRECT, f08c47fec0942fa0"
+    return Response(content=content, media_type="text/plain")
+
+
 # Request/Response models
 class SearchRequest(BaseModel):
     query: str = Field(..., min_length=2, max_length=100, description="City name to search")
