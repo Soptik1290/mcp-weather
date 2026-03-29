@@ -5,7 +5,6 @@ import {
     StyleSheet,
     TouchableOpacity,
     TextInput,
-    FlatList,
     ScrollView,
     ActivityIndicator,
     Animated,
@@ -363,7 +362,8 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
             >
                 <KeyboardAvoidingView
                     style={styles.container}
-                    behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
                 >
                     {/* Progress dots */}
                     <Animated.View style={[styles.progressContainer, fadeStyle(dotsAnim, 10)]}>
@@ -454,7 +454,12 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
 
                         {/* ===== STEP 2: Location ===== */}
                         <View style={styles.stepPage}>
-                            <View style={styles.stepContent}>
+                            <ScrollView
+                                style={{ flex: 1 }}
+                                contentContainerStyle={styles.stepContent}
+                                showsVerticalScrollIndicator={false}
+                                keyboardShouldPersistTaps="handled"
+                            >
                                 <Animated.Text style={[styles.locationIcon, fadeStyle(step2Icon, 30)]}>
                                     📍
                                 </Animated.Text>
@@ -534,25 +539,20 @@ export function OnboardingScreen({ navigation }: OnboardingScreenProps) {
                                 </Animated.View>
 
                                 {/* Search results */}
-                                <FlatList
-                                    data={searchResults}
-                                    keyExtractor={(item, index) => `${item.latitude}-${item.longitude}-${index}`}
-                                    renderItem={renderSearchItem}
-                                    style={styles.searchList}
-                                    keyboardShouldPersistTaps="handled"
-                                    showsVerticalScrollIndicator={false}
-                                    ListEmptyComponent={
-                                        searchQuery.length >= 2 && !searching ? (
-                                            <View style={styles.emptyContainer}>
-                                                <MapPin size={40} color="rgba(255,255,255,0.3)" strokeWidth={1} />
-                                                <Text style={styles.emptyText}>
-                                                    {lang === 'cs' ? 'Nic nenalezeno' : 'No results'}
-                                                </Text>
-                                            </View>
-                                        ) : null
-                                    }
-                                />
-                            </View>
+                                {searchResults.map((item, index) => (
+                                    <React.Fragment key={`${item.latitude}-${item.longitude}-${index}`}>
+                                        {renderSearchItem({ item })}
+                                    </React.Fragment>
+                                ))}
+                                {searchQuery.length >= 2 && !searching && searchResults.length === 0 && (
+                                    <View style={styles.emptyContainer}>
+                                        <MapPin size={40} color="rgba(255,255,255,0.3)" strokeWidth={1} />
+                                        <Text style={styles.emptyText}>
+                                            {lang === 'cs' ? 'Nic nenalezeno' : 'No results'}
+                                        </Text>
+                                    </View>
+                                )}
+                            </ScrollView>
                         </View>
 
                         {/* ===== STEP 3: Subscription ===== */}
@@ -866,11 +866,6 @@ const styles = StyleSheet.create({
         fontSize: 17,
         fontWeight: '400',
         color: '#fff',
-    },
-    searchList: {
-        width: '100%',
-        marginTop: 10,
-        maxHeight: 280,
     },
     // Result card — mirrors SearchScreen.resultCard
     resultCard: {

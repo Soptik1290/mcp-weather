@@ -7,13 +7,13 @@ load_dotenv()
 async def test():
     try:
         client = AsyncOpenAI(api_key=os.getenv('OPENAI_API_KEY'))
-        print('Calling gpt-5-mini...')
+        print('Calling gpt-5.4-nano...')
         
         system_prompt = 'You are a friendly personal weather assistant. Return a JSON object with ONLY summary: your advice.'
         user_prompt = 'Location: Prague. Data: 12C, Cloudy'
         
         response = await client.chat.completions.create(
-            model='gpt-5-mini',
+            model='gpt-5.4-nano',
             messages=[
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt}

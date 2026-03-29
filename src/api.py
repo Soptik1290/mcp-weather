@@ -236,7 +236,7 @@ async def get_current_weather(request: WeatherRequest, response: Response):
         weather = await open_meteo.get_weather(location, days=1, language=request.language)
         
         # Determine model based on tier
-        model = "gpt-5-mini" if request.tier in ["pro", "ultra"] else "gpt-3.5-turbo"
+        model = "gpt-5.4-nano" if request.tier in ["pro", "ultra"] else "gpt-3.5-turbo"
         
         # Get AI aggregation
         aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
@@ -304,7 +304,7 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
         
         if request.tier in ["pro", "ultra"]:
              # AI Aggregation for paid tiers
-             model = "gpt-5-mini"
+             model = "gpt-5.4-nano"
              aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model, confidence_bias=request.confidence_bias)
         else:
              # Statistical Aggregation for free tier
@@ -390,7 +390,7 @@ async def get_ai_summary(request: AISummaryRequest, response: Response):
 
         response_data = {
             "ai_summary": summary,
-            "model_used": "gpt-4o-mini" if summary else "none"
+            "model_used": "gpt-5.4-nano" if summary else "none"
         }
 
         await set_cached_weather(cache_key, response_data, ttl_seconds=1800)  # 30m
@@ -434,7 +434,7 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
         
         # Aggregate based on tier
         if request.tier in ["pro", "ultra"]:
-            model = "gpt-5-mini"
+            model = "gpt-5.4-nano"
             aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
         else:
             model = "statistical"
@@ -651,16 +651,16 @@ Do not use markdown symbols like ** or ##, just capitalized headers.
                 # Primary model attempt
                 try:
                     ai_resp = await aggregator.client.chat.completions.create(
-                        model="gpt-5-mini",
+                        model="gpt-5.4-nano",
                         messages=[{"role": "user", "content": prompt}],
                         max_completion_tokens=4000
                     )
                     explanation = ai_resp.choices[0].message.content
                 except Exception as e:
-                    print(f"GPT-5-mini failed, trying fallback: {e}")
+                    print(f"GPT-5.4-nano failed, trying fallback: {e}")
                     # Fallback model attempt
                     ai_resp = await aggregator.client.chat.completions.create(
-                        model="gpt-4o",
+                        model="gpt-5-mini",
                         messages=[{"role": "user", "content": prompt}],
                         max_completion_tokens=2000
                     )

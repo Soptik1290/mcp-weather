@@ -64,7 +64,7 @@ class WeatherAggregator:
             try:
                 from openai import AsyncOpenAI
                 self.client = AsyncOpenAI(api_key=self.api_key)
-                self.model = "gpt-5-mini"  # GPT-5 mini for intelligent aggregation
+                self.model = "gpt-5.4-nano"  # GPT-5.4 nano — faster, cost-efficient, similar intelligence
                 print(f"[OK] AI aggregation enabled (model: {self.model})")
             except Exception as e:
                 print(f"[ERR] AI aggregation failed: {e}")
@@ -281,7 +281,7 @@ class WeatherAggregator:
         self,
         weather_data: list[WeatherData],
         user_language: str = "en",
-        model: str = "gpt-4o-mini",
+        model: str = "gpt-5.4-nano",
         confidence_bias: str = "balanced"
     ) -> AggregatedForecast:
         """
@@ -300,7 +300,7 @@ class WeatherAggregator:
         self,
         weather_data: list[WeatherData],
         language: str,
-        model: str = "gpt-4o-mini",
+        model: str = "gpt-5.4-nano",
         confidence_bias: str = "balanced"
     ) -> AggregatedForecast:
         print(f"DEBUG: _ai_aggregate called with language='{language}', model='{model}', confidence_bias='{confidence_bias}'")
@@ -464,12 +464,12 @@ Analyze these sources and deduce the most accurate current weather."""
             # First failure with primary model
             print(f"[WARN] AI aggregation error (primary {model}): {e}")
             
-            # Fallback to gpt-4o if primary was gpt-5-mini
-            if model == "gpt-5-mini":
+            # Fallback to gpt-5-mini if primary was gpt-5.4-nano
+            if model == "gpt-5.4-nano":
                 try:
-                    print("[INFO] Retrying with gpt-4o...")
+                    print("[INFO] Retrying with gpt-5-mini...")
                     response = await self.client.chat.completions.create(
-                        model="gpt-4o",
+                        model="gpt-5-mini",
                         messages=[
                             {"role": "system", "content": system_prompt},
                             {"role": "user", "content": user_prompt}
@@ -544,7 +544,7 @@ Analyze these sources and deduce the most accurate current weather."""
                         model_agreement=agreement
                     )
                 except Exception as e2:
-                    print(f"[ERR] Backup AI model failed: {e2}")
+                    print(f"[ERR] Backup AI model (gpt-5-mini) failed: {e2}")
                     # Convert error to string for display
                     error_msg = str(e2)
                     if "429" in error_msg:
@@ -733,7 +733,7 @@ Data from {len(sources)} sources:
 
         try:
             response = await self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model="gpt-5.4-nano",
                 messages=[
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt}
@@ -754,7 +754,7 @@ Data from {len(sources)} sources:
             # Try backup model
             try:
                 response = await self.client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-5-mini",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
@@ -767,7 +767,7 @@ Data from {len(sources)} sources:
                     result = json.loads(content)
                     return result.get("summary")
             except Exception as e2:
-                print(f"[ERR] AI summary backup failed: {e2}")
+                print(f"[ERR] AI summary backup (gpt-5-mini) failed: {e2}")
             return None
     
     async def get_ambient_theme(
