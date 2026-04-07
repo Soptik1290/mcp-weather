@@ -21,7 +21,7 @@ import httpx
 
 # HTTP client for reverse geocoding is now in src.services
 
-from src.app_services import initialize_providers, reverse_geocode, get_open_meteo_provider, close_services
+from src.app_services import initialize_providers, reverse_geocode, get_open_meteo_provider, close_services, forward_geocode
 from src.aggregator import WeatherAggregator
 from src.models import Location, WeatherData
 
@@ -213,7 +213,7 @@ async def search_location(request: SearchRequest, response: Response):
             response.headers["X-Cache-Status"] = "HIT"
             return cached
         
-        locations = await open_meteo.search_location(request.query, request.language)
+        locations = await forward_geocode(request.query, request.language)
         data = [loc.model_dump() for loc in locations]
         
         await set_cached_weather(cache_key, data, ttl_seconds=86400) # 24h
@@ -235,24 +235,33 @@ async def get_current_weather(request: WeatherRequest, response: Response):
             return cached
 
         # Search for location
-        locations = await open_meteo.search_location(request.location_name)
+        locations = await forward_geocode(request.location_name, request.language)
         if not locations:
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
         
         location = locations[0]
-        weather = await open_meteo.get_weather(location, days=1, language=request.language)
+        
+        # Collect weather data from all available providers IN PARALLEL
+        results = await asyncio.gather(
+            *[_fetch_provider(name, prov, location, 1, request.language)
+              for name, prov in providers]
+        )
+        weather_data_list = [r for r in results if r is not None]
+        
+        if not weather_data_list:
+            raise HTTPException(status_code=500, detail="All weather providers failed")
         
         # Determine model based on tier
         model = "gpt-5.4-nano" if request.tier in ["pro", "ultra"] else "gpt-3.5-turbo"
         
         # Get AI aggregation
-        aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
+        aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model, confidence_bias=request.confidence_bias)
 
         # Get ambient theme
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
-            weather.current,
-            weather.astronomy,
+            aggregated.current,
+            aggregated.astronomy,
             current_hour
         )
         
@@ -290,8 +299,8 @@ async def get_weather_forecast(request: WeatherRequest, response: Response):
             response.headers["X-Cache-Status"] = "HIT"
             return cached
 
-        # Search for location using Open-Meteo (always available)
-        locations = await open_meteo.search_location(request.location_name)
+        # Search for location using robust geocoding
+        locations = await forward_geocode(request.location_name, request.language)
         if not locations:
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
         
@@ -373,7 +382,7 @@ async def get_ai_summary(request: AISummaryRequest, response: Response):
             return cached
 
         # Fetch weather from all providers (fast, usually cached at HTTP/provider level)
-        locations = await open_meteo.search_location(request.location_name)
+        locations = await forward_geocode(request.location_name, request.language)
         if not locations:
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
 
@@ -437,22 +446,30 @@ async def get_weather_by_coordinates(request: CoordinatesRequest, response: Resp
             country=country
         )
         
-        weather = await open_meteo.get_weather(location, days=min(request.days, 16), language=request.language)
+        # Collect weather data from all available providers IN PARALLEL
+        results = await asyncio.gather(
+            *[_fetch_provider(name, prov, location, min(request.days, 16), request.language)
+              for name, prov in providers]
+        )
+        weather_data_list = [r for r in results if r is not None]
+        
+        if not weather_data_list:
+            raise HTTPException(status_code=500, detail="All weather providers failed")
         
         # Aggregate based on tier
         if request.tier in ["pro", "ultra"]:
             model = "gpt-5.4-nano"
-            aggregated = await aggregator.aggregate([weather], request.language, model=model, confidence_bias=request.confidence_bias)
+            aggregated = await aggregator.aggregate(weather_data_list, request.language, model=model, confidence_bias=request.confidence_bias)
         else:
             model = "statistical"
             msg = "Statistický souhrn (Upgrade pro AI)" if request.language == "cs" else "Statistical summary (Upgrade for AI)"
-            aggregated = await aggregator._statistical_aggregate([weather], request.language, availability_message=msg)
+            aggregated = await aggregator._statistical_aggregate(weather_data_list, request.language, availability_message=msg)
         
         # Get ambient theme
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
-            weather.current,
-            weather.astronomy,
+            aggregated.current,
+            aggregated.astronomy,
             current_hour
         )
         
@@ -518,12 +535,22 @@ async def get_ambient_theme(request: WeatherRequest, response: Response):
             response.headers["X-Cache-Status"] = "HIT"
             return cached
 
-        locations = await open_meteo.search_location(request.location_name)
+        locations = await forward_geocode(request.location_name, request.language)
         if not locations:
             raise HTTPException(status_code=404, detail=f"Location '{request.location_name}' not found")
         
         location = locations[0]
-        weather = await open_meteo.get_weather(location, days=1)
+        
+        results = await asyncio.gather(
+            *[_fetch_provider(name, prov, location, 1, request.language)
+              for name, prov in providers]
+        )
+        weather_data_list = [r for r in results if r is not None]
+        
+        if not weather_data_list:
+            raise HTTPException(status_code=500, detail="All weather providers failed")
+            
+        weather = weather_data_list[0]
 
         current_hour = datetime.now().hour
         theme = await aggregator.get_ambient_theme(
@@ -592,7 +619,7 @@ async def explain_weather(request: ExplainRequest, response: Response):
             return cached
             
         # Search for location
-        locations = await open_meteo.search_location(request.location_name)
+        locations = await forward_geocode(request.location_name, request.language)
         if not locations:
             raise HTTPException(status_code=404, detail="Location not found")
         location = locations[0]

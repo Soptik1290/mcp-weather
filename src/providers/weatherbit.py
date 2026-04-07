@@ -57,13 +57,26 @@ class WeatherBitProvider(WeatherProvider):
         lang_code = "cz" if language == "cs" else language
 
         # 1. Get current weather
-        current = await self._get_current(location, lang_code)
+        try:
+            current = await self._get_current(location, lang_code)
+        except httpx.HTTPStatusError as e:
+            # If 429 Too Many Requests or 403, we should fail provider gracefully
+            print(f"[ERR] WeatherBit current weather failed: {e}")
+            raise
         
         # 2. Get daily forecast
-        daily = await self._get_daily(location, days, lang_code)
+        try:
+            daily = await self._get_daily(location, days, lang_code)
+        except Exception as e:
+            print(f"[WARN] WeatherBit daily forecast failed: {e}")
+            daily = []
 
-        # 3. Get hourly forecast
-        hourly = await self._get_hourly(location, lang_code)
+        # 3. Get hourly forecast - Free tier dostává často 403 u hourly 
+        try:
+            hourly = await self._get_hourly(location, lang_code)
+        except Exception as e:
+            print(f"[WARN] WeatherBit hourly forecast failed (Possible Free tier limit): {e}")
+            hourly = []
         
         return WeatherData(
             provider="weatherbit",

@@ -60,6 +60,63 @@ async def reverse_geocode(latitude: float, longitude: float, language: str = "en
         print(f"[WARN] Reverse geocoding failed: {e}")
         return f"Location ({latitude:.2f}, {longitude:.2f})", None
 
+async def forward_geocode(query: str, language: str = "en") -> List[Location]:
+    """
+    Search for locations by name with fallback mechanism.
+    Tries Open-Meteo first, then falls back to Nominatim.
+    """
+    from src.providers.open_meteo import OpenMeteoProvider
+    
+    # 1. Try Open-Meteo
+    try:
+        om = OpenMeteoProvider()
+        locations = await om.search_location(query, language)
+        await om.close()
+        if locations:
+            return locations
+    except Exception as e:
+        print(f"[WARN] OpenMeteo geocoding failed, falling back to Nominatim: {e}")
+        
+    # 2. Fallback to Nominatim
+    try:
+        response = await _http_client.get(
+            "https://nominatim.openstreetmap.org/search",
+            params={
+                "q": query,
+                "format": "json",
+                "limit": 5,
+                "addressdetails": 1,
+                "accept-language": language
+            },
+            headers={
+                "User-Agent": "MCP-Weather-App/1.0"
+            }
+        )
+        response.raise_for_status()
+        data = response.json()
+        
+        locations = []
+        for item in data:
+            lat = float(item.get("lat", 0))
+            lon = float(item.get("lon", 0))
+            address = item.get("address", {})
+            country = address.get("country")
+            name = item.get("name", query)
+            
+            locations.append(Location(
+                name=name,
+                latitude=lat,
+                longitude=lon,
+                country=country,
+                timezone=None
+            ))
+            
+        print(f"[OK] Fallback Geocoding (Nominatim) returned {len(locations)} results for '{query}'")
+        return locations
+    except Exception as e:
+        print(f"[ERR] Both geocoders failed. Nominatim error: {e}")
+        return []
+
 # --- Provider Factory ---
 def initialize_providers() -> List[tuple[str, object]]:
     """
