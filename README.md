@@ -201,6 +201,8 @@ mcp-weather/
 - **⚠️ Oficiální výstrahy a varování (MeteoAlarm)** - Warning banners for severe weather (storms, ice) and Push Notifications for Ultra users.
 - **☔ Live Activities (iOS)** - Dynamic Island support with live countdowns like "Rain starting in 14 minutes".
 - **🏞️ Cestovní mód (Travel Mode)** - Special widget to compare home city weather vs. your vacation destination.
+- **🚗 Roadtrip Pack** - Weather routing for your epic journeys and mountain passes (e.g., Stelvio, Furka Pass). Input your route and get precise forecasts along the way, not just at the destination. See exactly where rain or hail will hit, so you know if you should hide your N54 on summer tires under a bridge.
+- **🚵 Sport Pack** - Tailored weather module for athletes and outdoor enthusiasts. Get ideal conditions for cycling (wind, temperature), running, surfing, or snow conditions for skiing.
 - **NOAA Aviation Weather** - METARs, TAFs, aviation advisories
 - **NOAA Marine Weather** - Ocean/coastal forecasts
 - **NOAA Solar/Space** - Enhanced UV index and solar radiation data

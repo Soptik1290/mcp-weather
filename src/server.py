@@ -7,6 +7,21 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+# Initialize Sentry for error tracking
+import sentry_sdk
+from sentry_sdk.integrations.fastapi import FastApiIntegration
+from sentry_sdk.integrations.starlette import StarletteIntegration
+
+sentry_sdk.init(
+    dsn=os.getenv("SENTRY_DSN"),
+    integrations=[
+        StarletteIntegration(),
+        FastApiIntegration(),
+    ],
+    traces_sample_rate=1.0 if os.getenv("SENTRY_ENVIRONMENT") == "development" else 0.1,
+    profiles_sample_rate=0.1,
+    environment=os.getenv("SENTRY_ENVIRONMENT", "production"),
+)
 
 import asyncio
 from datetime import datetime

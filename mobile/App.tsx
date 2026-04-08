@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect } from 'react';
+import * as Sentry from '@sentry/react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -123,4 +124,4 @@ function App(): React.JSX.Element {
   );
 }
 
-export default App;
+export default Sentry.wrap(App);
