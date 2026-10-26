@@ -72,6 +72,7 @@ async def add_security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Content-Security-Policy"] = "default-src 'none'"
+    response.headers["X-Robots-Tag"] = "noindex, nofollow"
     return response
 
 # Initialize providers
@@ -159,6 +160,13 @@ class RateLimiter:
 
 # Aggregator
 aggregator = WeatherAggregator()
+
+
+@app.get("/robots.txt", include_in_schema=False)
+async def get_robots_txt():
+    """Serves robots.txt to prevent search engine indexing."""
+    content = "User-agent: *\nDisallow: /\n"
+    return Response(content=content, media_type="text/plain")
 
 
 @app.get("/app-ads.txt")
